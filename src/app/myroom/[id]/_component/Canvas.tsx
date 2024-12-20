@@ -17,7 +17,7 @@ const MyRoomCanvas: React.FC = () => {
       canvas.height = window.innerHeight;
 
       const backgroundImage = new Image();
-      backgroundImage.src = "/background/Myroom.webp";
+      backgroundImage.src = "/background/myroom.webp";
       backgroundImage.onload = () => {
         context.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
       };

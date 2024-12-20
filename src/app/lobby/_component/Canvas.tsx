@@ -17,7 +17,7 @@ const LobbyCanvas: React.FC = () => {
       canvas.height = window.innerHeight;
 
       const backgroundImage = new Image();
-      backgroundImage.src = "/background/Lobby.webp";
+      backgroundImage.src = "/background/lobby.webp";
       backgroundImage.onload = () => {
         context.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
       };

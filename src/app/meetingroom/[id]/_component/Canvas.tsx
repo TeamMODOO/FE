@@ -17,7 +17,7 @@ const MeetingRoomCanvas: React.FC = () => {
       canvas.height = window.innerHeight;
 
       const backgroundImage = new Image();
-      backgroundImage.src = "/background/MeetingRoom.webp";
+      backgroundImage.src = "/background/meetingRoom.webp";
       backgroundImage.onload = () => {
         context.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
       };
