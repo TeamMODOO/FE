@@ -8,10 +8,11 @@ import { User } from "../_model/User";
 import Style from "./Canvas.style";
 import characterImages from "./CharacterArray";
 
+// 맵의 요소들 정의(이미지 크기, 한 번에 이동하는 거리 등)
 const MAP_CONSTANTS = {
   IMG_WIDTH: 60,
   IMG_HEIGHT: 90,
-  SPEED: 100, // 한 번에 이동하는 거리
+  SPEED: 100,
 };
 
 const LobbyCanvas: React.FC = () => {
@@ -19,6 +20,8 @@ const LobbyCanvas: React.FC = () => {
   const requestAnimationRef = useRef<number | null>(null);
   const [backgroundImage, setBackgroundImage] =
     useState<HTMLImageElement | null>(null);
+
+  // 유저 더미 데이터
   const [users, setUsers] = useState<User[]>([
     {
       id: "1",
@@ -49,32 +52,35 @@ const LobbyCanvas: React.FC = () => {
       nickname: "정글러4",
     },
   ]);
-  const myCharacterIndex = 1; // 내 캐릭터의 인덱스
+  // 내 캐릭터 인덱스
+  const myCharacterIndex = 1;
   const [pressedKeys, setPressedKeys] = useState<Record<string, boolean>>({});
-  const debouncedPressedKeys = useThrottle(pressedKeys, 500); // 0.01초 디바운스 적용
-  const [isFacingRight, setIsFacingRight] = useState(false); // false: 왼쪽 바라보기, true: 오른쪽 바라보기
+  // 0.5초 delay 적용
+  const throttledPressedKeys = useThrottle(pressedKeys, 500);
+  // false: 왼쪽 바라보기, true: 오른쪽 바라보기
+  const [isFacingRight, setIsFacingRight] = useState(false);
 
-  // 디바운스된 키 입력에 따라 캐릭터 이동
+  // 키 입력에 따라 캐릭터 이동
   useEffect(() => {
     const updatedUsers = [...users];
     const myCharacter = updatedUsers[myCharacterIndex];
 
-    if (debouncedPressedKeys["w"] && myCharacter.y > 0) {
+    if (throttledPressedKeys["w"] && myCharacter.y > 0) {
       myCharacter.y -= MAP_CONSTANTS.SPEED;
     }
-    if (debouncedPressedKeys["a"] && myCharacter.x > 0) {
+    if (throttledPressedKeys["a"] && myCharacter.x > 0) {
       myCharacter.x -= MAP_CONSTANTS.SPEED;
       setIsFacingRight(false);
     }
     if (
-      debouncedPressedKeys["s"] &&
+      throttledPressedKeys["s"] &&
       myCharacter.y <
         (canvasRef.current?.height || 0) - MAP_CONSTANTS.IMG_HEIGHT
     ) {
       myCharacter.y += MAP_CONSTANTS.SPEED;
     }
     if (
-      debouncedPressedKeys["d"] &&
+      throttledPressedKeys["d"] &&
       myCharacter.x < (canvasRef.current?.width || 0) - MAP_CONSTANTS.IMG_WIDTH
     ) {
       myCharacter.x += MAP_CONSTANTS.SPEED;
@@ -82,7 +88,7 @@ const LobbyCanvas: React.FC = () => {
     }
 
     setUsers(updatedUsers);
-  }, [debouncedPressedKeys]); // debouncedPressedKeys 변경 시만 실행
+  }, [throttledPressedKeys]); // throttledPressedKeys 변경 시만 실행
 
   const render = () => {
     const canvas = canvasRef.current;
