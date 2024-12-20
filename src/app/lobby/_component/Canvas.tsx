@@ -6,6 +6,7 @@ import { User } from "../_model/User";
 import Style from "./Canvas.style";
 import characterImages from "./CharacterArray";
 
+// 맵의 요소들 정의(이미지 크기 등)
 const MAP_CONSTANTS = {
   IMG_WIDTH: 60,
   IMG_HEIGHT: 90,
@@ -16,6 +17,7 @@ const LobbyCanvas: React.FC = () => {
   const [backgroundImage, setBackgroundImage] =
     useState<HTMLImageElement | null>(null);
 
+  // 유저 더미 데이터
   const users: User[] = [
     {
       id: "1",
@@ -47,20 +49,21 @@ const LobbyCanvas: React.FC = () => {
     },
   ];
 
+  // 화면에 그리기
   const render = () => {
     const canvas = canvasRef.current;
     if (!canvas || !backgroundImage) return;
     const context = canvas.getContext("2d");
     if (!context) return;
 
-    // Clear canvas
+    // 캔버스 초기화
     context.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Draw background first
+    // 배경 그리기
     context.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
 
-    // Render users
     users.forEach((user) => {
+      // 유저 그리기
       const character = new Image();
       character.src = characterImages[user.characterType];
 
@@ -73,7 +76,7 @@ const LobbyCanvas: React.FC = () => {
           MAP_CONSTANTS.IMG_HEIGHT,
         );
 
-        // Draw nickname
+        // 닉네임 그리시
         context.font = "12px Arial";
         context.fillStyle = "white";
         context.textAlign = "center";
@@ -97,12 +100,11 @@ const LobbyCanvas: React.FC = () => {
     bgImage.src = "/background/lobby.webp";
     bgImage.onload = () => {
       setBackgroundImage(bgImage);
-      // 배경 이미지 로드 완료 후 캐릭터를 렌더링
+      // 배경 이미지 로드 완료 후 렌더링
       render();
     };
   }, []);
 
-  // backgroundImage 혹은 window 사이즈 변경 시 재렌더 필요하면 실행
   useEffect(() => {
     render();
   }, [backgroundImage]);
