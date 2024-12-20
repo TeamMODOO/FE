@@ -54,17 +54,20 @@ const LobbyCanvas: React.FC = () => {
   ]);
   // 내 캐릭터 인덱스
   const myCharacterIndex = 1;
+  // 사용자가 누른 키보드 상태를 기록
   const [pressedKeys, setPressedKeys] = useState<Record<string, boolean>>({});
-  // 0.5초 delay 적용
+  // 500ms 단위로 pressedKeys를 업데이트
   const throttledPressedKeys = useThrottle(pressedKeys, 500);
   // false: 왼쪽 바라보기, true: 오른쪽 바라보기
   const [isFacingRight, setIsFacingRight] = useState(false);
 
-  // 키 입력에 따라 캐릭터 이동
+  // throttledPressedKeys가 변경될 때마다 캐릭터의 위치(x, y)를 업데이트.throttledPressedKeys가 변경될 때마다 캐릭터의 위치(x, y)를 업데이트.
   useEffect(() => {
     const updatedUsers = [...users];
     const myCharacter = updatedUsers[myCharacterIndex];
 
+    // 키 입력에 따라 캐릭터가 한 번에 SPEED 값만큼 이동
+    // 화면 경계(canvas.width와 canvas.height)를 넘지 않도록 제한
     if (throttledPressedKeys["w"] && myCharacter.y > 0) {
       myCharacter.y -= MAP_CONSTANTS.SPEED;
     }
@@ -88,8 +91,9 @@ const LobbyCanvas: React.FC = () => {
     }
 
     setUsers(updatedUsers);
-  }, [throttledPressedKeys]); // throttledPressedKeys 변경 시만 실행
+  }, [throttledPressedKeys]);
 
+  // 배경 이미지가 캔버스 크기에 맞게 그려짐
   const render = () => {
     const canvas = canvasRef.current;
     if (!canvas || !backgroundImage) return;
@@ -110,7 +114,8 @@ const LobbyCanvas: React.FC = () => {
       const facingRight = index === myCharacterIndex ? isFacingRight : false;
 
       context.save();
-      // 캐릭터 중심 기준으로 좌우반전
+
+      // 캐릭터 중심 기준으로 좌우반전하여 캐릭터 그리기
       if (facingRight) {
         context.translate(
           user.x + MAP_CONSTANTS.IMG_WIDTH / 2,
@@ -149,6 +154,7 @@ const LobbyCanvas: React.FC = () => {
     requestAnimationRef.current = requestAnimationFrame(render);
   };
 
+  // 배경 그리기
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -174,11 +180,14 @@ const LobbyCanvas: React.FC = () => {
     };
   }, [backgroundImage, users]);
 
+  // 사용자가 누른 키를 pressedKeys 상태로 관리
   useEffect(() => {
+    // 키를 누를 때(keydown) 해당 키를 true로 설정.
     const handleKeyDown = (e: KeyboardEvent) => {
       setPressedKeys((prev) => ({ ...prev, [e.key]: true }));
     };
 
+    // 키를 뗄 때(keyup) 해당 키를 false로 설정.
     const handleKeyUp = (e: KeyboardEvent) => {
       setPressedKeys((prev) => ({ ...prev, [e.key]: false }));
     };
