@@ -1,3 +1,5 @@
+import MeetingRoomCanvas from "./_component/Canvas";
+
 export default function Page() {
-  return <div>회의실</div>;
+  return <MeetingRoomCanvas></MeetingRoomCanvas>;
 }

@@ -1,3 +1,5 @@
+import LobbyCanvas from "./_component/Canvas";
+
 export default function Page() {
-  return <div>로비</div>;
+  return <LobbyCanvas></LobbyCanvas>;
 }
