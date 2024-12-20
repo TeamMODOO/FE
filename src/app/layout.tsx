@@ -2,7 +2,9 @@ import "@/styles/globals.css";
 
 import type { Metadata } from "next";
 
-import { cn } from "@/lib/clsx";
+import { HomeSideBar, MeetingRoomSideBar } from "@/components";
+import { cn } from "@/lib/utils";
+import { AppProviders } from "@/provider";
 import { SpoqaHanSansNeo } from "@/styles/font";
 
 export const metadata: Metadata = {
@@ -18,7 +20,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={SpoqaHanSansNeo.variable}>
       <body className={cn("font-spoqa-han-sans-neo", "w-full", "h-dvh")}>
-        {children}
+        <AppProviders>
+          {true ? <HomeSideBar /> : <MeetingRoomSideBar />}
+          {children}
+        </AppProviders>
       </body>
     </html>
   );
