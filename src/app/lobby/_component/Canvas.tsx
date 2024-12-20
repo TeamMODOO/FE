@@ -2,6 +2,8 @@
 
 import React, { useEffect, useRef, useState } from "react";
 
+import useThrottle from "@/hooks/useThrottle";
+
 import { User } from "../_model/User";
 import Style from "./Canvas.style";
 import characterImages from "./CharacterArray";
@@ -9,7 +11,7 @@ import characterImages from "./CharacterArray";
 const MAP_CONSTANTS = {
   IMG_WIDTH: 60,
   IMG_HEIGHT: 90,
-  SPEED: 3,
+  SPEED: 100, // 한 번에 이동하는 거리
 };
 
 const LobbyCanvas: React.FC = () => {
@@ -49,34 +51,38 @@ const LobbyCanvas: React.FC = () => {
   ]);
   const myCharacterIndex = 1; // 내 캐릭터의 인덱스
   const [pressedKeys, setPressedKeys] = useState<Record<string, boolean>>({});
+  const debouncedPressedKeys = useThrottle(pressedKeys, 500); // 0.01초 디바운스 적용
   const [isFacingRight, setIsFacingRight] = useState(false); // false: 왼쪽 바라보기, true: 오른쪽 바라보기
 
-  const moveCharacter = () => {
+  // 디바운스된 키 입력에 따라 캐릭터 이동
+  useEffect(() => {
     const updatedUsers = [...users];
     const myCharacter = updatedUsers[myCharacterIndex];
 
-    if (pressedKeys["w"] && myCharacter.y > 0) {
+    if (debouncedPressedKeys["w"] && myCharacter.y > 0) {
       myCharacter.y -= MAP_CONSTANTS.SPEED;
     }
-    if (pressedKeys["a"] && myCharacter.x > 0) {
+    if (debouncedPressedKeys["a"] && myCharacter.x > 0) {
       myCharacter.x -= MAP_CONSTANTS.SPEED;
+      setIsFacingRight(false);
     }
     if (
-      pressedKeys["s"] &&
+      debouncedPressedKeys["s"] &&
       myCharacter.y <
         (canvasRef.current?.height || 0) - MAP_CONSTANTS.IMG_HEIGHT
     ) {
       myCharacter.y += MAP_CONSTANTS.SPEED;
     }
     if (
-      pressedKeys["d"] &&
+      debouncedPressedKeys["d"] &&
       myCharacter.x < (canvasRef.current?.width || 0) - MAP_CONSTANTS.IMG_WIDTH
     ) {
       myCharacter.x += MAP_CONSTANTS.SPEED;
+      setIsFacingRight(true);
     }
 
     setUsers(updatedUsers);
-  };
+  }, [debouncedPressedKeys]); // debouncedPressedKeys 변경 시만 실행
 
   const render = () => {
     const canvas = canvasRef.current;
@@ -95,14 +101,11 @@ const LobbyCanvas: React.FC = () => {
       const characterImage = new Image();
       characterImage.src = characterImages[user.characterType];
 
-      // 내 캐릭터만 방향 반영 (필요시 모든 캐릭터에 적용 가능)
       const facingRight = index === myCharacterIndex ? isFacingRight : false;
 
       context.save();
       // 캐릭터 중심 기준으로 좌우반전
       if (facingRight) {
-        // 오른쪽 바라보는 경우
-        // 중심 기준으로 반전하기 위해 translate 후 scale
         context.translate(
           user.x + MAP_CONSTANTS.IMG_WIDTH / 2,
           user.y + MAP_CONSTANTS.IMG_HEIGHT / 2,
@@ -116,7 +119,6 @@ const LobbyCanvas: React.FC = () => {
           MAP_CONSTANTS.IMG_HEIGHT,
         );
       } else {
-        // 왼쪽 바라보는 경우(기본)
         context.drawImage(
           characterImage,
           user.x,
@@ -128,7 +130,7 @@ const LobbyCanvas: React.FC = () => {
       context.restore();
 
       // 닉네임 그리기
-      context.font = "12px Arial";
+      context.font = "bold 12px Arial";
       context.fillStyle = "white";
       context.textAlign = "center";
       context.fillText(
@@ -138,7 +140,6 @@ const LobbyCanvas: React.FC = () => {
       );
     });
 
-    moveCharacter();
     requestAnimationRef.current = requestAnimationFrame(render);
   };
 
@@ -165,18 +166,11 @@ const LobbyCanvas: React.FC = () => {
         cancelAnimationFrame(requestAnimationRef.current);
       }
     };
-  }, [backgroundImage, users, isFacingRight]);
+  }, [backgroundImage, users]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       setPressedKeys((prev) => ({ ...prev, [e.key]: true }));
-      // 방향 전환 처리
-      if (e.key === "d") {
-        setIsFacingRight(true);
-      }
-      if (e.key === "a") {
-        setIsFacingRight(false);
-      }
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
