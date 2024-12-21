@@ -10,21 +10,39 @@ import { User } from "../_model/User";
 import Style from "./Canvas.style";
 import characterImages from "./CharacterArray";
 
-// 맵의 요소들 정의(이미지 크기, 한 번에 이동하는 거리 등)
 const MAP_CONSTANTS = {
   IMG_WIDTH: 60,
   IMG_HEIGHT: 90,
   SPEED: 30,
-  CANVAS_WIDTH: 1150, // 캔버스의 고정된 가로 크기
-  CANVAS_HEIGHT: 830, // 캔버스의 고정된 세로 크기
+  CANVAS_WIDTH: 1150,
+  CANVAS_HEIGHT: 830,
 };
+
+// 포탈 정보 (x, y, width, height, route, name)
+const portals = [
+  {
+    x: 650,
+    y: 180,
+    width: 130,
+    height: 130,
+    route: "/myroom/123",
+    name: "마이룸",
+  },
+  {
+    x: 400,
+    y: 180,
+    width: 130,
+    height: 130,
+    route: "/meetingroom/123",
+    name: "회의실",
+  },
+];
 
 const LobbyCanvas: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const router = useRouter();
   const requestAnimationRef = useRef<number | null>(null);
 
-  // 배경 이미지 (포탈 이미지는 <img> 태그로 처리)
   const [backgroundImage, setBackgroundImage] =
     useState<HTMLImageElement | null>(null);
 
@@ -59,15 +77,39 @@ const LobbyCanvas: React.FC = () => {
       nickname: "정글러4",
     },
   ]);
-  const myCharacterIndex = 1;
 
+  const myCharacterIndex = 1;
   const [pressedKeys, setPressedKeys] = useState<Record<string, boolean>>({});
   const throttledPressedKeys = useThrottle(pressedKeys, 50);
   const [isFacingRight, setIsFacingRight] = useState(false);
 
-  // 포탈 클릭 시 이동할 페이지
-  const handlePortalClick = () => {
-    router.push("/myroom/123");
+  /**
+   * 포탈 위에 있을 경우 해당 route 반환, 아니면 null
+   */
+  const getPortalRouteIfOnPortal = (): string | null => {
+    const myCharacter = users[myCharacterIndex];
+    const charLeft = myCharacter.x;
+    const charRight = myCharacter.x + MAP_CONSTANTS.IMG_WIDTH;
+    const charTop = myCharacter.y;
+    const charBottom = myCharacter.y + MAP_CONSTANTS.IMG_HEIGHT;
+
+    for (const portal of portals) {
+      const portalLeft = portal.x;
+      const portalRight = portal.x + portal.width;
+      const portalTop = portal.y;
+      const portalBottom = portal.y + portal.height;
+
+      const isOverlap =
+        charLeft < portalRight &&
+        charRight > portalLeft &&
+        charTop < portalBottom &&
+        charBottom > portalTop;
+
+      if (isOverlap) {
+        return portal.route;
+      }
+    }
+    return null;
   };
 
   // 캐릭터 이동 로직
@@ -99,7 +141,7 @@ const LobbyCanvas: React.FC = () => {
     setUsers(updatedUsers);
   }, [throttledPressedKeys]);
 
-  // 실제 그리기 함수
+  // 캔버스에 배경/캐릭터 그리기
   const render = () => {
     const canvas = canvasRef.current;
     if (!canvas || !backgroundImage) return;
@@ -109,10 +151,10 @@ const LobbyCanvas: React.FC = () => {
 
     context.clearRect(0, 0, canvas.width, canvas.height);
 
-    // 배경 그리기
+    // 배경
     context.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
 
-    // 유저 그리기
+    // 캐릭터 그리기
     users.forEach((user, index) => {
       const characterImage = new Image();
       characterImage.src = characterImages[user.characterType];
@@ -144,6 +186,7 @@ const LobbyCanvas: React.FC = () => {
       }
       context.restore();
 
+      // 닉네임
       context.font = "bold 12px Arial";
       context.fillStyle = "white";
       context.textAlign = "center";
@@ -169,7 +212,7 @@ const LobbyCanvas: React.FC = () => {
     };
   }, []);
 
-  // 매 프레임마다 캔버스 렌더링
+  // 매 프레임마다 render
   useEffect(() => {
     if (backgroundImage) {
       requestAnimationRef.current = requestAnimationFrame(function loop() {
@@ -177,7 +220,6 @@ const LobbyCanvas: React.FC = () => {
         requestAnimationRef.current = requestAnimationFrame(loop);
       });
     }
-
     return () => {
       if (requestAnimationRef.current) {
         cancelAnimationFrame(requestAnimationRef.current);
@@ -185,70 +227,74 @@ const LobbyCanvas: React.FC = () => {
     };
   }, [backgroundImage, users]);
 
-  // 키보드 이벤트 등록
+  // 스페이스바 -> 포탈 이동
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       setPressedKeys((prev) => ({ ...prev, [e.key]: true }));
+      if (e.key === " ") {
+        const route = getPortalRouteIfOnPortal();
+        if (route) {
+          router.push(route);
+        }
+      }
     };
-
     const handleKeyUp = (e: KeyboardEvent) => {
       setPressedKeys((prev) => ({ ...prev, [e.key]: false }));
     };
-
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
-
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
     };
-  }, []);
+  }, [users]);
 
   return (
     <div className={Style.canvasContainerClass}>
-      {/* 캔버스 */}
       <canvas ref={canvasRef} />
-      <div
-        role="button"
-        tabIndex={0}
-        onClick={handlePortalClick}
-        style={{
-          position: "absolute",
-          left: "650px",
-          top: "180px",
-          cursor: "pointer",
-        }}
-        onKeyPress={() => handlePortalClick()}
-      >
-        <NextImage
-          src="/furniture/potal.gif"
-          alt="Portal"
-          width={130}
-          height={130}
-          priority
-        />
-      </div>
-      <div
-        role="button"
-        tabIndex={0}
-        onClick={handlePortalClick}
-        style={{
-          position: "absolute",
-          left: "400px",
-          top: "180px",
-          cursor: "pointer",
-          transform: "scaleX(-1)",
-        }}
-        onKeyPress={() => handlePortalClick()}
-      >
-        <NextImage
-          src="/furniture/potal.gif"
-          alt="Portal"
-          width={130}
-          height={130}
-          priority
-        />
-      </div>
+      {portals.map((portal, index) => {
+        const isFlipped = index === 1; // 두 번째 포탈만 좌우 반전
+        return (
+          <div
+            key={index}
+            style={{
+              position: "absolute",
+              left: `${portal.x}px`,
+              top: `${portal.y}px`,
+              width: `${portal.width}px`,
+              height: `${portal.height}px`,
+              textAlign: "center",
+            }}
+          >
+            {/* 이미지만 반전 */}
+            <div
+              style={{
+                transform: isFlipped ? "scaleX(-1)" : "none",
+              }}
+            >
+              <NextImage
+                src="/furniture/potal.gif"
+                alt="Portal"
+                width={portal.width}
+                height={portal.height}
+                priority
+              />
+            </div>
+            {/* 텍스트는 반전되지 않게 그대로 */}
+            <div
+              style={{
+                marginTop: "5px",
+                color: "white",
+                fontWeight: "bold",
+                fontSize: "16px",
+                textAlign: "center",
+              }}
+            >
+              {portal.name}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 };
