@@ -1,0 +1,41 @@
+.container {
+  display: flex;
+  justify-content: center;
+  height: 100dvh;
+  background-color: black;
+}
+
+.container > .centersection {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.centersection > .logo {
+  width: 70vw;
+  height: auto;
+}
+
+.googleLoginButton {
+  width: 20vw;
+  height: auto;
+  padding: 0;
+  border-radius: 50px;
+}
+
+.googleLoginButtonHover {
+  width: 20vw;
+  height: auto;
+  display: none;
+  /* padding: 0; */
+  /* border-radius: 50px; */
+}
+
+.googleLoginButton:hover img:last-child {
+  display: block;
+}
+
+.googleLoginButton:hover img:first-child {
+  display: none;
+}
