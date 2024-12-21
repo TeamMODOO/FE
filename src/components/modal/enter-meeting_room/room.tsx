@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
 
 export const RoomCard = () => {
   return (
-    <Card className="w-[250px]">
+    <Card className="w-full">
       <CardHeader>
         <CardTitle>제목</CardTitle>
       </CardHeader>

@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 
-import { CardPagination } from "@/components/modal/enter-meeting_room/pagination";
 import { RoomCard } from "@/components/modal/enter-meeting_room/room";
 import { Button } from "@/components/ui/button";
 import {
@@ -29,20 +28,21 @@ export const EnterMeetingRoom = () => {
         <Tabs defaultValue="participate" className="flex size-full flex-col">
           <DialogHeader>
             <DialogTitle>
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-2 ">
                 <TabsTrigger value="participate">방 참여하기</TabsTrigger>
                 <TabsTrigger value="make">방 만들기</TabsTrigger>
               </TabsList>
             </DialogTitle>
           </DialogHeader>
 
-          <TabsContent value="participate">
-            <div className="grid grid-cols-3 gap-4 py-4">
-              {[...Array(6)].map((_, i) => (
-                <RoomCard key={i} />
-              ))}
+          <TabsContent value="participate" className="flex-1 overflow-hidden">
+            <div className="h-full overflow-y-auto pr-4">
+              <div className="mt-4 grid h-[310px] grid-cols-2 gap-4 overflow-y-auto pb-4">
+                {[...Array(6)].map((_, i) => (
+                  <RoomCard key={i} />
+                ))}
+              </div>
             </div>
-            <CardPagination />
           </TabsContent>
           <TabsContent value="make">
             <div className="flex flex-col gap-4 py-4">
