@@ -1,5 +1,7 @@
 "use client";
 
+import NextImage from "next/image";
+import { useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 
 import useThrottle from "@/hooks/useThrottle";
@@ -12,14 +14,17 @@ import characterImages from "./CharacterArray";
 const MAP_CONSTANTS = {
   IMG_WIDTH: 60,
   IMG_HEIGHT: 90,
-  SPEED: 100,
+  SPEED: 30,
   CANVAS_WIDTH: 1150, // 캔버스의 고정된 가로 크기
   CANVAS_HEIGHT: 830, // 캔버스의 고정된 세로 크기
 };
 
 const LobbyCanvas: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const router = useRouter();
   const requestAnimationRef = useRef<number | null>(null);
+
+  // 배경 이미지 (포탈 이미지는 <img> 태그로 처리)
   const [backgroundImage, setBackgroundImage] =
     useState<HTMLImageElement | null>(null);
 
@@ -57,9 +62,15 @@ const LobbyCanvas: React.FC = () => {
   const myCharacterIndex = 1;
 
   const [pressedKeys, setPressedKeys] = useState<Record<string, boolean>>({});
-  const throttledPressedKeys = useThrottle(pressedKeys, 500);
+  const throttledPressedKeys = useThrottle(pressedKeys, 50);
   const [isFacingRight, setIsFacingRight] = useState(false);
 
+  // 포탈 클릭 시 이동할 페이지
+  const handlePortalClick = () => {
+    router.push("/myroom/123");
+  };
+
+  // 캐릭터 이동 로직
   useEffect(() => {
     const updatedUsers = [...users];
     const myCharacter = updatedUsers[myCharacterIndex];
@@ -88,9 +99,11 @@ const LobbyCanvas: React.FC = () => {
     setUsers(updatedUsers);
   }, [throttledPressedKeys]);
 
+  // 실제 그리기 함수
   const render = () => {
     const canvas = canvasRef.current;
     if (!canvas || !backgroundImage) return;
+
     const context = canvas.getContext("2d");
     if (!context) return;
 
@@ -140,10 +153,9 @@ const LobbyCanvas: React.FC = () => {
         user.y + MAP_CONSTANTS.IMG_HEIGHT + 10,
       );
     });
-
-    requestAnimationRef.current = requestAnimationFrame(render);
   };
 
+  // 배경 이미지 로드
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -157,9 +169,13 @@ const LobbyCanvas: React.FC = () => {
     };
   }, []);
 
+  // 매 프레임마다 캔버스 렌더링
   useEffect(() => {
     if (backgroundImage) {
-      requestAnimationRef.current = requestAnimationFrame(render);
+      requestAnimationRef.current = requestAnimationFrame(function loop() {
+        render();
+        requestAnimationRef.current = requestAnimationFrame(loop);
+      });
     }
 
     return () => {
@@ -169,6 +185,7 @@ const LobbyCanvas: React.FC = () => {
     };
   }, [backgroundImage, users]);
 
+  // 키보드 이벤트 등록
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       setPressedKeys((prev) => ({ ...prev, [e.key]: true }));
@@ -189,7 +206,49 @@ const LobbyCanvas: React.FC = () => {
 
   return (
     <div className={Style.canvasContainerClass}>
+      {/* 캔버스 */}
       <canvas ref={canvasRef} />
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={handlePortalClick}
+        style={{
+          position: "absolute",
+          left: "650px",
+          top: "180px",
+          cursor: "pointer",
+        }}
+        onKeyPress={() => handlePortalClick()}
+      >
+        <NextImage
+          src="/furniture/potal.gif"
+          alt="Portal"
+          width={130}
+          height={130}
+          priority
+        />
+      </div>
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={handlePortalClick}
+        style={{
+          position: "absolute",
+          left: "400px",
+          top: "180px",
+          cursor: "pointer",
+          transform: "scaleX(-1)",
+        }}
+        onKeyPress={() => handlePortalClick()}
+      >
+        <NextImage
+          src="/furniture/potal.gif"
+          alt="Portal"
+          width={130}
+          height={130}
+          priority
+        />
+      </div>
     </div>
   );
 };
