@@ -9,7 +9,9 @@ import useThrottle from "@/hooks/useThrottle";
 import { User } from "../_model/User";
 import Style from "./Canvas.style";
 import characterImages from "./CharacterArray";
+import { NpcModal } from "./NpcModal";
 
+// 맵의 요소들 정의(이미지 크기, 한 번에 이동하는 거리, 맵 크기)
 const MAP_CONSTANTS = {
   IMG_WIDTH: 60,
   IMG_HEIGHT: 90,
@@ -18,7 +20,7 @@ const MAP_CONSTANTS = {
   CANVAS_HEIGHT: 830,
 };
 
-// 포탈 정보 (x, y, width, height, route, name)
+// 포탈 정보
 const portals = [
   {
     x: 650,
@@ -35,6 +37,34 @@ const portals = [
     height: 130,
     route: "/meetingroom/123",
     name: "회의실",
+  },
+];
+
+// NPC 정보
+const npcs = [
+  {
+    x: 350,
+    y: 600,
+    width: 50,
+    height: 80,
+    image: "/character/npc1.png",
+    modalTitle: "NPC1 대화",
+  },
+  {
+    x: 800,
+    y: 500,
+    width: 50,
+    height: 80,
+    image: "/character/npc2.png",
+    modalTitle: "NPC2 대화",
+  },
+  {
+    x: 300,
+    y: 300,
+    width: 60,
+    height: 90,
+    image: "/character/npc3.png",
+    modalTitle: "NPC3 대화",
   },
 ];
 
@@ -78,42 +108,73 @@ const LobbyCanvas: React.FC = () => {
     },
   ]);
 
+  // 내 캐릭터 인덱스
   const myCharacterIndex = 1;
   const [pressedKeys, setPressedKeys] = useState<Record<string, boolean>>({});
   const throttledPressedKeys = useThrottle(pressedKeys, 50);
   const [isFacingRight, setIsFacingRight] = useState(false);
 
-  /**
-   * 포탈 위에 있을 경우 해당 route 반환, 아니면 null
-   */
+  // 모달 상태
+  const [npc1ModalOpen, setNpc1ModalOpen] = useState(false);
+  const [npc2ModalOpen, setNpc2ModalOpen] = useState(false);
+  const [npc3ModalOpen, setNpc3ModalOpen] = useState(false);
+
+  // 모달 열림 여부 확인
+  const isAnyModalOpen = npc1ModalOpen || npc2ModalOpen || npc3ModalOpen;
+
+  // 캐릭터, 포탈 충돌여부
   const getPortalRouteIfOnPortal = (): string | null => {
     const myCharacter = users[myCharacterIndex];
-    const charLeft = myCharacter.x;
-    const charRight = myCharacter.x + MAP_CONSTANTS.IMG_WIDTH;
-    const charTop = myCharacter.y;
-    const charBottom = myCharacter.y + MAP_CONSTANTS.IMG_HEIGHT;
+    const [cl, cr, ct, cb] = [
+      myCharacter.x,
+      myCharacter.x + MAP_CONSTANTS.IMG_WIDTH,
+      myCharacter.y,
+      myCharacter.y + MAP_CONSTANTS.IMG_HEIGHT,
+    ];
 
     for (const portal of portals) {
-      const portalLeft = portal.x;
-      const portalRight = portal.x + portal.width;
-      const portalTop = portal.y;
-      const portalBottom = portal.y + portal.height;
+      const [pl, pr, pt, pb] = [
+        portal.x,
+        portal.x + portal.width,
+        portal.y,
+        portal.y + portal.height,
+      ];
 
-      const isOverlap =
-        charLeft < portalRight &&
-        charRight > portalLeft &&
-        charTop < portalBottom &&
-        charBottom > portalTop;
-
-      if (isOverlap) {
-        return portal.route;
-      }
+      const overlap = cl < pr && cr > pl && ct < pb && cb > pt;
+      if (overlap) return portal.route;
     }
     return null;
   };
 
-  // 캐릭터 이동 로직
+  // 캐릭터, NPC 충돌여부
+  const getNpcIndexIfOnNpc = (): number | null => {
+    const myCharacter = users[myCharacterIndex];
+    const [cl, cr, ct, cb] = [
+      myCharacter.x,
+      myCharacter.x + MAP_CONSTANTS.IMG_WIDTH,
+      myCharacter.y,
+      myCharacter.y + MAP_CONSTANTS.IMG_HEIGHT,
+    ];
+
+    for (let i = 0; i < npcs.length; i++) {
+      const npc = npcs[i];
+      const [nl, nr, nt, nb] = [
+        npc.x,
+        npc.x + npc.width,
+        npc.y,
+        npc.y + npc.height,
+      ];
+      const overlap = cl < nr && cr > nl && ct < nb && cb > nt;
+      if (overlap) return i;
+    }
+    return null;
+  };
+
+  // 캐릭터 이동
   useEffect(() => {
+    // 모달이 떠있다면 이동 금지
+    if (isAnyModalOpen) return;
+
     const updatedUsers = [...users];
     const myCharacter = updatedUsers[myCharacterIndex];
 
@@ -139,36 +200,35 @@ const LobbyCanvas: React.FC = () => {
     }
 
     setUsers(updatedUsers);
-  }, [throttledPressedKeys]);
+  }, [throttledPressedKeys, isAnyModalOpen]);
 
-  // 캔버스에 배경/캐릭터 그리기
+  // 캔버스에 배경, 캐릭터 그리기
   const render = () => {
     const canvas = canvasRef.current;
     if (!canvas || !backgroundImage) return;
 
-    const context = canvas.getContext("2d");
-    if (!context) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
 
-    context.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // 배경
-    context.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+    ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
 
-    // 캐릭터 그리기
+    // 캐릭터
     users.forEach((user, index) => {
       const characterImage = new Image();
       characterImage.src = characterImages[user.characterType];
 
       const facingRight = index === myCharacterIndex ? isFacingRight : false;
-
-      context.save();
+      ctx.save();
       if (facingRight) {
-        context.translate(
+        ctx.translate(
           user.x + MAP_CONSTANTS.IMG_WIDTH / 2,
           user.y + MAP_CONSTANTS.IMG_HEIGHT / 2,
         );
-        context.scale(-1, 1);
-        context.drawImage(
+        ctx.scale(-1, 1);
+        ctx.drawImage(
           characterImage,
           -MAP_CONSTANTS.IMG_WIDTH / 2,
           -MAP_CONSTANTS.IMG_HEIGHT / 2,
@@ -176,7 +236,7 @@ const LobbyCanvas: React.FC = () => {
           MAP_CONSTANTS.IMG_HEIGHT,
         );
       } else {
-        context.drawImage(
+        ctx.drawImage(
           characterImage,
           user.x,
           user.y,
@@ -184,13 +244,13 @@ const LobbyCanvas: React.FC = () => {
           MAP_CONSTANTS.IMG_HEIGHT,
         );
       }
-      context.restore();
+      ctx.restore();
 
       // 닉네임
-      context.font = "bold 12px Arial";
-      context.fillStyle = "white";
-      context.textAlign = "center";
-      context.fillText(
+      ctx.font = "bold 12px Arial";
+      ctx.fillStyle = "white";
+      ctx.textAlign = "center";
+      ctx.fillText(
         user.nickname,
         user.x + MAP_CONSTANTS.IMG_WIDTH / 2,
         user.y + MAP_CONSTANTS.IMG_HEIGHT + 10,
@@ -205,14 +265,12 @@ const LobbyCanvas: React.FC = () => {
     canvas.width = MAP_CONSTANTS.CANVAS_WIDTH;
     canvas.height = MAP_CONSTANTS.CANVAS_HEIGHT;
 
-    const bgImage = new Image();
-    bgImage.src = "/background/lobby.webp";
-    bgImage.onload = () => {
-      setBackgroundImage(bgImage);
-    };
+    const bg = new Image();
+    bg.src = "/background/lobby.webp";
+    bg.onload = () => setBackgroundImage(bg);
   }, []);
 
-  // 매 프레임마다 render
+  // 유저 위치 변경시 다시 렌더링
   useEffect(() => {
     if (backgroundImage) {
       requestAnimationRef.current = requestAnimationFrame(function loop() {
@@ -227,75 +285,171 @@ const LobbyCanvas: React.FC = () => {
     };
   }, [backgroundImage, users]);
 
-  // 스페이스바 -> 포탈 이동
+  // 키 이벤트 등록
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // 모달이 열려 있다면 그대로 무시(배경 입력 차단)
+      if (isAnyModalOpen) return;
+
       setPressedKeys((prev) => ({ ...prev, [e.key]: true }));
+
+      // 스페이스바 처리
       if (e.key === " ") {
+        // 포탈 충돌 체크
         const route = getPortalRouteIfOnPortal();
         if (route) {
           router.push(route);
+          return;
+        }
+        // NPC 충돌 체크
+        const npcIndex = getNpcIndexIfOnNpc();
+        if (npcIndex !== null) {
+          // NPC에 따라 다른 모달 열기
+          if (npcIndex === 0) setNpc1ModalOpen(true);
+          else if (npcIndex === 1) setNpc2ModalOpen(true);
+          else if (npcIndex === 2) setNpc3ModalOpen(true);
         }
       }
     };
+
     const handleKeyUp = (e: KeyboardEvent) => {
+      // 모달이 열려 있다면 그대로 무시
+      if (isAnyModalOpen) return;
       setPressedKeys((prev) => ({ ...prev, [e.key]: false }));
     };
+
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
+
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
     };
-  }, [users]);
+  }, [
+    users,
+    isAnyModalOpen, // 모달 열림 상태가 바뀔 때마다 effect 재등록
+  ]);
 
   return (
-    <div className={Style.canvasContainerClass}>
-      <canvas ref={canvasRef} />
-      {portals.map((portal, index) => {
-        const isFlipped = index === 1; // 두 번째 포탈만 좌우 반전
-        return (
-          <div
-            key={index}
-            style={{
-              position: "absolute",
-              left: `${portal.x}px`,
-              top: `${portal.y}px`,
-              width: `${portal.width}px`,
-              height: `${portal.height}px`,
-              textAlign: "center",
-            }}
-          >
-            {/* 이미지만 반전 */}
+    <>
+      {/* NPC 모달들 */}
+      <NpcModal
+        isOpen={npc1ModalOpen}
+        onClose={() => setNpc1ModalOpen(false)}
+        title="NPC1 대화"
+      >
+        <p>여기는 NPC1 대화 내용 입니다.</p>
+      </NpcModal>
+
+      <NpcModal
+        isOpen={npc2ModalOpen}
+        onClose={() => setNpc2ModalOpen(false)}
+        title="NPC2 대화"
+      >
+        <p>여기는 NPC2 대화 내용 입니다.</p>
+      </NpcModal>
+
+      <NpcModal
+        isOpen={npc3ModalOpen}
+        onClose={() => setNpc3ModalOpen(false)}
+        title="NPC3 대화"
+      >
+        <p>여기는 NPC3 대화 내용 입니다.</p>
+      </NpcModal>
+
+      {/* 로비 Canvas */}
+      <div
+        className={Style.canvasContainerClass}
+        style={{
+          position: "relative",
+          width: MAP_CONSTANTS.CANVAS_WIDTH,
+          height: MAP_CONSTANTS.CANVAS_HEIGHT,
+        }}
+      >
+        {/* 포탈, NPC 등 HTML 요소 */}
+        <div style={{ position: "absolute", top: 0, left: 0, zIndex: 1 }}>
+          {portals.map((portal, i) => {
+            const isFlipped = i === 1;
+            return (
+              <div
+                key={`portal-${i}`}
+                style={{
+                  position: "absolute",
+                  left: portal.x,
+                  top: portal.y,
+                  width: portal.width,
+                  height: portal.height,
+                  textAlign: "center",
+                }}
+              >
+                <div style={{ transform: isFlipped ? "scaleX(-1)" : "none" }}>
+                  <NextImage
+                    src="/furniture/potal.gif"
+                    alt="Portal"
+                    width={portal.width}
+                    height={portal.height}
+                    priority
+                  />
+                </div>
+                <div
+                  style={{
+                    color: "white",
+                    fontWeight: "bold",
+                    fontSize: 16,
+                    textAlign: "center",
+                  }}
+                >
+                  {portal.name}
+                </div>
+              </div>
+            );
+          })}
+
+          {/* NPC UI */}
+          {npcs.map((npc, idx) => (
             <div
+              key={`npc-${idx}`}
               style={{
-                transform: isFlipped ? "scaleX(-1)" : "none",
-              }}
-            >
-              <NextImage
-                src="/furniture/potal.gif"
-                alt="Portal"
-                width={portal.width}
-                height={portal.height}
-                priority
-              />
-            </div>
-            {/* 텍스트는 반전되지 않게 그대로 */}
-            <div
-              style={{
-                marginTop: "5px",
-                color: "white",
-                fontWeight: "bold",
-                fontSize: "16px",
+                position: "absolute",
+                left: npc.x,
+                top: npc.y,
+                width: npc.width,
+                height: npc.height,
                 textAlign: "center",
               }}
             >
-              {portal.name}
+              <NextImage
+                src={npc.image}
+                alt={`NPC-${idx}`}
+                width={npc.width}
+                height={npc.height}
+                priority
+              />
+              <div
+                style={{
+                  color: "yellow",
+                  fontWeight: "bold",
+                  fontSize: 14,
+                  textAlign: "center",
+                }}
+              >
+                NPC {idx + 1}
+              </div>
             </div>
-          </div>
-        );
-      })}
-    </div>
+          ))}
+        </div>
+
+        {/* 배경 + 캐릭터 Canvas (zIndex: 2) */}
+        <canvas
+          ref={canvasRef}
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+          }}
+        />
+      </div>
+    </>
   );
 };
 
