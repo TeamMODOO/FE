@@ -21,7 +21,8 @@ export default function RootLayout({
     <html lang="en" className={SpoqaHanSansNeo.variable}>
       <body className={cn("font-spoqa-han-sans-neo", "w-full", "h-dvh")}>
         <AppProviders>
-          {true ? <HomeSideBar /> : <MeetingRoomSideBar />}
+          <MeetingRoomSideBar />
+          <HomeSideBar />
           {children}
         </AppProviders>
       </body>
