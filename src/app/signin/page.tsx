@@ -19,6 +19,11 @@ export default function SignInPage() {
 
   return (
     <div className={styles.container}>
+      {/* 배경 반딧불이 애니메이션 */}
+      {Array.from({ length: 30 }).map((_, index) => (
+        <div key={index} className={styles.floatingSquare}></div>
+      ))}
+
       <div className={styles.centersection}>
         <Image
           className={styles.logo}
