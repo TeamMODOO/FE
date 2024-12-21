@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
-const SIDEBAR_WIDTH = "440px";
+const SIDEBAR_WIDTH = "350px";
 
 type SidebarContext = {
   state: "expanded" | "collapsed";
