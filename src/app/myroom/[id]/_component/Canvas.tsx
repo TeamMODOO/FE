@@ -4,22 +4,17 @@ import NextImage from "next/image";
 import React, { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-// shadcn ui 컴포넌트
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 
 import { Funiture } from "../_model/Funiture";
 import { User } from "../_model/User";
-
-// --------------------------------------------------
-// 모델, 타입, 기타 데이터
-// --------------------------------------------------
+import PortfolioModal from "./ PortfolioModal";
+import BoardModal from "./BoardModal";
+import Style from "./Canvas.style";
+import characterImages from "./CharacterArray";
+import FurnitureInfoModal from "./FurnitureInfoModal";
+import interiorImages from "./Interior";
+import ResumeModal from "./ResumeModal";
+import TechStackModal from "./TechStackModal";
 
 // 예시: 기술 스택 목록
 const techStackList = [
@@ -49,11 +44,7 @@ const techStackList = [
   "iOS",
 ];
 
-const characterImages: Record<string, string> = {
-  character1: "/character/character1.png",
-  character2: "/character/character2.png",
-};
-
+// Canvas 크기 상수
 const MAP_CONSTANTS = {
   IMG_WIDTH: 100,
   IMG_HEIGHT: 150,
@@ -61,10 +52,10 @@ const MAP_CONSTANTS = {
   CANVAS_HEIGHT: 830,
 };
 
-// --------------------------------------------------
-// 본문 시작
-// --------------------------------------------------
 const MyRoomCanvas: React.FC = () => {
+  // --------------------------------------------------
+  // 캔버스 Ref
+  // --------------------------------------------------
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [backgroundImage, setBackgroundImage] =
     useState<HTMLImageElement | null>(null);
@@ -104,8 +95,7 @@ const MyRoomCanvas: React.FC = () => {
   ]);
 
   // --------------------------------------------------
-  // 가구 데이터 (이력서 / 포트폴리오 / 기술스택)
-  //  - 처음엔 "none" 상태
+  // (A) 가구 데이터 (이력서 / 포트폴리오 / 기술스택)
   // --------------------------------------------------
   const [resume, setResume] = useState<Funiture[]>([
     { id: "1", x: 100, y: 100, funitureType: "none", funiturename: "이력서" },
@@ -202,7 +192,7 @@ const MyRoomCanvas: React.FC = () => {
   ]);
 
   // --------------------------------------------------
-  // 게시판 (방명록)
+  // (B) 게시판(방명록)
   // --------------------------------------------------
   const [board] = useState<Funiture[]>([
     {
@@ -213,15 +203,9 @@ const MyRoomCanvas: React.FC = () => {
       funiturename: "게시판",
     },
   ]);
+  const [isBoardOpen, setIsBoardOpen] = useState(false); // 게시판 모달
 
-  // --------------------------------------------------
-  // (1) 게시판 모달 open state
-  // --------------------------------------------------
-  const [isBoardOpen, setIsBoardOpen] = useState(false);
-
-  // --------------------------------------------------
-  // (2) 새 글(게시판 댓글) 관리
-  // --------------------------------------------------
+  // 게시판 댓글들
   interface BoardComment {
     id: number;
     name: string;
@@ -236,45 +220,69 @@ const MyRoomCanvas: React.FC = () => {
   const [visitorMessage, setVisitorMessage] = useState("");
 
   // --------------------------------------------------
-  // (3) 각 버튼 클릭 시 뜨는 "가구 추가(입력) 모달" 관리
-  //     - resume / portfolio / techStack
+  // (C) 모달 - 이력서 / 포트폴리오 / 기술스택
   // --------------------------------------------------
   const [resumeModalOpen, setResumeModalOpen] = useState(false);
   const [portfolioModalOpen, setPortfolioModalOpen] = useState(false);
   const [techStackModalOpen, setTechStackModalOpen] = useState(false);
 
-  // 이력서 입력값
+  // 이력서 링크 입력
   const [resumeLink, setResumeLink] = useState("");
-  // 포트폴리오 PDF
+  // 포트폴리오 PDF 파일
   const [portfolioFile, setPortfolioFile] = useState<File | null>(null);
-  // 기술스택 선택
+  // 기술 스택 선택
   const [selectedTech, setSelectedTech] = useState("");
 
   // --------------------------------------------------
-  // (4) 이미 바뀐 가구를 클릭하면 "정보 확인 모달" 열기
-  //     - 어떤 가구인지, 어떤 데이터인지 표시
+  // (D) 가구 상세 보기(이미 등록된 것) 모달
   // --------------------------------------------------
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [selectedFurnitureData, setSelectedFurnitureData] =
     useState<Funiture | null>(null);
 
   // --------------------------------------------------
-  // 캔버스 그리기
+  // 캔버스 초기화 & 배경 로드
   // --------------------------------------------------
-  const renderCanvas = () => {
+  useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas || !backgroundImage) return;
-    const context = canvas.getContext("2d");
+    if (!canvas) return;
+    canvas.width = MAP_CONSTANTS.CANVAS_WIDTH;
+    canvas.height = MAP_CONSTANTS.CANVAS_HEIGHT;
+
+    const bgImage = new Image();
+    bgImage.src = "/background/myroom.webp";
+    bgImage.onload = () => {
+      setBackgroundImage(bgImage);
+    };
+  }, []);
+
+  // --------------------------------------------------
+  // 배경, 캐릭터 그리기
+  // --------------------------------------------------
+  useEffect(() => {
+    if (!backgroundImage || !canvasRef.current) return;
+    const context = canvasRef.current.getContext("2d");
     if (!context) return;
 
-    context.clearRect(0, 0, canvas.width, canvas.height);
-    context.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
+    // 1) 배경 그리기
+    context.clearRect(
+      0,
+      0,
+      MAP_CONSTANTS.CANVAS_WIDTH,
+      MAP_CONSTANTS.CANVAS_HEIGHT,
+    );
+    context.drawImage(
+      backgroundImage,
+      0,
+      0,
+      MAP_CONSTANTS.CANVAS_WIDTH,
+      MAP_CONSTANTS.CANVAS_HEIGHT,
+    );
 
-    // 유저 캐릭터
+    // 2) 유저 캐릭터
     users.forEach((user) => {
-      const characterImage = characterImages[user.characterType];
       const img = new Image();
-      img.src = characterImage;
+      img.src = characterImages[user.characterType];
       img.onload = () => {
         context.drawImage(
           img,
@@ -293,83 +301,54 @@ const MyRoomCanvas: React.FC = () => {
         );
       };
     });
-  };
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    canvas.width = MAP_CONSTANTS.CANVAS_WIDTH;
-    canvas.height = MAP_CONSTANTS.CANVAS_HEIGHT;
-
-    const bgImage = new Image();
-    bgImage.src = "/background/myroom.webp";
-    bgImage.onload = () => {
-      setBackgroundImage(bgImage);
-    };
-  }, []);
-
-  useEffect(() => {
-    renderCanvas();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [backgroundImage, users]);
 
   // --------------------------------------------------
-  // (게시판) 새 글 작성
+  // 게시판 새 글 작성
   // --------------------------------------------------
   const handleAddComment = () => {
     if (!visitorName.trim() || !visitorMessage.trim()) return;
     setBoardComments((prev) => [
       ...prev,
-      {
-        id: prev.length + 1,
-        name: visitorName,
-        message: visitorMessage,
-      },
+      { id: prev.length + 1, name: visitorName, message: visitorMessage },
     ]);
     setVisitorName("");
     setVisitorMessage("");
   };
 
   // --------------------------------------------------
-  // (가구 추가) 버튼 -> 모달 열기
-  //    - 이력서는 1개까지, 포폴은 3개까지, 스택은 9개까지
+  // "이력서 / 포폴 / 기술스택" 추가 모달 열기
+  //   - 개수 제한
   // --------------------------------------------------
   const handleOpenResumeModal = () => {
-    const count = resume.filter((r) => r.funitureType !== "none").length;
-    if (count >= 1) return; // 버튼 비활성 조건
+    if (resume.filter((r) => r.funitureType !== "none").length >= 1) return;
     setResumeModalOpen(true);
   };
 
   const handleOpenPortfolioModal = () => {
-    const count = portfolio.filter((p) => p.funitureType !== "none").length;
-    if (count >= 3) return; // 버튼 비활성 조건
+    if (portfolio.filter((p) => p.funitureType !== "none").length >= 3) return;
     setPortfolioModalOpen(true);
   };
 
   const handleOpenTechStackModal = () => {
-    const count = technologyStack.filter(
-      (t) => t.funitureType !== "none",
-    ).length;
-    if (count >= 9) return; // 버튼 비활성 조건
+    if (technologyStack.filter((t) => t.funitureType !== "none").length >= 9)
+      return;
     setTechStackModalOpen(true);
   };
 
   // --------------------------------------------------
-  // (가구 저장) 모달에서 "저장하기" 클릭 시 실제 업데이트
+  // 모달에서 "저장하기" 눌렀을 때 실제 가구 업데이트
   // --------------------------------------------------
   const handleSaveResume = () => {
-    // 아직 "none" 상태인 이력서 중 첫 번째(혹은 n번째)를 업데이트
-    const indexToUpdate = resume.findIndex((r) => r.funitureType === "none");
-    if (indexToUpdate !== -1) {
+    const idx = resume.findIndex((r) => r.funitureType === "none");
+    if (idx !== -1) {
       setResume((prev) =>
         prev.map((item, i) =>
-          i === indexToUpdate
+          i === idx
             ? {
                 ...item,
-                funitureType: `resume/resume${indexToUpdate + 1}`,
-                data: {
-                  resumeLink, // 사용자가 입력한 이력서 링크
-                },
+                funitureType: `resume/resume${idx + 1}`,
+                data: { resumeLink },
               }
             : item,
         ),
@@ -380,18 +359,19 @@ const MyRoomCanvas: React.FC = () => {
   };
 
   const handleSavePortfolio = () => {
-    // 아직 "none" 상태인 포폴 중 첫 번째
-    const indexToUpdate = portfolio.findIndex((p) => p.funitureType === "none");
-    if (indexToUpdate !== -1 && portfolioFile) {
+    if (!portfolioFile) {
+      setPortfolioModalOpen(false);
+      return;
+    }
+    const idx = portfolio.findIndex((p) => p.funitureType === "none");
+    if (idx !== -1) {
       setPortfolio((prev) =>
         prev.map((item, i) =>
-          i === indexToUpdate
+          i === idx
             ? {
                 ...item,
-                funitureType: `portfolio/portfolio${indexToUpdate + 1}`,
-                data: {
-                  fileName: portfolioFile.name,
-                },
+                funitureType: `portfolio/portfolio${idx + 1}`,
+                data: { fileName: portfolioFile.name },
               }
             : item,
         ),
@@ -402,20 +382,19 @@ const MyRoomCanvas: React.FC = () => {
   };
 
   const handleSaveTechStack = () => {
-    // 아직 "none" 상태인 기술스택 중 첫 번째
-    const indexToUpdate = technologyStack.findIndex(
-      (t) => t.funitureType === "none",
-    );
-    if (indexToUpdate !== -1 && selectedTech) {
+    if (!selectedTech) {
+      setTechStackModalOpen(false);
+      return;
+    }
+    const idx = technologyStack.findIndex((t) => t.funitureType === "none");
+    if (idx !== -1) {
       setTechnologyStack((prev) =>
         prev.map((item, i) =>
-          i === indexToUpdate
+          i === idx
             ? {
                 ...item,
-                funitureType: `technologyStack/technologyStack${indexToUpdate + 1}`,
-                data: {
-                  stack: selectedTech,
-                },
+                funitureType: `technologyStack/technologyStack${idx + 1}`,
+                data: { stack: selectedTech },
               }
             : item,
         ),
@@ -426,19 +405,16 @@ const MyRoomCanvas: React.FC = () => {
   };
 
   // --------------------------------------------------
-  // (가구 클릭) : 이미 업데이트된 가구면 정보 확인 모달
+  // 이미 등록된 가구 클릭 → 상세 보기 모달
   // --------------------------------------------------
   const handleFurnitureClick = (f: Funiture) => {
-    if (f.funitureType === "none" || f.funitureType === "board") {
-      return; // "none" 이거나 게시판이면 스킵 (게시판은 다른 모달이 있음)
-    }
-    // 이미 바뀐 가구면 해당 데이터 확인
+    if (f.funitureType === "none" || f.funitureType === "board") return;
     setSelectedFurnitureData(f);
     setViewModalOpen(true);
   };
 
   // --------------------------------------------------
-  // 버튼 비활성화 조건
+  // 버튼 비활성화 체크
   // --------------------------------------------------
   const isResumeButtonDisabled =
     resume.filter((r) => r.funitureType !== "none").length >= 1;
@@ -448,20 +424,26 @@ const MyRoomCanvas: React.FC = () => {
     technologyStack.filter((t) => t.funitureType !== "none").length >= 9;
 
   return (
-    <div
-      style={{
-        position: "relative",
-        width: MAP_CONSTANTS.CANVAS_WIDTH,
-        height: MAP_CONSTANTS.CANVAS_HEIGHT,
-      }}
-    >
-      {/* -------------------------------------
-          "이력서 / 포폴 / 기술스택" 가구 표시
-          클릭 시 info 모달 오픈
-      -------------------------------------- */}
-      {[...resume, ...portfolio, ...technologyStack].map((item, index) => (
+    <div className={Style.canvasContainerClass} /* Tailwind 스타일 적용 */>
+      {/* -------------------------
+          캔버스 (배경 & 캐릭터)
+      ------------------------- */}
+      <canvas
+        ref={canvasRef}
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          zIndex: 1,
+        }}
+      />
+
+      {/* -------------------------
+          이력서/포폴/스택 가구 표시
+      ------------------------- */}
+      {[...resume, ...portfolio, ...technologyStack].map((item) => (
         <div
-          key={`${item.id}-${index}`}
+          key={item.id}
           style={{
             position: "absolute",
             left: item.x,
@@ -475,7 +457,7 @@ const MyRoomCanvas: React.FC = () => {
           onClick={() => handleFurnitureClick(item)}
         >
           <NextImage
-            src={`/interior/${item.funitureType}.gif`} // "none"이면 interior/none.gif (혹은 에러?) => 필요시 placeholder gif
+            src={interiorImages[item.funitureType] || interiorImages["none"]}
             alt={item.funiturename}
             width={120}
             height={120}
@@ -494,9 +476,9 @@ const MyRoomCanvas: React.FC = () => {
         </div>
       ))}
 
-      {/* ------------------------------------
-          게시판 오브젝트 (방명록)
-      ------------------------------------- */}
+      {/* -------------------------
+          게시판
+      ------------------------- */}
       {board.map((item) => (
         <div
           key={item.id}
@@ -532,22 +514,9 @@ const MyRoomCanvas: React.FC = () => {
         </div>
       ))}
 
-      {/* 캔버스 */}
-      <canvas
-        ref={canvasRef}
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          zIndex: 1,
-        }}
-      />
-
-      {/* ------------------------------------------
-          하단 버튼들: 이력서 / 포폴 / 기술스택 추가
-          - 모달로 입력받아야 하므로, 클릭 시 모달 오픈
-          - 개수 제한에 따라 버튼 비활성화
-      ------------------------------------------- */}
+      {/* -------------------------
+          우측 하단 버튼들
+      ------------------------- */}
       <div
         style={{
           position: "absolute",
@@ -582,185 +551,55 @@ const MyRoomCanvas: React.FC = () => {
         </Button>
       </div>
 
-      {/* 
-        --------------------------------------------------
-          (A) 이력서 추가 모달
-        --------------------------------------------------
-      */}
-      <Dialog open={resumeModalOpen} onOpenChange={setResumeModalOpen}>
-        <DialogContent className="max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>이력서 만들기</DialogTitle>
-          </DialogHeader>
+      {/* --------------------------------------------------
+          각 모달을 자식 컴포넌트로 분리
+      -------------------------------------------------- */}
+      {/* (1) 이력서 모달 */}
+      <ResumeModal
+        open={resumeModalOpen}
+        onClose={setResumeModalOpen}
+        resumeLink={resumeLink}
+        setResumeLink={setResumeLink}
+        onSave={handleSaveResume}
+      />
 
-          <div className="mt-4 flex flex-col gap-4">
-            <Label htmlFor="resumeLink">이력서 링크</Label>
-            <Input
-              id="resumeLink"
-              placeholder="이력서 링크(예: Google Docs, Notion 등)"
-              value={resumeLink}
-              onChange={(e) => setResumeLink(e.target.value)}
-            />
-            <Button onClick={handleSaveResume}>저장하기</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* (2) 포트폴리오 모달 */}
+      <PortfolioModal
+        open={portfolioModalOpen}
+        onClose={setPortfolioModalOpen}
+        portfolioFile={portfolioFile}
+        setPortfolioFile={setPortfolioFile}
+        onSave={handleSavePortfolio}
+      />
 
-      {/* 
-        --------------------------------------------------
-          (B) 포트폴리오 추가 모달
-        --------------------------------------------------
-      */}
-      <Dialog open={portfolioModalOpen} onOpenChange={setPortfolioModalOpen}>
-        <DialogContent className="max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>포트폴리오 만들기</DialogTitle>
-          </DialogHeader>
+      {/* (3) 기술 스택 모달 */}
+      <TechStackModal
+        open={techStackModalOpen}
+        onClose={setTechStackModalOpen}
+        techStackList={techStackList}
+        selectedTech={selectedTech}
+        setSelectedTech={setSelectedTech}
+        onSave={handleSaveTechStack}
+      />
 
-          <div className="mt-4 flex flex-col gap-4">
-            <Label htmlFor="portfolioPdf">PDF 파일 업로드</Label>
-            <Input
-              id="portfolioPdf"
-              type="file"
-              accept=".pdf"
-              onChange={(e) => {
-                if (e.target.files && e.target.files.length > 0) {
-                  setPortfolioFile(e.target.files[0]);
-                }
-              }}
-            />
-            {portfolioFile && <div>선택된 파일: {portfolioFile.name}</div>}
+      {/* (4) 이미 등록된 가구 상세 모달 */}
+      <FurnitureInfoModal
+        open={viewModalOpen}
+        onClose={setViewModalOpen}
+        furniture={selectedFurnitureData}
+      />
 
-            <Button onClick={handleSavePortfolio}>저장하기</Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* 
-        --------------------------------------------------
-          (C) 기술 스택 추가 모달
-        --------------------------------------------------
-      */}
-      <Dialog open={techStackModalOpen} onOpenChange={setTechStackModalOpen}>
-        <DialogContent className="max-w-[700px]">
-          <DialogHeader>
-            <DialogTitle>기술 스택 선택</DialogTitle>
-          </DialogHeader>
-
-          <div className="mt-4">
-            <Input
-              placeholder="스택 검색(예: react)... (데모)"
-              className="mb-2"
-            />
-            {/* 추천 스택 목록 */}
-            <div className="flex flex-wrap gap-2">
-              {techStackList.map((stack) => (
-                <Button
-                  key={stack}
-                  variant={selectedTech === stack ? "default" : "outline"}
-                  onClick={() => setSelectedTech(stack)}
-                >
-                  {stack}
-                </Button>
-              ))}
-            </div>
-            <div className="mt-4">
-              <Button onClick={handleSaveTechStack}>저장하기</Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* 
-        --------------------------------------------------
-          (D) 이미 바뀐 가구를 클릭했을 때,
-              저장된 정보 확인 모달
-        --------------------------------------------------
-      */}
-      <Dialog open={viewModalOpen} onOpenChange={setViewModalOpen}>
-        <DialogContent className="max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>등록 정보 확인</DialogTitle>
-          </DialogHeader>
-
-          {selectedFurnitureData && (
-            <div className="mt-4 space-y-2">
-              {selectedFurnitureData.funitureType.startsWith("resume/") && (
-                <>
-                  <div className="font-bold">[이력서]</div>
-                  <div>링크: {selectedFurnitureData.data?.resumeLink}</div>
-                </>
-              )}
-
-              {selectedFurnitureData.funitureType.startsWith("portfolio/") && (
-                <>
-                  <div className="font-bold">[포트폴리오]</div>
-                  <div>파일명: {selectedFurnitureData.data?.fileName}</div>
-                </>
-              )}
-
-              {selectedFurnitureData.funitureType.startsWith(
-                "technologyStack/",
-              ) && (
-                <>
-                  <div className="font-bold">[기술 스택]</div>
-                  <div>선택 스택: {selectedFurnitureData.data?.stack}</div>
-                </>
-              )}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* 
-        --------------------------------------------------
-          (E) 게시판 모달 (기존 방명록 기능)
-        --------------------------------------------------
-      */}
-      <Dialog open={isBoardOpen} onOpenChange={setIsBoardOpen}>
-        <DialogContent className="max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>방명록</DialogTitle>
-          </DialogHeader>
-
-          {/* 댓글 목록 */}
-          <div className="mt-4 max-h-[300px] overflow-y-auto border p-2">
-            {boardComments.map((comment) => (
-              <div key={comment.id} className="mb-4">
-                <div className="font-bold text-black">{comment.name}</div>
-                <div className="text-black">{comment.message}</div>
-              </div>
-            ))}
-          </div>
-
-          {/* 입력폼 */}
-          <div className="mt-4 flex flex-col gap-2">
-            <Label htmlFor="name" className="text-black">
-              이름
-            </Label>
-            <Input
-              id="name"
-              placeholder="이름을 입력하세요"
-              value={visitorName}
-              onChange={(e) => setVisitorName(e.target.value)}
-            />
-
-            <Label htmlFor="message" className="text-black">
-              글
-            </Label>
-            <Input
-              id="message"
-              placeholder="글 내용을 입력하세요"
-              value={visitorMessage}
-              onChange={(e) => setVisitorMessage(e.target.value)}
-            />
-
-            <Button className="mt-2" onClick={handleAddComment}>
-              작성하기
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* (5) 게시판(방명록) 모달 */}
+      <BoardModal
+        open={isBoardOpen}
+        onClose={setIsBoardOpen}
+        boardComments={boardComments}
+        visitorName={visitorName}
+        visitorMessage={visitorMessage}
+        setVisitorName={setVisitorName}
+        setVisitorMessage={setVisitorMessage}
+        handleAddComment={handleAddComment}
+      />
     </div>
   );
 };
