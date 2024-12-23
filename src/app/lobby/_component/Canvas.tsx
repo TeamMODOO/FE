@@ -302,16 +302,27 @@ const LobbyCanvas: React.FC = () => {
     });
   }, []);
 
-  // **requestAnimationFrame**: 배경 및 캐릭터 계속 그리기
+  // **requestAnimationFrame**: 배경 및 캐릭터 계속 그리기 (30프레임 제한)
   useEffect(() => {
     if (!backgroundImage) return;
 
-    const loop = () => {
-      render();
+    const FRAME_RATE = 30; // 초당 프레임 수
+    const FRAME_INTERVAL = 1000 / FRAME_RATE; // 프레임 간격 (ms)
+    let lastFrameTime = performance.now(); // 마지막 프레임 시간 초기화
+
+    const loop = (currentTime: number) => {
+      const delta = currentTime - lastFrameTime;
+
+      if (delta >= FRAME_INTERVAL) {
+        render(); // 프레임 간격에 도달하면 렌더링
+        lastFrameTime = currentTime; // 마지막 렌더링 시간 업데이트
+      }
+
       requestAnimationRef.current = requestAnimationFrame(loop);
     };
 
     requestAnimationRef.current = requestAnimationFrame(loop);
+
     return () => {
       if (requestAnimationRef.current) {
         cancelAnimationFrame(requestAnimationRef.current);
