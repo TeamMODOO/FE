@@ -1,4 +1,6 @@
-import { useMainSocketConnect } from "@/hooks/useMainSocketConnect";
+"use client";
+
+import useMainSocketConnect from "@/hooks/useMainSocketConnect";
 
 import LobbyCanvas from "./_component/Canvas";
 

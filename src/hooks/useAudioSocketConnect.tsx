@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useRef } from "react";
 import { io, Socket } from "socket.io-client";
 
@@ -7,9 +9,7 @@ type UseAudioSocketConnectType = {
   roomId: string;
 };
 
-export const useAudioSocketConnect = ({
-  roomId,
-}: UseAudioSocketConnectType) => {
+const useAudioSocketConnect = ({ roomId }: UseAudioSocketConnectType) => {
   const audioSocketRef = useRef<Socket | null>(null);
   const setAudioSocket = useAudioSocketStore((state) => state.setSocket);
   const setAudioSocketIsConnected = useAudioSocketStore(
@@ -53,3 +53,5 @@ export const useAudioSocketConnect = ({
     };
   }, [roomId]);
 };
+
+export default useAudioSocketConnect;
