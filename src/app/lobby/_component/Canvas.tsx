@@ -8,7 +8,7 @@ import useThrottle from "@/hooks/useThrottle";
 
 import { User } from "../_model/User";
 import Style from "./Canvas.style";
-import characterImages from "./CharacterArray";
+import characterImages from "./CharacterArray"; // { character1: "/path.png", character2: "/path2.png", ... }
 import { NpcModal } from "./NpcModal";
 
 // 맵의 요소들 정의(이미지 크기, 한 번에 이동하는 거리, 맵 크기)
@@ -73,8 +73,15 @@ const LobbyCanvas: React.FC = () => {
   const router = useRouter();
   const requestAnimationRef = useRef<number | null>(null);
 
+  // **배경 이미지** (1회 로드)
   const [backgroundImage, setBackgroundImage] =
     useState<HTMLImageElement | null>(null);
+
+  // **캐릭터 이미지** 사전 로드 (character1, character2 등)
+  // key: "character1", value: <HTMLImageElement>
+  const [loadedCharacterImages, setLoadedCharacterImages] = useState<{
+    [key: string]: HTMLImageElement;
+  }>({});
 
   // 유저 더미 데이터
   const [users, setUsers] = useState<User[]>([
@@ -110,19 +117,22 @@ const LobbyCanvas: React.FC = () => {
 
   // 내 캐릭터 인덱스
   const myCharacterIndex = 1;
+
+  // 키 입력 상태
   const [pressedKeys, setPressedKeys] = useState<Record<string, boolean>>({});
+  // 키 입력을 50ms 단위로만 반영 (최적화)
   const throttledPressedKeys = useThrottle(pressedKeys, 50);
+
+  // 좌우 방향 전환
   const [isFacingRight, setIsFacingRight] = useState(false);
 
   // 모달 상태
   const [npc1ModalOpen, setNpc1ModalOpen] = useState(false);
   const [npc2ModalOpen, setNpc2ModalOpen] = useState(false);
   const [npc3ModalOpen, setNpc3ModalOpen] = useState(false);
-
-  // 모달 열림 여부 확인
   const isAnyModalOpen = npc1ModalOpen || npc2ModalOpen || npc3ModalOpen;
 
-  // 캐릭터, 포탈 충돌여부
+  // 포탈 충돌 체크
   const getPortalRouteIfOnPortal = (): string | null => {
     const myCharacter = users[myCharacterIndex];
     const [cl, cr, ct, cb] = [
@@ -131,7 +141,6 @@ const LobbyCanvas: React.FC = () => {
       myCharacter.y,
       myCharacter.y + MAP_CONSTANTS.IMG_HEIGHT,
     ];
-
     for (const portal of portals) {
       const [pl, pr, pt, pb] = [
         portal.x,
@@ -139,14 +148,13 @@ const LobbyCanvas: React.FC = () => {
         portal.y,
         portal.y + portal.height,
       ];
-
       const overlap = cl < pr && cr > pl && ct < pb && cb > pt;
       if (overlap) return portal.route;
     }
     return null;
   };
 
-  // 캐릭터, NPC 충돌여부
+  // NPC 충돌 체크
   const getNpcIndexIfOnNpc = (): number | null => {
     const myCharacter = users[myCharacterIndex];
     const [cl, cr, ct, cb] = [
@@ -155,7 +163,6 @@ const LobbyCanvas: React.FC = () => {
       myCharacter.y,
       myCharacter.y + MAP_CONSTANTS.IMG_HEIGHT,
     ];
-
     for (let i = 0; i < npcs.length; i++) {
       const npc = npcs[i];
       const [nl, nr, nt, nb] = [
@@ -170,11 +177,9 @@ const LobbyCanvas: React.FC = () => {
     return null;
   };
 
-  // 캐릭터 이동
+  // **캐릭터 이동 로직**
   useEffect(() => {
-    // 모달이 떠있다면 이동 금지
     if (isAnyModalOpen) return;
-
     const updatedUsers = [...users];
     const myCharacter = updatedUsers[myCharacterIndex];
 
@@ -202,7 +207,7 @@ const LobbyCanvas: React.FC = () => {
     setUsers(updatedUsers);
   }, [throttledPressedKeys, isAnyModalOpen]);
 
-  // 캔버스에 배경, 캐릭터 그리기
+  // **캔버스 렌더링 로직**
   const render = () => {
     const canvas = canvasRef.current;
     if (!canvas || !backgroundImage) return;
@@ -210,26 +215,28 @@ const LobbyCanvas: React.FC = () => {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+    // 1) 화면 지우기
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // 배경
+    // 2) 배경 그리기
     ctx.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
 
-    // 캐릭터
+    // 3) 캐릭터 그리기
     users.forEach((user, index) => {
-      const characterImage = new Image();
-      characterImage.src = characterImages[user.characterType];
+      const img = loadedCharacterImages[user.characterType];
+      if (!img) return; // 아직 이미지 로드가 안 됐을 때 안전처리
 
       const facingRight = index === myCharacterIndex ? isFacingRight : false;
       ctx.save();
       if (facingRight) {
+        // 캐릭터 이미지 좌우 반전
         ctx.translate(
           user.x + MAP_CONSTANTS.IMG_WIDTH / 2,
           user.y + MAP_CONSTANTS.IMG_HEIGHT / 2,
         );
         ctx.scale(-1, 1);
         ctx.drawImage(
-          characterImage,
+          img,
           -MAP_CONSTANTS.IMG_WIDTH / 2,
           -MAP_CONSTANTS.IMG_HEIGHT / 2,
           MAP_CONSTANTS.IMG_WIDTH,
@@ -237,7 +244,7 @@ const LobbyCanvas: React.FC = () => {
         );
       } else {
         ctx.drawImage(
-          characterImage,
+          img,
           user.x,
           user.y,
           MAP_CONSTANTS.IMG_WIDTH,
@@ -246,7 +253,7 @@ const LobbyCanvas: React.FC = () => {
       }
       ctx.restore();
 
-      // 닉네임
+      // **닉네임 표시**
       ctx.font = "bold 12px Arial";
       ctx.fillStyle = "white";
       ctx.textAlign = "center";
@@ -258,7 +265,7 @@ const LobbyCanvas: React.FC = () => {
     });
   };
 
-  // 배경 이미지 로드
+  // **배경 이미지 1회 로드**
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -267,44 +274,66 @@ const LobbyCanvas: React.FC = () => {
 
     const bg = new Image();
     bg.src = "/background/lobby.webp";
-    bg.onload = () => setBackgroundImage(bg);
+    bg.onload = () => {
+      setBackgroundImage(bg);
+    };
   }, []);
 
-  // 유저 위치 변경시 다시 렌더링
+  // **캐릭터 이미지 1회 로드**
+  // characterImages = { character1: "/char1.png", character2: "/char2.png", ... }
   useEffect(() => {
-    if (backgroundImage) {
-      requestAnimationRef.current = requestAnimationFrame(function loop() {
-        render();
-        requestAnimationRef.current = requestAnimationFrame(loop);
-      });
-    }
+    const entries = Object.entries(characterImages);
+    if (entries.length === 0) return;
+
+    const tempObj: { [key: string]: HTMLImageElement } = {};
+    let loadedCount = 0;
+    const totalCount = entries.length;
+
+    entries.forEach(([charType, url]) => {
+      const img = new Image();
+      img.src = url;
+      img.onload = () => {
+        tempObj[charType] = img;
+        loadedCount++;
+        if (loadedCount === totalCount) {
+          setLoadedCharacterImages(tempObj);
+        }
+      };
+    });
+  }, []);
+
+  // **requestAnimationFrame**: 배경 및 캐릭터 계속 그리기
+  useEffect(() => {
+    if (!backgroundImage) return;
+
+    const loop = () => {
+      render();
+      requestAnimationRef.current = requestAnimationFrame(loop);
+    };
+
+    requestAnimationRef.current = requestAnimationFrame(loop);
     return () => {
       if (requestAnimationRef.current) {
         cancelAnimationFrame(requestAnimationRef.current);
       }
     };
-  }, [backgroundImage, users]);
+  }, [backgroundImage, users, loadedCharacterImages]);
 
-  // 키 이벤트 등록
+  // **키보드 이벤트 등록**
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // 모달이 열려 있다면 그대로 무시(배경 입력 차단)
-      if (isAnyModalOpen) return;
-
+      if (isAnyModalOpen) return; // 모달 열려 있으면 무시
       setPressedKeys((prev) => ({ ...prev, [e.key]: true }));
 
-      // 스페이스바 처리
+      // 스페이스바 시 포탈 & NPC 체크
       if (e.key === " ") {
-        // 포탈 충돌 체크
         const route = getPortalRouteIfOnPortal();
         if (route) {
           router.push(route);
           return;
         }
-        // NPC 충돌 체크
         const npcIndex = getNpcIndexIfOnNpc();
         if (npcIndex !== null) {
-          // NPC에 따라 다른 모달 열기
           if (npcIndex === 0) setNpc1ModalOpen(true);
           else if (npcIndex === 1) setNpc2ModalOpen(true);
           else if (npcIndex === 2) setNpc3ModalOpen(true);
@@ -313,22 +342,17 @@ const LobbyCanvas: React.FC = () => {
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
-      // 모달이 열려 있다면 그대로 무시
-      if (isAnyModalOpen) return;
+      if (isAnyModalOpen) return; // 모달 열려 있으면 무시
       setPressedKeys((prev) => ({ ...prev, [e.key]: false }));
     };
 
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
-
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
     };
-  }, [
-    users,
-    isAnyModalOpen, // 모달 열림 상태가 바뀔 때마다 effect 재등록
-  ]);
+  }, [isAnyModalOpen]);
 
   return (
     <>
