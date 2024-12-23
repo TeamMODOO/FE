@@ -22,12 +22,15 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.468.0",
+    "mediasoup-client": "^3.8.1",
     "next": "^14",
     "next-auth": "^5.0.0-beta.25",
     "react": "^18",
     "react-dom": "^18",
+    "socket.io-client": "^4.8.1",
     "tailwind-merge": "^2.5.5",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "zustand": "^5.0.2"
   },
   "devDependencies": {
     "@chromatic-com/storybook": "^3.2.2",
