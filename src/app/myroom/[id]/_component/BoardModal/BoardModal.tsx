@@ -12,7 +12,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-import { BoardModalProps } from "../_model/Board";
+import { BoardModalProps } from "../../_model/Board";
+import Style from "./BoardModal.style";
 
 const BoardModal: React.FC<BoardModalProps> = ({
   open,
@@ -26,23 +27,23 @@ const BoardModal: React.FC<BoardModalProps> = ({
 }) => {
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-[500px]">
+      <DialogContent className={Style.dialogContent}>
         <DialogHeader>
           <DialogTitle>방명록</DialogTitle>
         </DialogHeader>
 
         {/* 댓글 목록 */}
-        <div className="mt-4 max-h-[300px] overflow-y-auto border p-2">
+        <div className={Style.commentListContainer}>
           {boardComments.map((comment) => (
-            <div key={comment.id} className="mb-4">
-              <div className="font-bold text-black">{comment.name}</div>
-              <div className="text-black">{comment.message}</div>
+            <div key={comment.id} className={Style.singleCommentContainer}>
+              <div className={Style.commentName}>{comment.name}</div>
+              <div className={Style.commentMessage}>{comment.message}</div>
             </div>
           ))}
         </div>
 
         {/* 입력폼 */}
-        <div className="mt-4 flex flex-col gap-2">
+        <div className={Style.formContainer}>
           <Label htmlFor="name" className="text-black">
             이름
           </Label>
@@ -63,7 +64,7 @@ const BoardModal: React.FC<BoardModalProps> = ({
             onChange={(e) => setVisitorMessage(e.target.value)}
           />
 
-          <Button className="mt-2" onClick={handleAddComment}>
+          <Button className={Style.submitButton} onClick={handleAddComment}>
             작성하기
           </Button>
         </div>

@@ -5,16 +5,16 @@ import React, { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 
-import { Funiture } from "../_model/Funiture";
-import { User } from "../_model/User";
-import PortfolioModal from "./ PortfolioModal";
-import BoardModal from "./BoardModal";
+import { Funiture } from "../../_model/Funiture";
+import { User } from "../../_model/User";
+import BoardModal from "../BoardModal/BoardModal";
+import FurnitureInfoModal from "../FurnitureInfoModal/FurnitureInfoModal";
+import PortfolioModal from "../PortfolioModal/PortfolioModal";
+import ResumeModal from "../ResumeModal/ResumeModal";
+import TechStackModal from "../TechStackModal/TechStackModal";
 import Style from "./Canvas.style";
 import characterImages from "./CharacterArray";
-import FurnitureInfoModal from "./FurnitureInfoModal";
 import interiorImages from "./Interior";
-import ResumeModal from "./ResumeModal";
-import TechStackModal from "./TechStackModal";
 
 // 예시: 기술 스택 목록
 const techStackList = [
@@ -430,36 +430,16 @@ const MyRoomCanvas: React.FC = () => {
     technologyStack.filter((t) => t.funitureType !== "none").length >= 9;
 
   return (
-    <div className={Style.canvasContainerClass} /* Tailwind 스타일 적용 */>
-      {/* -------------------------
-          캔버스 (배경 & 캐릭터)
-      ------------------------- */}
-      <canvas
-        ref={canvasRef}
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          zIndex: 1,
-        }}
-      />
+    <div className={Style.canvasContainerClass}>
+      {/* 캔버스 */}
+      <canvas ref={canvasRef} className={Style.absoluteCanvasClass} />
 
-      {/* -------------------------
-          이력서/포폴/스택 가구 표시
-      ------------------------- */}
+      {/* 가구 표시 */}
       {[...resume, ...portfolio, ...technologyStack].map((item) => (
         <div
           key={item.id}
-          style={{
-            position: "absolute",
-            left: item.x,
-            top: item.y,
-            width: 80,
-            height: 80,
-            textAlign: "center",
-            zIndex: 3,
-            cursor: item.funitureType !== "none" ? "pointer" : "default",
-          }}
+          className={Style.furnitureContainerClass}
+          style={{ left: item.x, top: item.y }} // 동적 좌표
           onClick={() => handleFurnitureClick(item)}
         >
           <NextImage
@@ -469,35 +449,16 @@ const MyRoomCanvas: React.FC = () => {
             height={120}
             priority
           />
-          <div
-            style={{
-              color: "white",
-              fontWeight: "bold",
-              fontSize: 14,
-              marginTop: -10,
-            }}
-          >
-            {item.funiturename}
-          </div>
+          <div className={Style.furnitureTextClass}>{item.funiturename}</div>
         </div>
       ))}
 
-      {/* -------------------------
-          게시판
-      ------------------------- */}
+      {/* 게시판 */}
       {board.map((item) => (
         <div
           key={item.id}
-          style={{
-            position: "absolute",
-            left: item.x,
-            top: item.y,
-            width: 300,
-            height: 200,
-            textAlign: "center",
-            zIndex: 3,
-            cursor: "pointer",
-          }}
+          className={Style.boardContainerClass}
+          style={{ left: item.x, top: item.y }} // 동적 좌표
           onClick={() => setIsBoardOpen(true)}
         >
           <NextImage
@@ -507,52 +468,19 @@ const MyRoomCanvas: React.FC = () => {
             height={200}
             priority
           />
-          <div
-            style={{
-              color: "white",
-              fontWeight: "bold",
-              fontSize: 14,
-              marginTop: -10,
-            }}
-          >
+          <div className="mt-[-10px] text-[14px] font-bold text-white">
             {item.funiturename}
           </div>
         </div>
       ))}
 
-      {/* -------------------------
-          우측 하단 버튼들
-      ------------------------- */}
-      <div
-        style={{
-          position: "absolute",
-          bottom: 20,
-          right: 20,
-          display: "flex",
-          flexDirection: "column",
-          gap: "10px",
-          zIndex: 3,
-        }}
-      >
-        <Button
-          onClick={handleOpenResumeModal}
-          disabled={isResumeButtonDisabled}
-          variant="outline"
-        >
-          이력서 추가
-        </Button>
-        <Button
-          onClick={handleOpenPortfolioModal}
-          disabled={isPortfolioButtonDisabled}
-          variant="outline"
-        >
+      {/* 우측 하단 버튼들 */}
+      <div className={Style.bottomButtonsClass}>
+        <Button onClick={handleOpenResumeModal} /* ... */>이력서 추가</Button>
+        <Button onClick={handleOpenPortfolioModal} /* ... */>
           포트폴리오 추가
         </Button>
-        <Button
-          onClick={handleOpenTechStackModal}
-          disabled={isTechStackButtonDisabled}
-          variant="outline"
-        >
+        <Button onClick={handleOpenTechStackModal} /* ... */>
           기술 스택 추가
         </Button>
       </div>
