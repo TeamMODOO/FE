@@ -1,9 +1,11 @@
+"use client";
+
 import { useEffect, useRef } from "react";
 import { io, Socket } from "socket.io-client";
 
 import useMainSocketStore from "@/store/useMainSocketStore";
 
-export const useMainSocketConnect = () => {
+const useMainSocketConnect = () => {
   const mainSocketRef = useRef<Socket | null>(null);
   const setMainSocket = useMainSocketStore((state) => state.setSocket);
   const setMainSocketIsConnected = useMainSocketStore(
@@ -14,6 +16,7 @@ export const useMainSocketConnect = () => {
   const MAIN_SERVER_URL = `${baseURL}/main`;
 
   useEffect(() => {
+    return; // 수정 필요
     const newMainSocket = io(MAIN_SERVER_URL, {
       path: "/main/socket.io",
     });
@@ -45,3 +48,4 @@ export const useMainSocketConnect = () => {
     };
   }, []);
 };
+export default useMainSocketConnect;
