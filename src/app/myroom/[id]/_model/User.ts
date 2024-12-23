@@ -1,5 +1,3 @@
-import characterImages from "../_component/CharacterArray";
-
 export interface User {
   id: string;
   x: number;
