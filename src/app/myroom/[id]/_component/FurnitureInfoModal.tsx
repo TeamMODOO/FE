@@ -9,13 +9,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-import { Funiture } from "../_model/Funiture";
-
-interface FurnitureInfoModalProps {
-  open: boolean;
-  onClose: (open: boolean) => void;
-  furniture: Funiture | null;
-}
+import { FurnitureInfoModalProps } from "../_model/Funiture";
 
 const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
   open,

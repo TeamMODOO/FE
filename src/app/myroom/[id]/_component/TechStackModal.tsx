@@ -11,14 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 
-interface TechStackModalProps {
-  open: boolean;
-  onClose: (open: boolean) => void;
-  techStackList: string[];
-  selectedTech: string;
-  setSelectedTech: React.Dispatch<React.SetStateAction<string>>;
-  onSave: () => void;
-}
+import { TechStackModalProps } from "../_model/TechStack";
 
 const TechStackModal: React.FC<TechStackModalProps> = ({
   open,
