@@ -41,11 +41,11 @@ const FriendDoor: React.FC<FriendDoorProps> = ({ friend }) => {
       onClick={toggleSelection} // 클릭 이벤트
     >
       {/* 아바타 및 이름 */}
-      <div className="absolute bottom-5 flex flex-col items-center justify-center">
+      <div className="absolute bottom-2 flex flex-col items-center justify-center">
         <img
           src={friend.avatar}
           alt={`${friend.name} avatar`}
-          className="size-15 mb-1 rounded-full"
+          className="w-20 h-20 mb-1 rounded-full"
         />
         <p className="bg-gray-200 text-center text-base font-bold text-black shadow-md">
           {friend.name}
