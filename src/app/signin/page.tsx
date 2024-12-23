@@ -9,7 +9,10 @@ export default function SignInPage() {
   // 각각 별도의 Server Action 정의
   async function handleSignIn() {
     "use server";
-    await signIn("google");
+    const result = await signIn("google", {
+      callbackUrl: "/registercharacter",
+    });
+    return result;
   }
 
   async function handleSignOut() {
