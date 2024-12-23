@@ -11,7 +11,10 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 
-import { TechStackModalProps } from "../_model/TechStack";
+import { TechStackModalProps } from "../../_model/TechStack";
+
+// 추가: 스타일 import
+import Style from "./TechStackModal.style";
 
 const TechStackModal: React.FC<TechStackModalProps> = ({
   open,
@@ -23,18 +26,18 @@ const TechStackModal: React.FC<TechStackModalProps> = ({
 }) => {
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-[700px]">
+      <DialogContent className={Style.dialogContent}>
         <DialogHeader>
           <DialogTitle>기술 스택 선택</DialogTitle>
         </DialogHeader>
 
-        <div className="mt-4">
+        <div className={Style.container}>
           <Input
             placeholder="스택 검색(예: react)... (데모)"
-            className="mb-2"
+            className={Style.searchInput}
           />
-          {/* 추천 스택 목록 */}
-          <div className="flex flex-wrap gap-2">
+
+          <div className={Style.stackList}>
             {techStackList.map((stack) => (
               <Button
                 key={stack}
@@ -46,7 +49,7 @@ const TechStackModal: React.FC<TechStackModalProps> = ({
             ))}
           </div>
 
-          <div className="mt-4">
+          <div className={Style.bottomSection}>
             <Button onClick={onSave}>저장하기</Button>
           </div>
         </div>

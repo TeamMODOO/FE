@@ -12,7 +12,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-import { PortfolioModalProps } from "../_model/Portfolio";
+import { PortfolioModalProps } from "../../_model/Portfolio";
+import Style from "./PortfolioModal.style";
 
 const PortfolioModal: React.FC<PortfolioModalProps> = ({
   open,
@@ -29,12 +30,12 @@ const PortfolioModal: React.FC<PortfolioModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-[500px]">
+      <DialogContent className={Style.dialogContent}>
         <DialogHeader>
           <DialogTitle>포트폴리오 만들기</DialogTitle>
         </DialogHeader>
 
-        <div className="mt-4 flex flex-col gap-4">
+        <div className={Style.formContainer}>
           <Label htmlFor="portfolioPdf">PDF 파일 업로드</Label>
           <Input
             id="portfolioPdf"
