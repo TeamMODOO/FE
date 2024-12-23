@@ -45,7 +45,7 @@ const FriendDoor: React.FC<FriendDoorProps> = ({ friend }) => {
         <img
           src={friend.avatar}
           alt={`${friend.name} avatar`}
-          className="w-20 h-20 mb-1 rounded-full"
+          className="mb-1 size-20 rounded-full"
         />
         <p className="bg-gray-200 text-center text-base font-bold text-black shadow-md">
           {friend.name}
