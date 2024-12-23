@@ -3,10 +3,40 @@
 import NextImage from "next/image";
 import React, { useEffect, useRef, useState } from "react";
 
-import { Funiture } from "../_model/Funiture";
-import { User } from "../_model/User";
-import Style from "./Canvas.style";
-import characterImages from "./CharacterArray";
+import { Button } from "@/components/ui/button";
+// shadcn ui 컴포넌트
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+
+// --------------------------------------------------
+// 모델, 타입, 기타 데이터
+// --------------------------------------------------
+interface Funiture {
+  id: string;
+  x: number;
+  y: number;
+  funitureType: string;
+  funiturename: string;
+}
+
+interface User {
+  id: string;
+  x: number;
+  y: number;
+  characterType: string;
+  nickname: string;
+}
+
+const characterImages: Record<string, string> = {
+  character1: "/character/character1.png",
+  character2: "/character/character2.png",
+};
 
 const MAP_CONSTANTS = {
   IMG_WIDTH: 100,
@@ -15,12 +45,17 @@ const MAP_CONSTANTS = {
   CANVAS_HEIGHT: 830,
 };
 
+// --------------------------------------------------
+// 본문 시작
+// --------------------------------------------------
 const MyRoomCanvas: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [backgroundImage, setBackgroundImage] =
     useState<HTMLImageElement | null>(null);
 
-  // 유저 데이터
+  // --------------------------------------------------
+  // 유저, 가구, 게시판 데이터
+  // --------------------------------------------------
   const [users] = useState<User[]>([
     {
       id: "1",
@@ -52,7 +87,7 @@ const MyRoomCanvas: React.FC = () => {
     },
   ]);
 
-  // 가구 데이터
+  // 이력서
   const [resume, setResume] = useState<Funiture[]>([
     {
       id: "1",
@@ -63,6 +98,7 @@ const MyRoomCanvas: React.FC = () => {
     },
   ]);
 
+  // 포트폴리오
   const [portfolio, setPortfolio] = useState<Funiture[]>([
     {
       id: "1",
@@ -87,6 +123,7 @@ const MyRoomCanvas: React.FC = () => {
     },
   ]);
 
+  // 기술 스택
   const [technologyStack, setTechnologyStack] = useState<Funiture[]>([
     {
       id: "1",
@@ -153,7 +190,47 @@ const MyRoomCanvas: React.FC = () => {
     },
   ]);
 
-  // 가구 데이터 업데이트 함수
+  // ---------------------------
+  // 중앙에 표시될 게시판(한 개)
+  //  - 보드 이미지 크기를 키웠으므로 좌표값을 약간 조정
+  // ---------------------------
+  const [board] = useState<Funiture[]>([
+    {
+      id: "board1",
+      x: 190,
+      y: 60,
+      funitureType: "board",
+      funiturename: "게시판",
+    },
+  ]);
+
+  // --------------------------------------------------
+  // 게시판 모달을 열기 위한 state
+  // --------------------------------------------------
+  const [isBoardOpen, setIsBoardOpen] = useState(false);
+
+  // --------------------------------------------------
+  // 게시판에 작성되는 글 목록
+  // --------------------------------------------------
+  interface BoardComment {
+    id: number;
+    name: string;
+    message: string;
+  }
+
+  const [boardComments, setBoardComments] = useState<BoardComment[]>([
+    { id: 1, name: "WellBeingGuru", message: "포스팅 잘 보고 갑니다!" },
+    { id: 2, name: "살펴민", message: "저도 잘 보고 가요~" },
+    { id: 3, name: "서툴왕자", message: "게시글 잘 보고 갑니다" },
+  ]);
+
+  // 새 글 입력값
+  const [visitorName, setVisitorName] = useState("");
+  const [visitorMessage, setVisitorMessage] = useState("");
+
+  // --------------------------------------------------
+  // 가구 데이터 업데이트 함수 (이력서/포폴/기술스택)
+  // --------------------------------------------------
   const updateFurniture = (
     furniture: Funiture[],
     setFurniture: React.Dispatch<React.SetStateAction<Funiture[]>>,
@@ -166,7 +243,7 @@ const MyRoomCanvas: React.FC = () => {
           i === index
             ? {
                 ...item,
-                funitureType: `${category}/${category}${index + 1}`, // 동적 문자열 생성
+                funitureType: `${category}/${category}${index + 1}`,
               }
             : item,
         ),
@@ -174,7 +251,9 @@ const MyRoomCanvas: React.FC = () => {
     }
   };
 
-  // 캔버스 렌더링
+  // --------------------------------------------------
+  // 캔버스에 배경 & 캐릭터들 그리기
+  // --------------------------------------------------
   const renderCanvas = () => {
     const canvas = canvasRef.current;
     if (!canvas || !backgroundImage) return;
@@ -183,9 +262,11 @@ const MyRoomCanvas: React.FC = () => {
     if (!context) return;
 
     context.clearRect(0, 0, canvas.width, canvas.height);
+
+    // 배경이미지
     context.drawImage(backgroundImage, 0, 0, canvas.width, canvas.height);
 
-    // 유저 캐릭터 그리기
+    // 유저 캐릭터
     users.forEach((user) => {
       const characterImage = characterImages[user.characterType];
       const img = new Image();
@@ -211,7 +292,9 @@ const MyRoomCanvas: React.FC = () => {
     });
   };
 
+  // --------------------------------------------------
   // 초기화 및 배경 이미지 로드
+  // --------------------------------------------------
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -226,21 +309,41 @@ const MyRoomCanvas: React.FC = () => {
     };
   }, []);
 
-  // 캔버스 업데이트
+  // --------------------------------------------------
+  // 배경/캐릭터 갱신
+  // --------------------------------------------------
   useEffect(() => {
     renderCanvas();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [backgroundImage, users]);
+
+  // --------------------------------------------------
+  // 게시판에 새 글 작성
+  // --------------------------------------------------
+  const handleAddComment = () => {
+    if (!visitorName.trim() || !visitorMessage.trim()) return;
+
+    setBoardComments((prev) => [
+      ...prev,
+      {
+        id: prev.length + 1,
+        name: visitorName,
+        message: visitorMessage,
+      },
+    ]);
+    setVisitorName("");
+    setVisitorMessage("");
+  };
 
   return (
     <div
-      className={Style.canvasContainerClass}
       style={{
         position: "relative",
         width: MAP_CONSTANTS.CANVAS_WIDTH,
         height: MAP_CONSTANTS.CANVAS_HEIGHT,
       }}
     >
-      {/* 가구 배치 */}
+      {/* 이력서, 포트폴리오, 기술스택 가구 표시 */}
       {[...resume, ...portfolio, ...technologyStack].map((item, index) => (
         <div
           key={`${item.funitureType}-${item.id}-${index}`}
@@ -255,10 +358,50 @@ const MyRoomCanvas: React.FC = () => {
           }}
         >
           <NextImage
-            src={`/interior/${item.funitureType}.gif`} // 확장자 추가
+            src={`/interior/${item.funitureType}.gif`}
             alt={item.funiturename}
             width={120}
             height={120}
+            priority
+          />
+          <div
+            style={{
+              color: "white",
+              fontWeight: "bold",
+              fontSize: 14,
+              marginTop: -10,
+            }}
+          >
+            {item.funiturename}
+          </div>
+        </div>
+      ))}
+
+      {/* -------------------------
+          게시판 오브젝트 (크기 키움)
+         ------------------------- */}
+      {board.map((item) => (
+        <div
+          key={item.id}
+          style={{
+            position: "absolute",
+            left: item.x,
+            top: item.y,
+            // 컨테이너 자체도 어느 정도 크기 확보 (300×200)
+            width: 300,
+            height: 200,
+            textAlign: "center",
+            zIndex: 3,
+            cursor: "pointer",
+          }}
+          onClick={() => setIsBoardOpen(true)}
+        >
+          <NextImage
+            src="/furniture/board.png"
+            alt={item.funiturename}
+            // 보드 이미지 자체의 표시 크기
+            width={300}
+            height={200}
             priority
           />
           <div
@@ -284,7 +427,9 @@ const MyRoomCanvas: React.FC = () => {
         }}
       />
 
-      {/* 버튼 */}
+      {/* --------------------------------------------------
+          하단에 가구 추가 버튼들
+         -------------------------------------------------- */}
       <div
         style={{
           position: "absolute",
@@ -350,6 +495,54 @@ const MyRoomCanvas: React.FC = () => {
           기술 스택 추가
         </button>
       </div>
+
+      {/* --------------------------------------------------
+          게시판 모달 (shadcn Dialog)
+         -------------------------------------------------- */}
+      <Dialog open={isBoardOpen} onOpenChange={setIsBoardOpen}>
+        <DialogContent className="max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>방명록</DialogTitle>
+          </DialogHeader>
+
+          {/* 댓글 목록 */}
+          <div className="mt-4 max-h-[300px] overflow-y-auto border p-2">
+            {boardComments.map((comment) => (
+              <div key={comment.id} className="mb-4">
+                <div className="font-bold text-black">{comment.name}</div>
+                <div className="text-black">{comment.message}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* 입력폼 */}
+          <div className="mt-4 flex flex-col gap-2">
+            <Label htmlFor="name" className="text-white">
+              이름
+            </Label>
+            <Input
+              id="name"
+              placeholder="이름을 입력하세요"
+              value={visitorName}
+              onChange={(e) => setVisitorName(e.target.value)}
+            />
+
+            <Label htmlFor="message" className="text-white">
+              글
+            </Label>
+            <Input
+              id="message"
+              placeholder="글 내용을 입력하세요"
+              value={visitorMessage}
+              onChange={(e) => setVisitorMessage(e.target.value)}
+            />
+
+            <Button className="mt-2" onClick={handleAddComment}>
+              작성하기
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
