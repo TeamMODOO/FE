@@ -12,13 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-interface PortfolioModalProps {
-  open: boolean;
-  onClose: (open: boolean) => void;
-  portfolioFile: File | null;
-  setPortfolioFile: React.Dispatch<React.SetStateAction<File | null>>;
-  onSave: () => void;
-}
+import { PortfolioModalProps } from "../_model/Portfolio";
 
 const PortfolioModal: React.FC<PortfolioModalProps> = ({
   open,

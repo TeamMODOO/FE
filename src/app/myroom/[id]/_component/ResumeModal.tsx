@@ -12,13 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-interface ResumeModalProps {
-  open: boolean;
-  onClose: (open: boolean) => void;
-  resumeLink: string;
-  setResumeLink: React.Dispatch<React.SetStateAction<string>>;
-  onSave: () => void;
-}
+import { ResumeModalProps } from "../_model/Resume";
 
 const ResumeModal: React.FC<ResumeModalProps> = ({
   open,

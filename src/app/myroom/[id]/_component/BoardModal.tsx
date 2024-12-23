@@ -12,22 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-interface BoardComment {
-  id: number;
-  name: string;
-  message: string;
-}
-
-interface BoardModalProps {
-  open: boolean;
-  onClose: (open: boolean) => void;
-  boardComments: BoardComment[];
-  visitorName: string;
-  visitorMessage: string;
-  setVisitorName: React.Dispatch<React.SetStateAction<string>>;
-  setVisitorMessage: React.Dispatch<React.SetStateAction<string>>;
-  handleAddComment: () => void;
-}
+import { BoardModalProps } from "../_model/Board";
 
 const BoardModal: React.FC<BoardModalProps> = ({
   open,

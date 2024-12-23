@@ -13,3 +13,9 @@ export interface Funiture {
   funiturename: string;
   data?: FurnitureData; // 구체 타입
 }
+
+export interface FurnitureInfoModalProps {
+  open: boolean;
+  onClose: (open: boolean) => void;
+  furniture: Funiture | null;
+}
