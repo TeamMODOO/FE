@@ -12,7 +12,6 @@ import {
 import { Input } from "@/components/ui/input";
 
 import { TechStackModalProps } from "../../_model/TechStack";
-
 // 추가: 스타일 import
 import Style from "./TechStackModal.style";
 

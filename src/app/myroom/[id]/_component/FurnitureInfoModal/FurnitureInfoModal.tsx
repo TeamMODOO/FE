@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/dialog";
 
 import { FurnitureInfoModalProps } from "../../_model/Funiture";
-
 import Style from "./FurnitureInfoModal.style";
 
 const FurnitureInfoModal: React.FC<FurnitureInfoModalProps> = ({
