@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 
 interface Friend {
@@ -15,9 +16,14 @@ interface FriendDoorProps {
 
 const FriendDoor: React.FC<FriendDoorProps> = ({ friend }) => {
   const [isSelected, setIsSelected] = useState(false); // 클릭된 상태 관리
+  const router = useRouter();
 
   const toggleSelection = () => {
     setIsSelected((prev) => !prev);
+  };
+
+  const handleClick = () => {
+    router.push(`/myroom/${friend.id}`); // 동적 경로로 이동
   };
 
   return (
@@ -51,7 +57,7 @@ const FriendDoor: React.FC<FriendDoorProps> = ({ friend }) => {
         <div className="absolute bottom-[-25px] flex w-full flex-row items-center justify-between gap-1 px-2">
           <button
             className="flex-1 rounded bg-blue-500 py-1 text-xs text-white hover:bg-blue-600"
-            onClick={() => alert(`${friend.name} 방으로 이동합니다.`)}
+            onClick={handleClick}
           >
             방 이동
           </button>
