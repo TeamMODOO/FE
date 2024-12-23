@@ -1,4 +1,4 @@
-const interiorImages = {
+const interiorImages: Record<string, string> = {
   none: "/interior/none.gif",
   "resume/resume1": "/interior/resume/resume1.gif",
   "portfolio/portfolio1": "/interior/portfolio/portfolio1.gif",
