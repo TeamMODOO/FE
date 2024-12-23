@@ -13,7 +13,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 import { ResumeModalProps } from "../../_model/Resume";
-
 // 추가: style import
 import Style from "./ResumeModal.style";
 
