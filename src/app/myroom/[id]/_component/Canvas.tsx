@@ -98,26 +98,32 @@ const MyRoomCanvas: React.FC = () => {
   // (A) 가구 데이터 (이력서 / 포트폴리오 / 기술스택)
   // --------------------------------------------------
   const [resume, setResume] = useState<Funiture[]>([
-    { id: "1", x: 100, y: 100, funitureType: "none", funiturename: "이력서" },
+    {
+      id: "resume-1",
+      x: 100,
+      y: 100,
+      funitureType: "none",
+      funiturename: "이력서",
+    },
   ]);
 
   const [portfolio, setPortfolio] = useState<Funiture[]>([
     {
-      id: "1",
+      id: "portfolio-1",
       x: 600,
       y: 100,
       funitureType: "none",
       funiturename: "포트폴리오1",
     },
     {
-      id: "2",
+      id: "portfolio-2",
       x: 780,
       y: 180,
       funitureType: "none",
       funiturename: "포트폴리오2",
     },
     {
-      id: "3",
+      id: "portfolio-3",
       x: 900,
       y: 90,
       funitureType: "none",
@@ -127,63 +133,63 @@ const MyRoomCanvas: React.FC = () => {
 
   const [technologyStack, setTechnologyStack] = useState<Funiture[]>([
     {
-      id: "1",
+      id: "technologyStack-1",
       x: 230,
       y: 470,
       funitureType: "none",
       funiturename: "기술스택1",
     },
     {
-      id: "2",
+      id: "technologyStack-2",
       x: 370,
       y: 550,
       funitureType: "none",
       funiturename: "기술스택2",
     },
     {
-      id: "3",
+      id: "technologyStack-3",
       x: 1050,
       y: 600,
       funitureType: "none",
       funiturename: "기술스택3",
     },
     {
-      id: "4",
+      id: "technologyStack-4",
       x: 950,
       y: 700,
       funitureType: "none",
       funiturename: "기술스택4",
     },
     {
-      id: "5",
+      id: "technologyStack-5",
       x: 1150,
       y: 680,
       funitureType: "none",
       funiturename: "기술스택5",
     },
     {
-      id: "6",
+      id: "technologyStack-6",
       x: 1000,
       y: 450,
       funitureType: "none",
       funiturename: "기술스택6",
     },
     {
-      id: "7",
+      id: "technologyStack-7",
       x: 1160,
       y: 400,
       funitureType: "none",
       funiturename: "기술스택7",
     },
     {
-      id: "8",
+      id: "technologyStack-8",
       x: 1250,
       y: 200,
       funitureType: "none",
       funiturename: "기술스택8",
     },
     {
-      id: "9",
+      id: "technologyStack-9",
       x: 1350,
       y: 100,
       funitureType: "none",
