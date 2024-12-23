@@ -10,7 +10,7 @@ export default function SignInPage() {
   async function handleSignIn() {
     "use server";
     const result = await signIn("google", {
-      callbackUrl: "/registercharacter",
+      callbackUrl: "/registeravatar",
     });
     return result;
   }

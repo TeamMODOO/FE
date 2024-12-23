@@ -11,8 +11,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   ],
   callbacks: {
     async redirect({ url, baseUrl }) {
-      // 기본값으로 /registercharacter 설정
-      return `${baseUrl}/registercharacter`;
+      // 기본값으로 /registerAvatar 설정
+      return `${baseUrl}/registeravatar`;
     },
   },
 });
