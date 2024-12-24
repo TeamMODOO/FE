@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 
-import useThrottle from "@/hooks/useThrottle"; // 실제 경로
+import useThrottle from "@/hooks/useThrottle";
 
 import { NpcInfo } from "../../_model/Npc";
 import { PortalInfo } from "../../_model/Portal";
@@ -11,9 +11,8 @@ import { User } from "../../_model/User";
 import { MAP_CONSTANTS } from "../../data/config";
 import LobbyCanvasSurface from "../LobbyCanvasSurface/LobbyCanvasSurface";
 import NpcList from "../Npc/NpcList";
-import { NpcModal } from "../Npc/NpcModal"; // NPC 모달 컴포넌트
+import { NpcModal } from "../Npc/NpcModal";
 import PortalList from "../Portal/PortalList";
-// ★ Tailwind 스타일 임포트
 import Style from "./Canvas.style";
 import characterImages from "./CharacterArray";
 
@@ -182,26 +181,52 @@ const LobbyCanvas: React.FC = () => {
     const updated = [...users];
     const me = updated[myCharacterIndex];
 
-    if (throttledPressedKeys["w"] && me.y > 0) {
+    // --- Up ---
+    if (
+      (throttledPressedKeys["w"] ||
+        throttledPressedKeys["W"] ||
+        throttledPressedKeys["ㅈ"] ||
+        throttledPressedKeys["ArrowUp"]) &&
+      me.y > 0
+    ) {
       me.y -= MAP_CONSTANTS.SPEED;
     }
-    if (throttledPressedKeys["a"] && me.x > 0) {
+
+    // --- Left ---
+    if (
+      (throttledPressedKeys["a"] ||
+        throttledPressedKeys["A"] ||
+        throttledPressedKeys["ㅁ"] ||
+        throttledPressedKeys["ArrowLeft"]) &&
+      me.x > 0
+    ) {
       me.x -= MAP_CONSTANTS.SPEED;
       setIsFacingRight(false);
     }
+
+    // --- Down ---
     if (
-      throttledPressedKeys["s"] &&
+      (throttledPressedKeys["s"] ||
+        throttledPressedKeys["S"] ||
+        throttledPressedKeys["ㄴ"] ||
+        throttledPressedKeys["ArrowDown"]) &&
       me.y < MAP_CONSTANTS.CANVAS_HEIGHT - MAP_CONSTANTS.IMG_HEIGHT
     ) {
       me.y += MAP_CONSTANTS.SPEED;
     }
+
+    // --- Right ---
     if (
-      throttledPressedKeys["d"] &&
+      (throttledPressedKeys["d"] ||
+        throttledPressedKeys["D"] ||
+        throttledPressedKeys["ㅇ"] ||
+        throttledPressedKeys["ArrowRight"]) &&
       me.x < MAP_CONSTANTS.CANVAS_WIDTH - MAP_CONSTANTS.IMG_WIDTH
     ) {
       me.x += MAP_CONSTANTS.SPEED;
       setIsFacingRight(true);
     }
+
     setUsers(updated);
   }, [throttledPressedKeys, isAnyModalOpen]);
 
