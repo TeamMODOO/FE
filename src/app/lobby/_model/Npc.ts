@@ -5,6 +5,7 @@ export interface NpcInfo {
   height: number;
   image: string;
   modalTitle: string;
+  name: string;
 }
 export interface NpcListProps {
   npcs: NpcInfo[];
