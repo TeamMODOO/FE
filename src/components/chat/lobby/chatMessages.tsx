@@ -8,7 +8,7 @@ import { ListMessages } from "./listMessages";
 export const ChatMessages = () => {
   const { messageList, messageValue, setMessageValue, handleSendMessage } =
     useChatSocket({
-      roomId: "7",
+      roomId: "floor07",
     });
 
   return (

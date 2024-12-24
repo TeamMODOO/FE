@@ -6,49 +6,6 @@ import { ChattingType } from "@/model/chatting";
 import { Message } from "../message";
 import { ScrollNotification } from "../ScrollNotification";
 
-const messages: ChattingType[] = [
-  {
-    user_name: "123",
-    chat_text: "123",
-    create_at: "123",
-  },
-  {
-    user_name: "123",
-    chat_text: "123",
-    create_at: "123",
-  },
-  {
-    user_name: "123",
-    chat_text: "123",
-    create_at: "123",
-  },
-  {
-    user_name: "123",
-    chat_text: "123",
-    create_at: "123",
-  },
-  {
-    user_name: "123",
-    chat_text: "123",
-    create_at: "123",
-  },
-  {
-    user_name: "123",
-    chat_text: "123",
-    create_at: "123",
-  },
-  {
-    user_name: "123",
-    chat_text: "123",
-    create_at: "123",
-  },
-  {
-    user_name: "123",
-    chat_text: "123",
-    create_at: "123",
-  },
-];
-
 type ListMessagesType = {
   messageList: ChattingType[];
 };
@@ -68,7 +25,7 @@ export const ListMessages = ({ messageList }: ListMessagesType) => {
       onScroll={handleOnScroll}
     >
       <div className="space-y-7">
-        {messages.map((message, idx) => (
+        {messageList.map((message, idx) => (
           <Message key={idx} message={message} />
         ))}
       </div>
