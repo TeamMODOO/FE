@@ -3,34 +3,27 @@
 import React from "react";
 
 import { DailyProblemProps } from "../../_model/DailyProblem";
+// Tailwind 스타일 파일
+import Style from "./DailyProblemContent.style";
 
 const DailyProblemContent: React.FC<DailyProblemProps> = ({
   dailyProblem,
   isProblemSolved,
   handleSolveDailyProblem,
 }) => {
-  const questModalStyle: React.CSSProperties = {
-    background: "#f3d8ae url('/images/quest-window-bg.png') repeat",
-    border: "2px solid #8b4513",
-    borderRadius: 8,
-    padding: "16px",
-    color: "#000",
-    fontFamily: "MaplestoryOTFBold, sans-serif",
-  };
-
   if (!dailyProblem) {
     return (
-      <div style={questModalStyle}>
+      <div className={Style.container}>
         <p>서버에서 오늘의 문제를 아직 받지 못했습니다.</p>
       </div>
     );
   }
 
   return (
-    <div style={questModalStyle}>
-      <h3>오늘의 문제</h3>
+    <div className={Style.container}>
+      <h3 className={Style.heading}>오늘의 문제</h3>
       <p>
-        <strong>
+        <strong className={Style.problemNumber}>
           #{dailyProblem.id} : {dailyProblem.title}
         </strong>
       </p>
@@ -39,15 +32,16 @@ const DailyProblemContent: React.FC<DailyProblemProps> = ({
           href={dailyProblem.link}
           target="_blank"
           rel="noreferrer"
-          style={{ color: "blue" }}
+          className={Style.linkText}
         >
           문제 보러가기
         </a>
       </p>
+
       {!isProblemSolved ? (
         <button onClick={handleSolveDailyProblem}>풀었어요!</button>
       ) : (
-        <p style={{ color: "green" }}>문제 해결 완료! 잘하셨어요!</p>
+        <p className={Style.solvedMessage}>문제 해결 완료! 잘하셨어요!</p>
       )}
     </div>
   );
