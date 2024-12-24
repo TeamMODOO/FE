@@ -1,19 +1,19 @@
 "use client";
 
 import NextImage from "next/image";
-import { PortalProps } from "../_model/Portal";
+
+import { PortalProps } from "../../_model/Portal";
+import Style from "./Portal.style";
 
 function Portal({ x, y, width, height, name }: PortalProps) {
   return (
     <div
+      className={Style.portalContainer}
       style={{
-        position: "absolute",
         left: x,
         top: y,
         width,
         height,
-        textAlign: "center",
-        zIndex: 9, // 여기서도 높게
       }}
     >
       <NextImage
@@ -23,9 +23,7 @@ function Portal({ x, y, width, height, name }: PortalProps) {
         height={height}
         priority
       />
-      <div style={{ color: "white", fontWeight: "bold", fontSize: 16 }}>
-        {name}
-      </div>
+      <div className={Style.portalName}>{name}</div>
     </div>
   );
 }
