@@ -2,17 +2,7 @@
 
 import React from "react";
 
-interface SolvedUser {
-  userId: string;
-  nickname: string;
-  solvedProblemId: number;
-  solvedDate: string;
-}
-
-interface SolvedUsersProps {
-  dailySolvedUsers: SolvedUser[];
-  getTodayString: () => string;
-}
+import { SolvedUsersProps } from "../../_model/SolvedUser";
 
 const SolvedUsersContent: React.FC<SolvedUsersProps> = ({
   dailySolvedUsers,

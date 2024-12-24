@@ -2,15 +2,7 @@
 
 import React from "react";
 
-interface DailyProblemProps {
-  dailyProblem: {
-    id: number;
-    title: string;
-    link: string;
-  } | null;
-  isProblemSolved: boolean;
-  handleSolveDailyProblem: () => void;
-}
+import { DailyProblemProps } from "../../_model/DailyProblem";
 
 const DailyProblemContent: React.FC<DailyProblemProps> = ({
   dailyProblem,
