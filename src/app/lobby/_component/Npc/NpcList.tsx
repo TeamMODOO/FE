@@ -27,7 +27,8 @@ function NpcList({ npcs }: NpcListProps) {
             height={npc.height}
             priority
           />
-          <div className={Style.npcLabel}>NPC {idx + 1}</div>
+
+          <div className={Style.npcLabel}>{npc.name}</div>
         </div>
       ))}
     </div>
