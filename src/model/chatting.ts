@@ -3,7 +3,7 @@ export interface ChattingRequest {
 }
 export interface ChattingResponse {
   user_name: string;
-  chat_text: string;
+  message: string;
 }
 
 export interface ChattingType extends ChattingResponse {
