@@ -33,13 +33,13 @@ export const useChatSocket = ({ roomId }: ChatSocketType) => {
       message: messageValue,
     };
 
-    mainSocket.emit("SC_CHAT", messageInfo);
+    mainSocket.emit("CS_CHAT", messageInfo);
     setMessageValue("");
   }, [mainSocket, messageValue]);
 
   useEffect(() => {
     if (!mainSocket) return;
-    mainSocket.on("CS_CHAT", addMessage);
+    mainSocket.on("SC_CHAT", addMessage);
   }, [mainSocket, addMessage]);
 
   return {

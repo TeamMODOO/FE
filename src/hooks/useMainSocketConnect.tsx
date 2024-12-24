@@ -12,11 +12,15 @@ const useMainSocketConnect = () => {
     (state) => state.setIsConnected,
   );
 
-  const baseURL = process.env.NEXT_PUBLIC_BASE_URL;
+  // const baseURL = process.env.NEXT_PUBLIC_BASE_URL;
 
   useEffect(() => {
-    const newMainSocket = io(baseURL, {
-      path: process.env.NEXT_APP_SOCKET_PATH,
+    // const newMainSocket = io(baseURL, {
+    //   path: process.env.NEXT_APP_SOCKET_PATH,
+    // });
+
+    const newMainSocket = io("http://127.0.0.1:8000", {
+      path: "/sockets",
     });
 
     newMainSocket?.on("connect", () => {
