@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { NpcModalProps } from "../_model/NpcModal";
 
 import {
   Dialog,
@@ -8,13 +9,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-
-interface NpcModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  title: string;
-  children?: React.ReactNode;
-}
 
 export const NpcModal: React.FC<NpcModalProps> = ({
   isOpen,
