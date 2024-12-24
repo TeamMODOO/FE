@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 
 import { LobbyCanvasSurfaceProps } from "../../_model/LobbyCanvasSurface";
-import { MAP_CONSTANTS } from "../../data/config";
+import { MAP_CONSTANTS } from "../MapConstants";
 import Style from "./LobbyCanvasSurface.style";
 
 function LobbyCanvasSurface({
