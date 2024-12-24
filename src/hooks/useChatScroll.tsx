@@ -1,12 +1,13 @@
 import { RefObject, useEffect, useState } from "react";
 
+import { ChattingType } from "@/model/chatting";
+
 interface UseScrollProps {
   scrollRef: RefObject<HTMLDivElement>;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  messageList: any[];
+  messageList: ChattingType[];
 }
 
-export const useScroll = ({ scrollRef, messageList }: UseScrollProps) => {
+export const useChatScroll = ({ scrollRef, messageList }: UseScrollProps) => {
   const [userScrolled, setUserScrolled] = useState(false);
   const [notification, setNotification] = useState(0);
 

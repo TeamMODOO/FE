@@ -1,24 +1,25 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 
-import { ChattingResponse } from "@/model/chatting";
+import { ChattingResponse, ChattingType } from "@/model/chatting";
 import useMainSocketStore from "@/store/useMainSocketStore";
 
 type ChatSocketType = {
-  responseType: string;
-  requestType: string;
+  roomId: string;
 };
 
-export const useChatSocket = ({
-  responseType,
-  requestType,
-}: ChatSocketType) => {
+export const useChatSocket = ({ roomId }: ChatSocketType) => {
   const mainSocket = useMainSocketStore((state) => state.socket);
-  const [messageList, setMessageList] = useState<ChattingResponse[]>([]);
+  const [messageList, setMessageList] = useState<ChattingType[]>([]);
   const [messageValue, setMessageValue] = useState<string>("");
 
   const addMessage = useCallback((newMessage: ChattingResponse) => {
-    setMessageList((prev) => [...prev, newMessage]);
+    const addMessageInfo = {
+      ...newMessage,
+      create_at: new Date().toISOString(),
+    };
+
+    setMessageList((prev) => [...prev, addMessageInfo]);
   }, []);
 
   const handleSendMessage = useCallback(() => {
@@ -26,17 +27,20 @@ export const useChatSocket = ({
       return;
     }
 
-    mainSocket.emit(requestType, messageValue);
+    const messageInfo = {
+      room_id: roomId,
+      user_name: "user1",
+      message: messageValue,
+    };
+
+    mainSocket.emit("SC_CHAT", messageInfo);
     setMessageValue("");
-  }, [mainSocket, messageValue, requestType]);
+  }, [mainSocket, messageValue]);
 
   useEffect(() => {
     if (!mainSocket) return;
-    mainSocket.on(responseType, addMessage);
-    return () => {
-      mainSocket.off(responseType);
-    };
-  }, [mainSocket, responseType, addMessage]);
+    mainSocket.on("CS_CHAT", addMessage);
+  }, [mainSocket, addMessage]);
 
   return {
     messageList,
