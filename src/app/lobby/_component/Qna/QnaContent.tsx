@@ -2,18 +2,9 @@
 
 import React from "react";
 
+import { QnaProps } from "../../_model/Qma";
+
 // 예시 QNA 타입
-interface QnaItem {
-  question: string;
-  answer: string;
-}
-
-interface QnaProps {
-  qnaList: QnaItem[];
-  selectedQnaIndex: number | null;
-  handleQnaClick: (index: number) => void;
-}
-
 const QnaContent: React.FC<QnaProps> = ({
   qnaList,
   selectedQnaIndex,
