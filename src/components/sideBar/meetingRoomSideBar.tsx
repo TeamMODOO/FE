@@ -1,5 +1,5 @@
-import { ChatInput } from "@/components/chat/chatInput";
-import { ChatMessages } from "@/components/chat/chatMessages";
+import { ChatInput } from "@/components/chat/meeting-room/chatInput";
+import { ChatMessages } from "@/components/chat/meeting-room/chatMessages";
 import {
   Sidebar,
   SidebarContent,
