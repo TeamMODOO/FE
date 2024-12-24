@@ -316,39 +316,53 @@ const LobbyCanvas: React.FC = () => {
   // ---------------------------
   useEffect(() => {
     if (isAnyModalOpen) return;
+
     const updated = [...users];
     const me = updated[myCharacterIndex];
 
-    // Up
+    // --- Up ---
     if (
-      (throttledPressedKeys["w"] || throttledPressedKeys["ArrowUp"]) &&
+      (throttledPressedKeys["w"] ||
+        throttledPressedKeys["W"] ||
+        throttledPressedKeys["ㅈ"] ||
+        throttledPressedKeys["ArrowUp"]) &&
       me.y > 0
     ) {
       me.y -= MAP_CONSTANTS.SPEED;
     }
-    // Left
+    // --- Left ---
     if (
-      (throttledPressedKeys["a"] || throttledPressedKeys["ArrowLeft"]) &&
+      (throttledPressedKeys["a"] ||
+        throttledPressedKeys["A"] ||
+        throttledPressedKeys["ㅁ"] ||
+        throttledPressedKeys["ArrowLeft"]) &&
       me.x > 0
     ) {
       me.x -= MAP_CONSTANTS.SPEED;
       setIsFacingRight(false);
     }
-    // Down
+    // --- Down ---
     if (
-      (throttledPressedKeys["s"] || throttledPressedKeys["ArrowDown"]) &&
+      (throttledPressedKeys["s"] ||
+        throttledPressedKeys["S"] ||
+        throttledPressedKeys["ㄴ"] ||
+        throttledPressedKeys["ArrowDown"]) &&
       me.y < MAP_CONSTANTS.CANVAS_HEIGHT - MAP_CONSTANTS.IMG_HEIGHT
     ) {
       me.y += MAP_CONSTANTS.SPEED;
     }
-    // Right
+    // --- Right ---
     if (
-      (throttledPressedKeys["d"] || throttledPressedKeys["ArrowRight"]) &&
+      (throttledPressedKeys["d"] ||
+        throttledPressedKeys["D"] ||
+        throttledPressedKeys["ㅇ"] ||
+        throttledPressedKeys["ArrowRight"]) &&
       me.x < MAP_CONSTANTS.CANVAS_WIDTH - MAP_CONSTANTS.IMG_WIDTH
     ) {
       me.x += MAP_CONSTANTS.SPEED;
       setIsFacingRight(true);
     }
+
     setUsers(updated);
   }, [throttledPressedKeys, isAnyModalOpen]);
 
