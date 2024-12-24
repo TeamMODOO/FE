@@ -9218,8 +9218,8 @@ unbox-primitive@^1.1.0:
   dependencies:
     call-bound "^1.0.3"
     has-bigints "^1.0.2"
-    has-symbols "^1.1.0"
-    which-boxed-primitive "^1.1.1"
+    has-symbols "^1.0.3"
+    which-boxed-primitive "^1.0.2"
 
 undici-types@~5.26.4:
   version "5.26.5"
