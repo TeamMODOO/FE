@@ -8,7 +8,7 @@ export const Message = ({ message }: { message: ChattingType }) => {
           <h1 className="font-bold">{message.user_name}</h1>
           <h1 className="text-sm text-gray-400">{message.create_at}</h1>
         </div>
-        <p className="text-gray-300">{message.chat_text}</p>
+        <p className="text-gray-300">{message.message}</p>
       </div>
     </div>
   );
