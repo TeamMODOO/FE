@@ -12,13 +12,11 @@ const useMainSocketConnect = () => {
     (state) => state.setIsConnected,
   );
 
-  const baseURL = ""; // env
-  const MAIN_SERVER_URL = `${baseURL}/main`;
+  const baseURL = process.env.NEXT_PUBLIC_BASE_URL;
 
   useEffect(() => {
-    return; // 수정 필요
-    const newMainSocket = io(MAIN_SERVER_URL, {
-      path: "/main/socket.io",
+    const newMainSocket = io(baseURL, {
+      path: process.env.NEXT_APP_SOCKET_PATH,
     });
 
     newMainSocket?.on("connect", () => {
