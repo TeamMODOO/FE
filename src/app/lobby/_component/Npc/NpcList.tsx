@@ -1,12 +1,13 @@
 "use client";
 
 import NextImage from "next/image";
-import { NpcListProps } from "../_model/Npc";
+
+import { NpcListProps } from "../../_model/Npc";
+import Style from "./NpcList.style";
 
 function NpcList({ npcs }: NpcListProps) {
   return (
-    // zIndex를 높게 (예: 9)
-    <div style={{ position: "absolute", top: 0, left: 0, zIndex: 9 }}>
+    <div className={Style.container}>
       {npcs.map((npc, idx) => (
         <div
           key={`npc-${idx}`}
@@ -16,8 +17,8 @@ function NpcList({ npcs }: NpcListProps) {
             top: npc.y,
             width: npc.width,
             height: npc.height,
-            textAlign: "center",
           }}
+          className={Style.npcItem}
         >
           <NextImage
             src={npc.image}
@@ -26,16 +27,7 @@ function NpcList({ npcs }: NpcListProps) {
             height={npc.height}
             priority
           />
-          <div
-            style={{
-              color: "yellow",
-              fontWeight: "bold",
-              fontSize: 14,
-              textAlign: "center",
-            }}
-          >
-            NPC {idx + 1}
-          </div>
+          <div className={Style.npcLabel}>NPC {idx + 1}</div>
         </div>
       ))}
     </div>

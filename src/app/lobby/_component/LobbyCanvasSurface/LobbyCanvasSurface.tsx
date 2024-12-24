@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { LobbyCanvasSurfaceProps } from "../_model/LobbyCanvasSurface";
-import { MAP_CONSTANTS } from "../data/config";
+
+import { LobbyCanvasSurfaceProps } from "../../_model/LobbyCanvasSurface";
+import { MAP_CONSTANTS } from "../../data/config";
+import Style from "./LobbyCanvasSurface.style";
 
 function LobbyCanvasSurface({
   canvasRef,
@@ -24,7 +26,6 @@ function LobbyCanvasSurface({
     const loop = (currentTime: number) => {
       const delta = currentTime - lastFrameTime;
       if (delta >= FRAME_INTERVAL) {
-        // 실제 그리기
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         renderCanvas(ctx, canvas);
         lastFrameTime = currentTime;
@@ -34,20 +35,16 @@ function LobbyCanvasSurface({
 
     requestAnimationRef.current = requestAnimationFrame(loop);
     return () => {
-      if (requestAnimationRef.current)
+      if (requestAnimationRef.current) {
         cancelAnimationFrame(requestAnimationRef.current);
+      }
     };
   }, [canvasRef, renderCanvas, users]);
 
   return (
     <canvas
       ref={canvasRef}
-      style={{
-        position: "absolute",
-        top: 0,
-        left: 0,
-        zIndex: 2, // NPC/포탈보다 뒤
-      }}
+      className={Style.canvasClass}
       width={MAP_CONSTANTS.CANVAS_WIDTH}
       height={MAP_CONSTANTS.CANVAS_HEIGHT}
     />

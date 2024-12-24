@@ -4,18 +4,18 @@ import { useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 
 import useThrottle from "@/hooks/useThrottle"; // 실제 경로
-import { NpcInfo } from "../_model/Npc";
-import { PortalInfo } from "../_model/Portal";
-import { User } from "../_model/User";
+
+import { NpcInfo } from "../../_model/Npc";
+import { PortalInfo } from "../../_model/Portal";
+import { User } from "../../_model/User";
+import { MAP_CONSTANTS } from "../../data/config";
+import LobbyCanvasSurface from "../LobbyCanvasSurface/LobbyCanvasSurface";
+import NpcList from "../Npc/NpcList";
+import { NpcModal } from "../Npc/NpcModal"; // NPC 모달 컴포넌트
+import PortalList from "../Portal/PortalList";
+// ★ Tailwind 스타일 임포트
 import Style from "./Canvas.style";
 import characterImages from "./CharacterArray";
-import { NpcModal } from "./NpcModal"; // NPC 모달 컴포넌트
-// ↑ 예: PortalInfo, NpcInfo, User 등을 한 곳에 정리해두고 import
-
-import { MAP_CONSTANTS } from "../data/config";
-import LobbyCanvasSurface from "./LobbyCanvasSurface";
-import NpcList from "./NpcList";
-import PortalList from "./PortalList";
 
 // ---------------------------
 // 포탈 정보
@@ -69,9 +69,7 @@ const npcs: NpcInfo[] = [
   },
 ];
 
-// ---------------------------
 // 메인 로비 캔버스 컴포넌트
-// ---------------------------
 const LobbyCanvas: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const router = useRouter();
@@ -85,7 +83,7 @@ const LobbyCanvas: React.FC = () => {
     [key: string]: HTMLImageElement;
   }>({});
 
-  // 유저(내 캐릭터 포함) 더미
+  // 유저 데이터(내 캐릭터 포함)
   const [users, setUsers] = useState<User[]>([
     {
       id: "1",
@@ -117,9 +115,9 @@ const LobbyCanvas: React.FC = () => {
     },
   ]);
 
-  const myCharacterIndex = 1; // 내 캐릭터는 users[1]이라고 가정
+  const myCharacterIndex = 1;
 
-  // 키 입력 상태
+  // 키 입력
   const [pressedKeys, setPressedKeys] = useState<Record<string, boolean>>({});
   const throttledPressedKeys = useThrottle(pressedKeys, 50);
 
@@ -133,9 +131,7 @@ const LobbyCanvas: React.FC = () => {
 
   const isAnyModalOpen = npc1ModalOpen || npc2ModalOpen || npc3ModalOpen;
 
-  // ---------------------------
   // 포탈 충돌 체크
-  // ---------------------------
   const getPortalRouteIfOnPortal = (): string | null => {
     const myChar = users[myCharacterIndex];
     const [cl, cr, ct, cb] = [
@@ -157,9 +153,7 @@ const LobbyCanvas: React.FC = () => {
     return null;
   };
 
-  // ---------------------------
   // NPC 충돌 체크
-  // ---------------------------
   const getNpcIndexIfOnNpc = (): number | null => {
     const myChar = users[myCharacterIndex];
     const [cl, cr, ct, cb] = [
@@ -182,9 +176,7 @@ const LobbyCanvas: React.FC = () => {
     return null;
   };
 
-  // ---------------------------
   // 캐릭터 이동 로직
-  // ---------------------------
   useEffect(() => {
     if (isAnyModalOpen) return;
     const updated = [...users];
@@ -213,9 +205,7 @@ const LobbyCanvas: React.FC = () => {
     setUsers(updated);
   }, [throttledPressedKeys, isAnyModalOpen]);
 
-  // ---------------------------
   // 배경 이미지 로드
-  // ---------------------------
   useEffect(() => {
     if (!canvasRef.current) return;
     const canvas = canvasRef.current;
@@ -227,9 +217,7 @@ const LobbyCanvas: React.FC = () => {
     bg.onload = () => setBackgroundImage(bg);
   }, []);
 
-  // ---------------------------
   // 캐릭터 이미지 로드
-  // ---------------------------
   useEffect(() => {
     const entries = Object.entries(characterImages);
     if (entries.length === 0) return;
@@ -251,15 +239,13 @@ const LobbyCanvas: React.FC = () => {
     });
   }, []);
 
-  // ---------------------------
   // 키 이벤트
-  // ---------------------------
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (isAnyModalOpen) return;
       setPressedKeys((prev) => ({ ...prev, [e.key]: true }));
 
-      // 스페이스바로 포탈 / NPC 상호작용
+      // 스페이스바 → 포탈 / NPC 상호작용
       if (e.key === " ") {
         const portalRoute = getPortalRouteIfOnPortal();
         if (portalRoute) {
@@ -288,9 +274,7 @@ const LobbyCanvas: React.FC = () => {
     };
   }, [isAnyModalOpen]);
 
-  // ---------------------------
-  // LobbyCanvasSurface 에 넘길 실제 draw 로직
-  // ---------------------------
+  // 실제 draw 로직 (LobbyCanvasSurface용)
   const renderCanvas = (
     ctx: CanvasRenderingContext2D,
     _canvas: HTMLCanvasElement,
@@ -304,7 +288,6 @@ const LobbyCanvas: React.FC = () => {
         MAP_CONSTANTS.CANVAS_HEIGHT,
       );
     }
-
     // 캐릭터들
     users.forEach((user, idx) => {
       const charImg = loadedCharacterImages[user.characterType];
@@ -375,14 +358,7 @@ const LobbyCanvas: React.FC = () => {
       </NpcModal>
 
       {/* 전체 화면 */}
-      <div
-        className={Style.canvasContainerClass}
-        style={{
-          position: "relative",
-          width: MAP_CONSTANTS.CANVAS_WIDTH,
-          height: MAP_CONSTANTS.CANVAS_HEIGHT,
-        }}
-      >
+      <div className={Style.canvasContainerClass}>
         {/* 포탈 UI */}
         <PortalList portals={portals} />
 
