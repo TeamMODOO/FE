@@ -1,9 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
+import { useMovementSocket } from "@/hooks/useMovementSocket";
 import useThrottle from "@/hooks/useThrottle";
+import useMainSocketStore from "@/store/useMainSocketStore";
 
 import { NoticeItem } from "../../_model/NoticeBoard";
 import { NpcInfo } from "../../_model/Npc";
@@ -33,7 +35,7 @@ const getTodayString = () => {
 };
 
 // ---------------------------
-// 포탈 정보
+// 포탈 정보 (예시)
 // ---------------------------
 const portals: PortalInfo[] = [
   {
@@ -55,7 +57,7 @@ const portals: PortalInfo[] = [
 ];
 
 // ---------------------------
-// NPC 정보
+// NPC 정보 (예시)
 // ---------------------------
 const npcs: NpcInfo[] = [
   {
@@ -113,31 +115,36 @@ const LobbyCanvas: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const router = useRouter();
 
-  // ---------------------------
+  const isSocketConnected = useMainSocketStore((state) => state.isConnected);
+
+  // 소켓 훅 (roomId, userId) - 프로토콜 바뀐 부분은 훅 내부에서 처리
+  const { movementLogs, emitMovement } = useMovementSocket({
+    roomId: "floor07",
+    userId: "1",
+  });
+
   // 1) 배경 / 캐릭터 로드
-  // ---------------------------
   const [backgroundImage, setBackgroundImage] =
     useState<HTMLImageElement | null>(null);
+
   const [loadedCharacterImages, setLoadedCharacterImages] = useState<
     Record<string, HTMLImageElement>
   >({});
 
-  // ---------------------------
   // 2) 유저 데이터
-  // ---------------------------
   const [users, setUsers] = useState<User[]>([
     {
       id: "1",
-      x: 850,
-      y: 350,
-      characterType: "character1",
+      x: 550,
+      y: 450,
+      characterType: "character2",
       nickname: "정글러1",
     },
     {
       id: "2",
       x: 600,
       y: 500,
-      characterType: "character2",
+      characterType: "character1",
       nickname: "정글러2",
     },
     {
@@ -155,32 +162,42 @@ const LobbyCanvas: React.FC = () => {
       nickname: "정글러4",
     },
   ]);
-  const myCharacterIndex = 1;
 
-  // ---------------------------
+  // 내 유저 ID
+  const myUserId = "1";
+  const myCharacterIndex = users.findIndex((u) => u.id === myUserId);
+
   // 3) 키 입력 & 이동
-  // ---------------------------
   const [pressedKeys, setPressedKeys] = useState<Record<string, boolean>>({});
-  const throttledPressedKeys = useThrottle(pressedKeys, 50);
+  const throttledPressedKeys = useThrottle(pressedKeys, 100);
   const [isFacingRight, setIsFacingRight] = useState(false);
 
-  // ---------------------------
   // 4) 모달 제어 (NPC1,2,3 + Notice)
-  // ---------------------------
   const [npc1ModalOpen, setNpc1ModalOpen] = useState(false);
   const [npc2ModalOpen, setNpc2ModalOpen] = useState(false);
   const [npc3ModalOpen, setNpc3ModalOpen] = useState(false);
   const [noticeModalOpen, setNoticeModalOpen] = useState(false);
 
-  // ---------------------------
-  // 공지사항(게시판)
-  // ---------------------------
+  // 공지사항(게시판) (예시)
   const [noticeList, setNoticeList] = useState<NoticeItem[]>([
     { id: 1, name: "운영자", message: "처음 오신 분들 환영합니다!" },
     { id: 2, name: "Alice", message: "안녕하세요! 반갑습니다." },
   ]);
   const [writerName, setWriterName] = useState("");
   const [writerMessage, setWriterMessage] = useState("");
+
+  // ... (NPC1, NPC2, NPC3 모달 등 - 생략하지 않고 그대로 유지)
+  // ...
+  const [dailyProblem, setDailyProblem] = useState<{
+    id: number;
+    title: string;
+    link: string;
+  } | null>(null);
+
+  const [isProblemSolved, setIsProblemSolved] = useState(false);
+  const [dailySolvedUsers, setDailySolvedUsers] = useState<SolvedUser[]>([]);
+  const [selectedQnaIndex, setSelectedQnaIndex] = useState<number | null>(null);
+
   const handleAddNotice = () => {
     if (!writerName.trim() || !writerMessage.trim()) return;
     setNoticeList((prev) => [
@@ -191,30 +208,12 @@ const LobbyCanvas: React.FC = () => {
     setWriterMessage("");
   };
 
-  // ---------------------------
-  // (NPC1) 오늘의 문제
-  // ---------------------------
-  const [dailyProblem, setDailyProblem] = useState<{
-    id: number;
-    title: string;
-    link: string;
-  } | null>(null);
-  const [isProblemSolved, setIsProblemSolved] = useState(false);
-
-  // (NPC2) 오늘 문제 푼 유저
-  const [dailySolvedUsers, setDailySolvedUsers] = useState<SolvedUser[]>([]);
-
-  // (NPC3) QnA
-  const [selectedQnaIndex, setSelectedQnaIndex] = useState<number | null>(null);
   const handleQnaClick = (index: number) => {
     setSelectedQnaIndex((prev) => (prev === index ? null : index));
   };
 
-  // ---------------------------
-  // 5) 서버에서 데이터 불러오기 (예시)
-  // ---------------------------
+  // 서버에서 데이터 불러오기 (예시)
   const fetchDataFromServer = async () => {
-    // 예시로 하드코딩
     setDailyProblem({
       id: 1018,
       title: "체스판 다시 칠하기",
@@ -240,9 +239,6 @@ const LobbyCanvas: React.FC = () => {
     fetchDataFromServer();
   }, []);
 
-  // ---------------------------
-  // "풀었어요" 버튼
-  // ---------------------------
   const handleSolveDailyProblem = () => {
     if (!dailyProblem) return;
     setIsProblemSolved(true);
@@ -251,31 +247,23 @@ const LobbyCanvas: React.FC = () => {
     setDailySolvedUsers((prev) => [
       ...prev,
       {
-        userId: users[myCharacterIndex].id,
-        nickname: users[myCharacterIndex].nickname,
+        userId: myUserId,
+        nickname: users[myCharacterIndex]?.nickname || "Unknown",
         solvedProblemId: dailyProblem.id,
         solvedDate: getTodayString(),
       },
     ]);
   };
 
-  // ---------------------------
-  // 전체 모달 열려있는지 (캐릭터 이동 제어)
-  // ---------------------------
   const isAnyModalOpen =
     npc1ModalOpen || npc2ModalOpen || npc3ModalOpen || noticeModalOpen;
 
   // ---------------------------
-  // 포탈 / NPC 충돌 체크
+  // 포탈 / NPC 충돌 체크 (생략 없이 유지)
   // ---------------------------
   const getPortalRouteIfOnPortal = (): string | null => {
-    const myChar = users[myCharacterIndex];
-    const [cl, cr, ct, cb] = [
-      myChar.x,
-      myChar.x + 50,
-      myChar.y,
-      myChar.y + 150,
-    ];
+    const me = users[myCharacterIndex];
+    const [cl, cr, ct, cb] = [me.x, me.x + 50, me.y, me.y + 150];
     for (const portal of portals) {
       const [pl, pr, pt, pb] = [
         portal.x,
@@ -290,13 +278,8 @@ const LobbyCanvas: React.FC = () => {
   };
 
   const getNpcIndexIfOnNpc = (): number | null => {
-    const myChar = users[myCharacterIndex];
-    const [cl, cr, ct, cb] = [
-      myChar.x,
-      myChar.x + 50,
-      myChar.y,
-      myChar.y + 150,
-    ];
+    const me = users[myCharacterIndex];
+    const [cl, cr, ct, cb] = [me.x, me.x + 50, me.y, me.y + 150];
     for (let i = 0; i < npcs.length; i++) {
       const npc = npcs[i];
       const [nl, nr, nt, nb] = [
@@ -316,72 +299,94 @@ const LobbyCanvas: React.FC = () => {
   // ---------------------------
   useEffect(() => {
     if (isAnyModalOpen) return;
+    if (myCharacterIndex < 0) return;
 
     const updated = [...users];
     const me = updated[myCharacterIndex];
+    let moved = false;
 
-    // --- Up ---
-    if (
-      (throttledPressedKeys["w"] ||
-        throttledPressedKeys["W"] ||
-        throttledPressedKeys["ㅈ"] ||
-        throttledPressedKeys["ArrowUp"]) &&
-      me.y > 0
-    ) {
-      me.y -= MAP_CONSTANTS.SPEED;
+    // Up
+    if (throttledPressedKeys["w"] || throttledPressedKeys["ArrowUp"]) {
+      if (me.y > 0) {
+        me.y -= MAP_CONSTANTS.SPEED;
+        moved = true;
+      }
     }
-    // --- Left ---
-    if (
-      (throttledPressedKeys["a"] ||
-        throttledPressedKeys["A"] ||
-        throttledPressedKeys["ㅁ"] ||
-        throttledPressedKeys["ArrowLeft"]) &&
-      me.x > 0
-    ) {
-      me.x -= MAP_CONSTANTS.SPEED;
-      setIsFacingRight(false);
+    // Left
+    if (throttledPressedKeys["a"] || throttledPressedKeys["ArrowLeft"]) {
+      if (me.x > 0) {
+        me.x -= MAP_CONSTANTS.SPEED;
+        setIsFacingRight(false);
+        moved = true;
+      }
     }
-    // --- Down ---
-    if (
-      (throttledPressedKeys["s"] ||
-        throttledPressedKeys["S"] ||
-        throttledPressedKeys["ㄴ"] ||
-        throttledPressedKeys["ArrowDown"]) &&
-      me.y < MAP_CONSTANTS.CANVAS_HEIGHT - MAP_CONSTANTS.IMG_HEIGHT
-    ) {
-      me.y += MAP_CONSTANTS.SPEED;
+    // Down
+    if (throttledPressedKeys["s"] || throttledPressedKeys["ArrowDown"]) {
+      if (me.y < MAP_CONSTANTS.CANVAS_HEIGHT - MAP_CONSTANTS.IMG_HEIGHT) {
+        me.y += MAP_CONSTANTS.SPEED;
+        moved = true;
+      }
     }
-    // --- Right ---
-    if (
-      (throttledPressedKeys["d"] ||
-        throttledPressedKeys["D"] ||
-        throttledPressedKeys["ㅇ"] ||
-        throttledPressedKeys["ArrowRight"]) &&
-      me.x < MAP_CONSTANTS.CANVAS_WIDTH - MAP_CONSTANTS.IMG_WIDTH
-    ) {
-      me.x += MAP_CONSTANTS.SPEED;
-      setIsFacingRight(true);
+    // Right
+    if (throttledPressedKeys["d"] || throttledPressedKeys["ArrowRight"]) {
+      if (me.x < MAP_CONSTANTS.CANVAS_WIDTH - MAP_CONSTANTS.IMG_WIDTH) {
+        me.x += MAP_CONSTANTS.SPEED;
+        setIsFacingRight(true);
+        moved = true;
+      }
     }
 
-    setUsers(updated);
-  }, [throttledPressedKeys, isAnyModalOpen]);
+    if (moved) {
+      setUsers(updated);
+      // emitMovement에 int로 position_x, position_y 전송
+      emitMovement(me.x, me.y);
+    }
+  }, [throttledPressedKeys, isAnyModalOpen, myCharacterIndex]);
 
   // ---------------------------
-  // 스페이스바로 포탈 / NPC
+  // 서버에서 Movement 이벤트 수신 -> users 업데이트
+  // ---------------------------
+  useEffect(() => {
+    if (movementLogs.length === 0) return;
+
+    // movementLogs 맨 마지막 이벤트만 반영 (또는 전체 순회 가능)
+    const latest = movementLogs[movementLogs.length - 1];
+    const { user_id, position_x, position_y } = latest;
+
+    // 내 userId와 같다면, 이미 위에서 처리했으므로 굳이 중복 반영 안 해도 됨
+    if (user_id === myUserId) return;
+
+    // user_id를 가진 유저 찾기
+    setUsers((prev) => {
+      const updated = [...prev];
+      const targetIndex = updated.findIndex((u) => u.id === user_id);
+      if (targetIndex >= 0) {
+        updated[targetIndex] = {
+          ...updated[targetIndex],
+          x: position_x,
+          y: position_y,
+        };
+      }
+      return updated;
+    });
+  }, [movementLogs, myUserId]);
+
+  // ---------------------------
+  // 스페이스바: 포탈 / NPC 상호작용
   // ---------------------------
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
+      if (!isSocketConnected) return;
       if (isAnyModalOpen) return;
-      setPressedKeys((prev) => ({ ...prev, [e.key]: true }));
+      if (myCharacterIndex < 0) return;
 
+      // 키 Pressed
       if (e.key === " ") {
-        // 포탈
         const portalRoute = getPortalRouteIfOnPortal();
         if (portalRoute) {
           router.push(portalRoute);
           return;
         }
-        // NPC
         const npcIndex = getNpcIndexIfOnNpc();
         if (npcIndex !== null) {
           if (npcIndex === 0) setNpc1ModalOpen(true);
@@ -390,6 +395,9 @@ const LobbyCanvas: React.FC = () => {
           else if (npcIndex === 3) setNoticeModalOpen(true);
         }
       }
+
+      // 기타 방향키 등 기록
+      setPressedKeys((prev) => ({ ...prev, [e.key]: true }));
     };
 
     const onKeyUp = (e: KeyboardEvent) => {
@@ -399,11 +407,18 @@ const LobbyCanvas: React.FC = () => {
 
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("keyup", onKeyUp);
+
     return () => {
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("keyup", onKeyUp);
     };
-  }, [isAnyModalOpen]);
+  }, [
+    isSocketConnected,
+    isAnyModalOpen,
+    myCharacterIndex,
+    throttledPressedKeys,
+    users,
+  ]);
 
   // ---------------------------
   // 배경 이미지 로드
@@ -444,12 +459,13 @@ const LobbyCanvas: React.FC = () => {
   }, []);
 
   // ---------------------------
-  // 캔버스 그리기 (LobbyCanvasSurface)
+  // 실제 캔버스 렌더 (LobbyCanvasSurface)
   // ---------------------------
   const renderCanvas = (
     ctx: CanvasRenderingContext2D,
     _canvas: HTMLCanvasElement,
   ) => {
+    // 배경
     if (backgroundImage) {
       ctx.drawImage(
         backgroundImage,
@@ -459,11 +475,15 @@ const LobbyCanvas: React.FC = () => {
         MAP_CONSTANTS.CANVAS_HEIGHT,
       );
     }
-    users.forEach((user, idx) => {
+
+    // 모든 유저 캐릭터
+    users.forEach((user) => {
       const charImg = loadedCharacterImages[user.characterType];
       if (!charImg) return;
 
-      const facingRight = idx === myCharacterIndex ? isFacingRight : false;
+      // 내 캐릭터인지 체크
+      const isMe = user.id === myUserId;
+      const facingRight = isMe ? isFacingRight : false;
 
       ctx.save();
       if (facingRight) {
@@ -490,7 +510,7 @@ const LobbyCanvas: React.FC = () => {
       }
       ctx.restore();
 
-      // 닉네임
+      // 닉네임 표시
       ctx.font = "bold 12px Arial";
       ctx.fillStyle = "white";
       ctx.textAlign = "center";
@@ -503,11 +523,11 @@ const LobbyCanvas: React.FC = () => {
   };
 
   // ---------------------------
-  // 최종 렌더
+  // 리턴 (모달/포탈/NPC 로직은 그대로)
   // ---------------------------
   return (
     <>
-      {/* NPC1: 오늘의 문제 모달 */}
+      {/* NPC1 모달 */}
       <NpcModal
         isOpen={npc1ModalOpen}
         onClose={() => setNpc1ModalOpen(false)}
@@ -520,7 +540,7 @@ const LobbyCanvas: React.FC = () => {
         />
       </NpcModal>
 
-      {/* NPC2: 문제 푼 유저 모달 */}
+      {/* NPC2 모달 */}
       <NpcModal
         isOpen={npc2ModalOpen}
         onClose={() => setNpc2ModalOpen(false)}
@@ -532,7 +552,7 @@ const LobbyCanvas: React.FC = () => {
         />
       </NpcModal>
 
-      {/* NPC3: QnA 모달 */}
+      {/* NPC3 모달 */}
       <NpcModal
         isOpen={npc3ModalOpen}
         onClose={() => setNpc3ModalOpen(false)}
@@ -557,10 +577,12 @@ const LobbyCanvas: React.FC = () => {
         handleAddNotice={handleAddNotice}
       />
 
-      {/* 실제 로비 화면 */}
+      {/* 로비 화면 */}
       <div className={Style.canvasContainerClass}>
         <PortalList portals={portals} />
         <NpcList npcs={npcs} />
+
+        {/* Canvas */}
         <LobbyCanvasSurface
           canvasRef={canvasRef}
           renderCanvas={renderCanvas}
