@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { io, Socket } from "socket.io-client";
 
 import useMainSocketStore from "@/store/useMainSocketStore";
+import useUsersStore from "@/store/useUsersStore";
 
 const useMainSocketConnect = () => {
   const mainSocketRef = useRef<Socket | null>(null);
@@ -13,6 +14,8 @@ const useMainSocketConnect = () => {
   );
 
   // const baseURL = process.env.NEXT_PUBLIC_BASE_URL;
+
+  const updateUserPosition = useUsersStore((state) => state.updateUserPosition);
 
   useEffect(() => {
     // const newMainSocket = io(baseURL, {
@@ -39,15 +42,20 @@ const useMainSocketConnect = () => {
       // console.log("Main Socket disconnected", reason);
     });
 
+    newMainSocket.on("movement", (data) => {
+      updateUserPosition(data.userId, data.position_x, data.position_y);
+    });
+
     return () => {
       setMainSocket(null);
       setMainSocketIsConnected(false);
       mainSocketRef.current?.off("connect");
       mainSocketRef.current?.off("connect_error");
       mainSocketRef.current?.off("disconnect");
+      mainSocketRef.current?.off("movement");
       mainSocketRef.current?.disconnect();
       // console.log("End Socket Connection!");
     };
-  }, []);
+  }, [setMainSocket, setMainSocketIsConnected, updateUserPosition]);
 };
 export default useMainSocketConnect;
