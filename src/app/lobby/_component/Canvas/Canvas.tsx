@@ -5,7 +5,6 @@ import { useEffect, useRef, useState } from "react";
 
 import { useMovementSocket } from "@/hooks/useMovementSocket";
 import useThrottle from "@/hooks/useThrottle";
-import useMainSocketStore from "@/store/useMainSocketStore";
 
 import { NoticeItem } from "../../_model/NoticeBoard";
 import { NpcInfo } from "../../_model/Npc";
@@ -115,7 +114,7 @@ const LobbyCanvas: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const router = useRouter();
 
-  const isSocketConnected = useMainSocketStore((state) => state.isConnected);
+  // const isSocketConnected = useMainSocketStore((state) => state.isConnected);
 
   // 소켓 훅 (roomId, userId) - 프로토콜 바뀐 부분은 훅 내부에서 처리
   const { movementLogs, emitMovement } = useMovementSocket({
@@ -376,7 +375,7 @@ const LobbyCanvas: React.FC = () => {
   // ---------------------------
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      if (!isSocketConnected) return;
+      // if (!isSocketConnected) return;
       if (isAnyModalOpen) return;
       if (myCharacterIndex < 0) return;
 
@@ -413,7 +412,7 @@ const LobbyCanvas: React.FC = () => {
       window.removeEventListener("keyup", onKeyUp);
     };
   }, [
-    isSocketConnected,
+    // isSocketConnected,
     isAnyModalOpen,
     myCharacterIndex,
     throttledPressedKeys,
