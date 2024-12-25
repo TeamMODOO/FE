@@ -1,20 +1,22 @@
+// components/LobbyCanvas.tsx
 "use client";
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
-// ------------ (원래 훅) -------------
-import { useMovementSocket } from "@/hooks/useMovementSocket"; // 필요하다면 (예: emitMovement)
-import useThrottle from "@/hooks/useThrottle"; // 필요하다면
-// ------------ (Zustand) -------------
+// (2) 로비 전용 소켓 로직 (emitMovement + 이벤트 구독)
+import useLobbySocketEvents from "@/hooks/useLobbySocketEvents";
+// (1) 공통 소켓 연결
+import useMainSocketConnect from "@/hooks/useMainSocketConnect";
+// (3) Zustand (유저 스토어)
 import useUsersStore from "@/store/useUsersStore";
 
-// -----------------------------------
 import { NoticeItem } from "../../_model/NoticeBoard";
 import { NpcInfo } from "../../_model/Npc";
 import { PortalInfo } from "../../_model/Portal";
 import { QNA_LIST } from "../../data/qna";
 import DailyProblemContent from "../DailyProblem/DailyProblemContent";
+// 기타 import (모달, NPC, 포탈 등)
 import { MAP_CONSTANTS } from "../MapConstants";
 import NoticeBoardModal from "../NoticeBoardModal/NoticeBoardModal";
 import NpcList from "../Npc/NpcList";
@@ -25,9 +27,6 @@ import SolvedUsersContent from "../SolvedUsers/SolvedUsersContent";
 import Style from "./Canvas.style";
 import characterImages from "./CharacterArray";
 
-// -----------------------------------
-
-/** 오늘 날짜 구하는 유틸 */
 const getTodayString = () => {
   const d = new Date();
   const mm = String(d.getMonth() + 1).padStart(2, "0");
@@ -107,32 +106,25 @@ const LobbyCanvas: React.FC = () => {
   const router = useRouter();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  // -------------------------------------
-  // 1) Zustand users (React 구독 x)
-  // -------------------------------------
-  const myUserId = "1";
+  // 1) 공통 소켓 연결 (한 번만 있으면 되므로,
+  //    _app.tsx나 Layout에 배치해도 OK. 여기선 예시로 사용)
+  useMainSocketConnect();
 
-  // -------------------------------------
-  // 2) 소켓 훅 (필요하면 사용)
-  // -------------------------------------
-  const { movementLogs, emitMovement } = useMovementSocket({
+  // 2) 로비 전용 이벤트 + emitMovement
+  const myUserId = "1";
+  const { emitMovement } = useLobbySocketEvents({
     roomId: "floor07",
     userId: myUserId,
   });
 
-  // -------------------------------------
-  // 3) 배경 / 캐릭터 로드
-  // -------------------------------------
+  // 3) 배경 / 캐릭터 이미지 로드
   const [backgroundImage, setBackgroundImage] =
     useState<HTMLImageElement | null>(null);
-
   const [loadedCharacterImages, setLoadedCharacterImages] = useState<
     Record<string, HTMLImageElement>
   >({});
 
-  // -------------------------------------
-  // 4) 모달 제어 (NPC1,2,3 + Notice)
-  // -------------------------------------
+  // -------- 모달/공지사항/QnA 관련 --------
   const [npc1ModalOpen, setNpc1ModalOpen] = useState(false);
   const [npc2ModalOpen, setNpc2ModalOpen] = useState(false);
   const [npc3ModalOpen, setNpc3ModalOpen] = useState(false);
@@ -145,9 +137,17 @@ const LobbyCanvas: React.FC = () => {
   const [writerName, setWriterName] = useState("");
   const [writerMessage, setWriterMessage] = useState("");
 
-  // -------------------------------------
-  // 5) 일일 문제, QnA, 풀이 유저
-  // -------------------------------------
+  const handleAddNotice = () => {
+    if (!writerName.trim() || !writerMessage.trim()) return;
+    setNoticeList((prev) => [
+      ...prev,
+      { id: prev.length + 1, name: writerName, message: writerMessage },
+    ]);
+    setWriterName("");
+    setWriterMessage("");
+  };
+
+  // -------- 일일 문제 & 풀이 유저 --------
   const [dailyProblem, setDailyProblem] = useState<{
     id: number;
     title: string;
@@ -162,19 +162,8 @@ const LobbyCanvas: React.FC = () => {
     setSelectedQnaIndex((prev) => (prev === index ? null : index));
   };
 
-  /** 공지사항 작성 */
-  const handleAddNotice = () => {
-    if (!writerName.trim() || !writerMessage.trim()) return;
-    setNoticeList((prev) => [
-      ...prev,
-      { id: prev.length + 1, name: writerName, message: writerMessage },
-    ]);
-    setWriterName("");
-    setWriterMessage("");
-  };
-
-  /** 서버에서 데이터 불러오기 (예시) */
   const fetchDataFromServer = async () => {
+    // ex) 서버에서 문제/풀이 유저 불러오기
     setDailyProblem({
       id: 1018,
       title: "체스판 다시 칠하기",
@@ -200,13 +189,11 @@ const LobbyCanvas: React.FC = () => {
     fetchDataFromServer();
   }, []);
 
-  /** 일일 문제 풀이 */
   const handleSolveDailyProblem = () => {
     if (!dailyProblem) return;
     setIsProblemSolved(true);
-    alert(`우와~! 대단해요! 문제 #${dailyProblem.id}를 푸셨군요!`);
+    alert(`문제 #${dailyProblem.id}를 푸셨군요!`);
 
-    // 현재 유저 id, nickname 가져오기 (Zustand에서)
     const usersState = useUsersStore.getState().users;
     const me = usersState.find((u) => u.id === myUserId);
 
@@ -221,16 +208,14 @@ const LobbyCanvas: React.FC = () => {
     ]);
   };
 
-  /** 모달이 하나라도 열려있나? */
+  // 모달 열려있으면 이동 막기
   const isAnyModalOpen =
     npc1ModalOpen || npc2ModalOpen || npc3ModalOpen || noticeModalOpen;
 
-  // -------------------------------------
-  // 6) 포탈 / NPC 충돌 체크
-  // -------------------------------------
+  // -------- 포탈 / NPC 충돌 체크 --------
   const getPortalRouteIfOnPortal = (): string | null => {
-    const usersState = useUsersStore.getState().users;
-    const me = usersState.find((u) => u.id === myUserId);
+    const { users } = useUsersStore.getState();
+    const me = users.find((u) => u.id === myUserId);
     if (!me) return null;
 
     const [cl, cr, ct, cb] = [me.x, me.x + 50, me.y, me.y + 150];
@@ -248,8 +233,8 @@ const LobbyCanvas: React.FC = () => {
   };
 
   const getNpcIndexIfOnNpc = (): number | null => {
-    const usersState = useUsersStore.getState().users;
-    const me = usersState.find((u) => u.id === myUserId);
+    const { users } = useUsersStore.getState();
+    const me = users.find((u) => u.id === myUserId);
     if (!me) return null;
 
     const [cl, cr, ct, cb] = [me.x, me.x + 50, me.y, me.y + 150];
@@ -267,41 +252,37 @@ const LobbyCanvas: React.FC = () => {
     return null;
   };
 
-  // -------------------------------------
-  // 7) 키 입력 & 이동 (내 캐릭터만)
-  // -------------------------------------
+  // -------- 키 입력 & 이동 --------
   const [pressedKeys, setPressedKeys] = useState<Record<string, boolean>>({});
-  const throttledPressedKeys = useThrottle(pressedKeys, 100);
   const [isFacingRight, setIsFacingRight] = useState(false);
 
   useEffect(() => {
     if (isAnyModalOpen) return;
 
-    const usersState = useUsersStore.getState().users;
-    const meIndex = usersState.findIndex((u) => u.id === myUserId);
+    const { users, updateUserPosition } = useUsersStore.getState();
+    const meIndex = users.findIndex((u) => u.id === myUserId);
     if (meIndex < 0) return;
 
-    let { x, y } = usersState[meIndex];
+    let { x, y } = users[meIndex];
     let moved = false;
 
-    // Up
+    // 예시: w, a, s, d (대소문자 + 한글 자판), arrow
     if (
-      throttledPressedKeys["w"] ||
-      throttledPressedKeys["W"] ||
-      throttledPressedKeys["ㅈ"] ||
-      throttledPressedKeys["ArrowUp"]
+      pressedKeys["w"] ||
+      pressedKeys["W"] ||
+      pressedKeys["ㅈ"] ||
+      pressedKeys["ArrowUp"]
     ) {
       if (y > 0) {
         y -= MAP_CONSTANTS.SPEED;
         moved = true;
       }
     }
-    // Left
     if (
-      throttledPressedKeys["a"] ||
-      throttledPressedKeys["A"] ||
-      throttledPressedKeys["ㅁ"] ||
-      throttledPressedKeys["ArrowLeft"]
+      pressedKeys["a"] ||
+      pressedKeys["A"] ||
+      pressedKeys["ㅁ"] ||
+      pressedKeys["ArrowLeft"]
     ) {
       if (x > 0) {
         x -= MAP_CONSTANTS.SPEED;
@@ -309,24 +290,22 @@ const LobbyCanvas: React.FC = () => {
         moved = true;
       }
     }
-    // Down
     if (
-      throttledPressedKeys["s"] ||
-      throttledPressedKeys["S"] ||
-      throttledPressedKeys["ㄴ"] ||
-      throttledPressedKeys["ArrowDown"]
+      pressedKeys["s"] ||
+      pressedKeys["S"] ||
+      pressedKeys["ㄴ"] ||
+      pressedKeys["ArrowDown"]
     ) {
       if (y < MAP_CONSTANTS.CANVAS_HEIGHT - MAP_CONSTANTS.IMG_HEIGHT) {
         y += MAP_CONSTANTS.SPEED;
         moved = true;
       }
     }
-    // Right
     if (
-      throttledPressedKeys["d"] ||
-      throttledPressedKeys["D"] ||
-      throttledPressedKeys["ㅇ"] ||
-      throttledPressedKeys["ArrowRight"]
+      pressedKeys["d"] ||
+      pressedKeys["D"] ||
+      pressedKeys["ㅇ"] ||
+      pressedKeys["ArrowRight"]
     ) {
       if (x < MAP_CONSTANTS.CANVAS_WIDTH - MAP_CONSTANTS.IMG_WIDTH) {
         x += MAP_CONSTANTS.SPEED;
@@ -336,22 +315,22 @@ const LobbyCanvas: React.FC = () => {
     }
 
     if (moved) {
-      useUsersStore.getState().updateUserPosition(myUserId, x, y);
+      // 1) 로컬(전역 store) 위치 업데이트
+      updateUserPosition(myUserId, x, y);
+      // 2) 서버 emitMovement
       emitMovement(x, y);
     }
-  }, [throttledPressedKeys, isAnyModalOpen]);
+  }, [pressedKeys, isAnyModalOpen, emitMovement]);
 
-  // -------------------------------------
-  // 8) 스페이스바 → 포탈/NPC 상호작용
-  // -------------------------------------
+  // -------- 스페이스바 -> 포탈/NPC --------
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (isAnyModalOpen) return;
 
       if (e.key === " ") {
-        const portalRoute = getPortalRouteIfOnPortal();
-        if (portalRoute) {
-          router.push(portalRoute);
+        const route = getPortalRouteIfOnPortal();
+        if (route) {
+          router.push(route);
           return;
         }
         const npcIndex = getNpcIndexIfOnNpc();
@@ -378,9 +357,7 @@ const LobbyCanvas: React.FC = () => {
     };
   }, [isAnyModalOpen]);
 
-  // -------------------------------------
-  // 9) 배경 / 캐릭터 이미지 로드
-  // -------------------------------------
+  // -------- 배경 & 캐릭터 이미지 로드 --------
   useEffect(() => {
     const bg = new Image();
     bg.src = "/background/lobby.webp";
@@ -408,19 +385,17 @@ const LobbyCanvas: React.FC = () => {
     });
   }, []);
 
-  // -------------------------------------
-  // 10) Canvas 렌더링 (requestAnimationFrame + 30fps 제한)
-  // -------------------------------------
+  // -------- Canvas rAF 30fps --------
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+
     canvas.width = MAP_CONSTANTS.CANVAS_WIDTH;
     canvas.height = MAP_CONSTANTS.CANVAS_HEIGHT;
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // 원하는 fps
     const fps = 30;
     const frameDuration = 1000 / fps;
 
@@ -428,25 +403,12 @@ const LobbyCanvas: React.FC = () => {
     let animationId: number;
 
     const render = (time: number) => {
-      // time: requestAnimationFrame으로부터 넘겨받은 현재 시점 (ms)
-
-      // delta 계산
       const delta = time - lastTime;
-
-      // 'frameDuration'이상 지났다면 그리기
       if (delta >= frameDuration) {
         lastTime = time - (delta % frameDuration);
 
-        // == 실제 그리기 로직 ==
-
         // 1) Clear
-        ctx.clearRect(
-          0,
-          0,
-          MAP_CONSTANTS.CANVAS_WIDTH,
-          MAP_CONSTANTS.CANVAS_HEIGHT,
-        );
-
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
         // 2) 배경
         if (backgroundImage) {
           ctx.drawImage(
@@ -457,42 +419,41 @@ const LobbyCanvas: React.FC = () => {
             MAP_CONSTANTS.CANVAS_HEIGHT,
           );
         }
-
-        // 3) 캐릭터들
+        // 3) 캐릭터 (전역 store)
         const { users } = useUsersStore.getState();
         users.forEach((user) => {
           const charImg = loadedCharacterImages[user.characterType];
-          if (charImg) {
-            const isMe = user.id === myUserId;
-            const facingRight = isMe ? isFacingRight : false;
+          if (!charImg) return;
 
-            ctx.save();
-            if (facingRight) {
-              ctx.translate(
-                user.x + MAP_CONSTANTS.IMG_WIDTH / 2,
-                user.y + MAP_CONSTANTS.IMG_HEIGHT / 2,
-              );
-              ctx.scale(-1, 1);
-              ctx.drawImage(
-                charImg,
-                -MAP_CONSTANTS.IMG_WIDTH / 2,
-                -MAP_CONSTANTS.IMG_HEIGHT / 2,
-                MAP_CONSTANTS.IMG_WIDTH,
-                MAP_CONSTANTS.IMG_HEIGHT,
-              );
-            } else {
-              ctx.drawImage(
-                charImg,
-                user.x,
-                user.y,
-                MAP_CONSTANTS.IMG_WIDTH,
-                MAP_CONSTANTS.IMG_HEIGHT,
-              );
-            }
-            ctx.restore();
+          const isMe = user.id === myUserId;
+          const facingRight = isMe ? isFacingRight : false;
+
+          ctx.save();
+          if (facingRight) {
+            ctx.translate(
+              user.x + MAP_CONSTANTS.IMG_WIDTH / 2,
+              user.y + MAP_CONSTANTS.IMG_HEIGHT / 2,
+            );
+            ctx.scale(-1, 1);
+            ctx.drawImage(
+              charImg,
+              -MAP_CONSTANTS.IMG_WIDTH / 2,
+              -MAP_CONSTANTS.IMG_HEIGHT / 2,
+              MAP_CONSTANTS.IMG_WIDTH,
+              MAP_CONSTANTS.IMG_HEIGHT,
+            );
+          } else {
+            ctx.drawImage(
+              charImg,
+              user.x,
+              user.y,
+              MAP_CONSTANTS.IMG_WIDTH,
+              MAP_CONSTANTS.IMG_HEIGHT,
+            );
           }
+          ctx.restore();
 
-          // 닉네임
+          // 닉네임 표시
           ctx.font = "bold 12px Arial";
           ctx.fillStyle = "white";
           ctx.textAlign = "center";
@@ -503,22 +464,16 @@ const LobbyCanvas: React.FC = () => {
           );
         });
       }
-
-      // 다음 프레임 예약
       animationId = requestAnimationFrame(render);
     };
 
-    // 최초 호출
     animationId = requestAnimationFrame(render);
-
     return () => {
       cancelAnimationFrame(animationId);
     };
   }, [backgroundImage, loadedCharacterImages, isFacingRight]);
 
-  // -------------------------------------
-  // 리턴: 모달 + 지도 객체(NPC,포탈) + Canvas
-  // -------------------------------------
+  // -------- 리턴 (모달들 + NPC/포탈 + Canvas) --------
   return (
     <>
       {/* NPC1 모달 */}
@@ -571,7 +526,6 @@ const LobbyCanvas: React.FC = () => {
         handleAddNotice={handleAddNotice}
       />
 
-      {/* 로비 화면 */}
       <div className={Style.canvasContainerClass}>
         <PortalList portals={portals} />
         <NpcList npcs={npcs} />
