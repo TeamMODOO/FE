@@ -3,6 +3,11 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
+import useLoadSprites, {
+  FRAME_HEIGHT,
+  FRAME_WIDTH,
+  LAYER_ORDER,
+} from "@/hooks/useLoadSprites";
 import useLobbySocketEvents from "@/hooks/useLobbySocketEvents";
 import useMainSocketConnect from "@/hooks/useMainSocketConnect";
 import useUsersStore from "@/store/useUsersStore";
@@ -21,30 +26,9 @@ import QnaContent from "../Qna/QnaContent";
 import SolvedUsersContent from "../SolvedUsers/SolvedUsersContent";
 import Style from "./Canvas.style";
 
-/* =========================================
-   4방향 스프라이트(행=방향, 열=프레임)
-   -----------------------------------------
-   - 행(row): 0=Down, 1=Up, 2=Right, 3=Left
-   - 열(col): 0=Idle, 1..3=이동
-========================================= */
-const FRAME_WIDTH = 32;
-const FRAME_HEIGHT = 32;
+/** 스프라이트/이동에 사용하는 타입들 */
+type Direction = 0 | 1 | 2 | 3; // 0=Down,1=Up,2=Right,3=Left
 
-// 레이어 순서 (body → eyes → clothes → hair)
-const LAYER_ORDER = ["body", "eyes", "clothes", "hair"] as const;
-
-// 레이어별 PNG 경로 (캐릭터)
-const SPRITE_PATHS = {
-  body: "/sprites/body.png",
-  eyes: "/sprites/eyes.png",
-  clothes: "/sprites/clothes.png",
-  hair: "/sprites/hair.png",
-};
-
-/** Direction: 0=Down, 1=Up, 2=Right, 3=Left */
-type Direction = 0 | 1 | 2 | 3;
-
-/** 예시로 사용하는 SolvedUser 타입 */
 type SolvedUser = {
   userId: string;
   nickname: string;
@@ -59,7 +43,7 @@ function getTodayString() {
   return `${d.getFullYear()}-${mm}-${dd}`;
 }
 
-/** 포탈 정보 (예시) */
+/** 포탈 정보 */
 const portals: PortalInfo[] = [
   {
     x: 650,
@@ -79,7 +63,7 @@ const portals: PortalInfo[] = [
   },
 ];
 
-/** NPC 정보 (예시) */
+/** NPC 정보 */
 const npcs: NpcInfo[] = [
   {
     x: 300,
@@ -100,7 +84,7 @@ const npcs: NpcInfo[] = [
     name: "NPC2",
   },
   {
-    x: 300,
+    x: 250,
     y: 300,
     width: 25,
     height: 35,
@@ -126,51 +110,29 @@ const LobbyCanvas: React.FC = () => {
   // 1) 공통 소켓 연결
   useMainSocketConnect();
 
-  // 2) 로비 소켓 이벤트 (emitMovement)
+  // 2) 로비 소켓 이벤트
   const myUserId = "1";
   const { emitMovement } = useLobbySocketEvents({
     roomId: "floor07",
     userId: myUserId,
   });
 
-  // ------------------ 배경 이미지 로드 ------------------
+  // ★ 스프라이트 로딩 훅 호출
+  const spriteImages = useLoadSprites();
+
+  // ------------------ 배경 이미지 ------------------
   const [backgroundImage, setBackgroundImage] =
     useState<HTMLImageElement | null>(null);
   useEffect(() => {
     const bg = new Image();
     bg.src = "/background/lobby.webp";
     bg.onload = () => setBackgroundImage(bg);
-    // 에러 로깅 생략 (주석처리)
   }, []);
 
-  // ------------------ 캐릭터 스프라이트 로드 ------------------
-  const [spriteImages, setSpriteImages] = useState<
-    Record<string, HTMLImageElement>
-  >({});
-  useEffect(() => {
-    const loaded: Record<string, HTMLImageElement> = {};
-    const entries = Object.entries(SPRITE_PATHS);
-    let count = 0;
-
-    entries.forEach(([layer, path]) => {
-      const img = new Image();
-      img.src = path;
-      img.onload = () => {
-        loaded[layer] = img;
-        count++;
-        // 모든 레이어 로딩 완료 시 setSpriteImages
-        if (count === entries.length) {
-          setSpriteImages(loaded);
-        }
-      };
-      // 에러 로깅 생략
-    });
-  }, []);
-
-  // ------------------ 포탈 GIF를 DOM에 숨김으로 배치 (애니메이션 유지) ------------------
+  // ------------------ 포탈 GIF ------------------
   const portalGifRef = useRef<HTMLImageElement | null>(null);
 
-  // ------------------ NPC 이미지들도 미리 로드 ------------------
+  // ------------------ NPC 이미지 ------------------
   const [npcImages, setNpcImages] = useState<Record<string, HTMLImageElement>>(
     {},
   );
@@ -178,7 +140,6 @@ const LobbyCanvas: React.FC = () => {
     const temp: Record<string, HTMLImageElement> = {};
     let loadedCount = 0;
     const uniquePaths = Array.from(new Set(npcs.map((npc) => npc.image)));
-
     uniquePaths.forEach((path) => {
       const img = new Image();
       img.src = path;
@@ -189,11 +150,10 @@ const LobbyCanvas: React.FC = () => {
           setNpcImages(temp);
         }
       };
-      // 에러 로깅 생략
     });
   }, []);
 
-  // ------------------ 모달/공지/QnA 상태 ------------------
+  // ------------------ 모달/공지/QnA ------------------
   const [npc1ModalOpen, setNpc1ModalOpen] = useState(false);
   const [npc2ModalOpen, setNpc2ModalOpen] = useState(false);
   const [npc3ModalOpen, setNpc3ModalOpen] = useState(false);
@@ -225,8 +185,8 @@ const LobbyCanvas: React.FC = () => {
   const [dailySolvedUsers, setDailySolvedUsers] = useState<SolvedUser[]>([]);
   const [selectedQnaIndex, setSelectedQnaIndex] = useState<number | null>(null);
 
-  // 예시 문제 로드
   useEffect(() => {
+    // 예시
     setDailyProblem({
       id: 1018,
       title: "체스판 다시 칠하기",
@@ -259,19 +219,16 @@ const LobbyCanvas: React.FC = () => {
     setSelectedQnaIndex((prev) => (prev === index ? null : index));
   };
 
-  // 모달 열려있으면 이동 제한
   const isAnyModalOpen =
     npc1ModalOpen || npc2ModalOpen || npc3ModalOpen || noticeModalOpen;
 
-  // ------------------ 포탈 / NPC 충돌 체크 ------------------
-  const getPortalRouteIfOnPortal = (): string | null => {
+  // ------------------ 포탈 / NPC 충돌 ------------------
+  function getPortalRouteIfOnPortal(): string | null {
     const { users } = useUsersStore.getState();
     const me = users.find((u) => u.id === myUserId);
     if (!me) return null;
 
-    // 캐릭터 Hitbox
-    const [cl, cr, ct, cb] = [me.x, me.x + 50, me.y, me.y + 150];
-
+    const [cl, cr, ct, cb] = [me.x, me.x + 32, me.y, me.y + 32];
     for (const portal of portals) {
       const [pl, pr, pt, pb] = [
         portal.x,
@@ -283,15 +240,14 @@ const LobbyCanvas: React.FC = () => {
       if (overlap) return portal.route;
     }
     return null;
-  };
+  }
 
-  const getNpcIndexIfOnNpc = (): number | null => {
+  function getNpcIndexIfOnNpc(): number | null {
     const { users } = useUsersStore.getState();
     const me = users.find((u) => u.id === myUserId);
     if (!me) return null;
 
-    const [cl, cr, ct, cb] = [me.x, me.x + 50, me.y, me.y + 150];
-
+    const [cl, cr, ct, cb] = [me.x, me.x + 32, me.y, me.y + 32];
     for (let i = 0; i < npcs.length; i++) {
       const npc = npcs[i];
       const [nl, nr, nt, nb] = [
@@ -304,27 +260,33 @@ const LobbyCanvas: React.FC = () => {
       if (overlap) return i;
     }
     return null;
-  };
+  }
 
-  // ------------------ 키 입력 & 이동 ------------------
+  // ------------------ 키 입력 & 이동 상태 ------------------
   const [pressedKeys, setPressedKeys] = useState<Record<string, boolean>>({});
-  const [direction, setDirection] = useState<Direction>(0); // 0=down,1=up,2=right,3=left
+  const [direction, setDirection] = useState<Direction>(0);
   const [isMoving, setIsMoving] = useState(false);
+
+  // ------------------------------
+  // 모달 닫힘 감지하여 pressedKeys 초기화
+  // ------------------------------
+  useEffect(() => {
+    if (!isAnyModalOpen) {
+      // 모든 모달이 닫힌 경우 → 키 상태 리셋
+      setPressedKeys({});
+    }
+  }, [isAnyModalOpen]);
 
   // 키 이벤트 등록
   useEffect(() => {
-    // down
     const handleKeyDown = (e: KeyboardEvent) => {
       if (isAnyModalOpen) return;
-
-      // 방향키와 스페이스에 대해서 스크롤 방지
-      if (
-        ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " "].includes(e.key)
-      ) {
+      const blocked = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " "];
+      if (blocked.includes(e.key)) {
         e.preventDefault();
       }
 
-      // 스페이스 눌렀을 때 포탈 or NPC 동작
+      // 스페이스 → 포탈 or NPC
       if (e.key === " ") {
         const route = getPortalRouteIfOnPortal();
         if (route) {
@@ -340,27 +302,22 @@ const LobbyCanvas: React.FC = () => {
         }
       }
 
-      // pressedKeys에 true
       setPressedKeys((prev) => ({ ...prev, [e.key]: true }));
     };
 
-    // up
     const handleKeyUp = (e: KeyboardEvent) => {
       if (isAnyModalOpen) return;
       setPressedKeys((prev) => ({ ...prev, [e.key]: false }));
     };
 
-    // blur (포커스를 잃으면 모든 키 false)
     const handleBlur = () => {
       setPressedKeys({});
     };
 
-    // 등록
     window.addEventListener("keydown", handleKeyDown, { passive: false });
     window.addEventListener("keyup", handleKeyUp);
     window.addEventListener("blur", handleBlur);
 
-    // 정리
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
@@ -368,7 +325,7 @@ const LobbyCanvas: React.FC = () => {
     };
   }, [isAnyModalOpen, router]);
 
-  // 방향 계산 함수
+  // 방향 계산
   function handleDirectionKeys(): Direction {
     if (
       pressedKeys["w"] ||
@@ -419,7 +376,7 @@ const LobbyCanvas: React.FC = () => {
     const newDir = handleDirectionKeys();
     setDirection(newDir);
 
-    // 상하좌우 처리
+    // 상
     if (
       pressedKeys["w"] ||
       pressedKeys["W"] ||
@@ -431,6 +388,7 @@ const LobbyCanvas: React.FC = () => {
         moved = true;
       }
     }
+    // 하
     if (
       pressedKeys["s"] ||
       pressedKeys["S"] ||
@@ -442,6 +400,7 @@ const LobbyCanvas: React.FC = () => {
         moved = true;
       }
     }
+    // 우
     if (
       pressedKeys["d"] ||
       pressedKeys["D"] ||
@@ -453,6 +412,7 @@ const LobbyCanvas: React.FC = () => {
         moved = true;
       }
     }
+    // 좌
     if (
       pressedKeys["a"] ||
       pressedKeys["A"] ||
@@ -465,24 +425,24 @@ const LobbyCanvas: React.FC = () => {
       }
     }
 
-    // 이동 여부에 따라 UserStore 및 소켓 Emit
+    // 실제로 이동했다면
     if (moved) {
       updateUserPosition(myUserId, x, y, newDir, true);
       emitMovement(x, y, newDir);
       setIsMoving(true);
     } else {
+      // 안 움직임
       updateUserPosition(myUserId, x, y, newDir, false);
       setIsMoving(false);
     }
   }, [pressedKeys, isAnyModalOpen, emitMovement]);
 
-  // ------------------ 카메라/줌 ------------------
+  // ------------------ 카메라/줌 & rAF 그리기 ------------------
   const zoomFactor = 2;
   function clamp(value: number, min: number, max: number) {
     return Math.max(min, Math.min(max, value));
   }
 
-  // rAF로 캔버스 그리기
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -497,13 +457,13 @@ const LobbyCanvas: React.FC = () => {
     let lastTime = 0;
     let animationId = 0;
 
-    // user별 애니메이션 (이동 프레임)
+    // user별 애니메이션 프레임
     const userFrameMap: Record<
       string,
       { frame: number; lastFrameTime: number }
     > = {};
     const frameInterval = 200; // 이동시 프레임 전환 속도
-    const maxMovingFrame = 3; // 1..3
+    const maxMovingFrame = 3;
 
     const render = (time: number) => {
       const delta = time - lastTime;
@@ -522,7 +482,6 @@ const LobbyCanvas: React.FC = () => {
         if (me) {
           const centerX = me.x + MAP_CONSTANTS.IMG_WIDTH / 2;
           const centerY = me.y + MAP_CONSTANTS.IMG_HEIGHT / 2;
-
           const viewWidth = canvas.width / zoomFactor;
           const viewHeight = canvas.height / zoomFactor;
 
@@ -533,7 +492,6 @@ const LobbyCanvas: React.FC = () => {
           cameraY = clamp(cameraY, 0, MAP_CONSTANTS.MAP_HEIGHT - viewHeight);
         }
 
-        // 카메라 적용
         ctx.save();
         ctx.scale(zoomFactor, zoomFactor);
         ctx.translate(-cameraX, -cameraY);
@@ -549,7 +507,7 @@ const LobbyCanvas: React.FC = () => {
           );
         }
 
-        // 4) 포탈(GIF) + 이름
+        // 4) 포탈
         portals.forEach((portal) => {
           if (portalGifRef.current) {
             ctx.drawImage(
@@ -560,12 +518,10 @@ const LobbyCanvas: React.FC = () => {
               portal.height,
             );
           } else {
-            // GIF 로드 전 임시 표시
             ctx.fillStyle = "rgba(0,0,255,0.3)";
             ctx.fillRect(portal.x, portal.y, portal.width, portal.height);
           }
 
-          // 포탈 이름
           ctx.font = "bold 12px Arial";
           ctx.fillStyle = "yellow";
           ctx.textAlign = "center";
@@ -581,8 +537,6 @@ const LobbyCanvas: React.FC = () => {
           const npcImg = npcImages[npc.image];
           if (npcImg) {
             ctx.drawImage(npcImg, npc.x, npc.y, npc.width, npc.height);
-
-            // 이름
             ctx.font = "bold 12px Arial";
             ctx.fillStyle = "yellow";
             ctx.textAlign = "center";
@@ -592,15 +546,15 @@ const LobbyCanvas: React.FC = () => {
               npc.y + npc.height + 12,
             );
           } else {
-            // 로드 전 임시
             ctx.fillStyle = "rgba(255,0,0,0.3)";
             ctx.fillRect(npc.x, npc.y, npc.width, npc.height);
           }
         });
 
-        // 6) 캐릭터(유저) 스프라이트 애니메이션
+        // 6) 캐릭터(유저) 스프라이트
         const now = performance.now();
         if (Object.keys(spriteImages).length === LAYER_ORDER.length) {
+          // 스프라이트가 모두 로딩된 경우에만 그림
           users.forEach((user) => {
             const { id, x, y, direction, isMoving, nickname } = user;
             if (!userFrameMap[id]) {
@@ -608,7 +562,6 @@ const LobbyCanvas: React.FC = () => {
             }
             const uf = userFrameMap[id];
 
-            // 이동 중이면 프레임 갱신
             if (isMoving) {
               if (now - uf.lastFrameTime > frameInterval) {
                 uf.lastFrameTime = now;
@@ -622,10 +575,10 @@ const LobbyCanvas: React.FC = () => {
               uf.lastFrameTime = now;
             }
 
-            // 스프라이트 시트에서 잘라 그리기
             const sx = uf.frame * FRAME_WIDTH;
             const sy = direction * FRAME_HEIGHT;
 
+            // ★ 분리된 스프라이트 로딩 훅에서 가져온 spriteImages 활용
             ctx.save();
             LAYER_ORDER.forEach((layer) => {
               const img = spriteImages[layer];
@@ -643,7 +596,7 @@ const LobbyCanvas: React.FC = () => {
             });
             ctx.restore();
 
-            // 캐릭터 닉네임 표시
+            // 닉네임
             ctx.font = "bold 12px Arial";
             ctx.fillStyle = "white";
             ctx.textAlign = "center";
@@ -665,7 +618,7 @@ const LobbyCanvas: React.FC = () => {
   // ------------------ 리턴 ------------------
   return (
     <>
-      {/* 숨긴 포탈 GIF (애니메이션 유지용) */}
+      {/* 숨긴 포탈 GIF */}
       <img
         ref={portalGifRef}
         src="/furniture/portal.gif"
@@ -724,15 +677,8 @@ const LobbyCanvas: React.FC = () => {
       />
 
       <div className={Style.canvasContainerClass}>
-        {/* 
-          PortalList, NpcList는 
-          '지금은 Canvas에서 모든 걸 그리므로' 
-          빈 배열을 넘기고 있음 
-        */}
         <PortalList portals={[]} />
         <NpcList npcs={[]} />
-
-        {/* 실제 Canvas */}
         <canvas ref={canvasRef} />
       </div>
     </>
