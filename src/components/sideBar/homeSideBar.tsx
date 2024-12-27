@@ -5,7 +5,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-import { ChatMessages } from "../chat/lobby/chatMessages";
+import { ChatMessages } from "../chat/lobby/ChatMessages";
 import { FriendInformation } from "./FriendInformation";
 
 export const HomeSideBar = () => {

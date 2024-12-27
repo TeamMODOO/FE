@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 
-import useThrottle from "@/hooks/useThrottle";
+import useThrottle from "@/hooks/performance/useThrottle";
 
 import { NoticeItem } from "../../_model/NoticeBoard";
 import { NpcInfo } from "../../_model/Npc";

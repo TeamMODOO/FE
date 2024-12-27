@@ -1,7 +1,7 @@
 "use client";
 
 import { EnterMeetingRoom } from "@/components";
-import useMainSocketConnect from "@/hooks/useMainSocketConnect";
+import useMainSocketConnect from "@/hooks/socket/useMainSocketConnect";
 
 export default function Home() {
   useMainSocketConnect();
