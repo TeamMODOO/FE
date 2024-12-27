@@ -1,6 +1,6 @@
 "use client";
 
-import useAudioSocketConnect from "@/hooks/useAudioSocketConnect";
+import useAudioSocketConnect from "@/hooks/socket/useAudioSocketConnect";
 
 import MeetingRoomCanvas from "./_component/Canvas";
 

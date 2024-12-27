@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
+import useThrottle from "@/hooks/performance/useThrottle";
 import useLoadSprites, {
   FRAME_HEIGHT,
   FRAME_WIDTH,
@@ -10,7 +11,6 @@ import useLoadSprites, {
 } from "@/hooks/useLoadSprites";
 import useLobbySocketEvents from "@/hooks/useLobbySocketEvents";
 import useMainSocketConnect from "@/hooks/useMainSocketConnect";
-import useThrottle from "@/hooks/useThrottle";
 import useUsersStore from "@/store/useUsersStore";
 
 import { NoticeItem } from "../../_model/NoticeBoard";
