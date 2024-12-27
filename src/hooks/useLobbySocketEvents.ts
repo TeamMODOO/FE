@@ -41,14 +41,16 @@ export default function useLobbySocketEvents({
   // -----------------------------
   // (1) 내 캐릭터 이동 emit
   // -----------------------------
+  // hooks/useLobbySocketEvents.ts
   const emitMovement = useCallback(
-    (x: number, y: number) => {
+    (x: number, y: number, direction: number) => {
       if (!mainSocket) return;
       const data = {
         user_id: userId,
         room_id: roomId,
         position_x: x,
         position_y: y,
+        direction, // 서버로 방향도 보냄
       };
       mainSocket.emit("CS_MOVEMENT_INFO", data);
     },
