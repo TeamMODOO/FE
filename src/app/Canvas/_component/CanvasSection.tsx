@@ -81,6 +81,7 @@ const CanvasSection = () => {
         canvas!.discardActiveObject(); // 선택 해제
       }
     };
+    window.addEventListener("keyup", handleDelete);
 
     return () => {
       window.removeEventListener("keyup", handleDelete);
@@ -89,7 +90,7 @@ const CanvasSection = () => {
 
   return (
     <div
-      className="bg-grayscale-white relative h-[calc(100vh-5rem)] w-full"
+      className="bg-grayscale-white relative h-screen w-full"
       ref={canvasContainerRef}
     >
       <canvas ref={canvasRef} className="absolute inset-0" />
