@@ -139,11 +139,8 @@ const LobbyCanvas: React.FC = () => {
   useEffect(() => {
     const bg = new Image();
     bg.src = "/background/lobby.webp";
-
     bg.onload = () => setBackgroundImage(bg);
-    bg.onerror = (e) => {
-      // console.error("Failed to load background:", bg.src, e);
-    };
+    // 에러 로깅 생략 (주석처리)
   }, []);
 
   // ------------------ 캐릭터 스프라이트 로드 ------------------
@@ -161,27 +158,26 @@ const LobbyCanvas: React.FC = () => {
       img.onload = () => {
         loaded[layer] = img;
         count++;
+        // 모든 레이어 로딩 완료 시 setSpriteImages
         if (count === entries.length) {
           setSpriteImages(loaded);
         }
       };
-      img.onerror = (e) => {
-        // console.error("Failed to load sprite image:", layer, path, e);
-      };
+      // 에러 로깅 생략
     });
   }, []);
 
   // ------------------ 포탈 GIF를 DOM에 숨김으로 배치 (애니메이션 유지) ------------------
   const portalGifRef = useRef<HTMLImageElement | null>(null);
 
-  // ------------------ (2) NPC 이미지들도 미리 로드 (배열) ------------------
+  // ------------------ NPC 이미지들도 미리 로드 ------------------
   const [npcImages, setNpcImages] = useState<Record<string, HTMLImageElement>>(
     {},
   );
   useEffect(() => {
     const temp: Record<string, HTMLImageElement> = {};
     let loadedCount = 0;
-    const uniquePaths = Array.from(new Set(npcs.map((npc) => npc.image))); // 중복 제거
+    const uniquePaths = Array.from(new Set(npcs.map((npc) => npc.image)));
 
     uniquePaths.forEach((path) => {
       const img = new Image();
@@ -191,12 +187,9 @@ const LobbyCanvas: React.FC = () => {
         loadedCount++;
         if (loadedCount === uniquePaths.length) {
           setNpcImages(temp);
-          // console.log("NPC images loaded:", temp);
         }
       };
-      img.onerror = (e) => {
-        // console.error("Failed to load NPC image:", path, e);
-      };
+      // 에러 로깅 생략
     });
   }, []);
 
@@ -232,8 +225,8 @@ const LobbyCanvas: React.FC = () => {
   const [dailySolvedUsers, setDailySolvedUsers] = useState<SolvedUser[]>([]);
   const [selectedQnaIndex, setSelectedQnaIndex] = useState<number | null>(null);
 
+  // 예시 문제 로드
   useEffect(() => {
-    // 예시: 서버에서 문제 불러오기
     setDailyProblem({
       id: 1018,
       title: "체스판 다시 칠하기",
@@ -318,11 +311,20 @@ const LobbyCanvas: React.FC = () => {
   const [direction, setDirection] = useState<Direction>(0); // 0=down,1=up,2=right,3=left
   const [isMoving, setIsMoving] = useState(false);
 
-  // 키 이벤트
+  // 키 이벤트 등록
   useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
+    // down
+    const handleKeyDown = (e: KeyboardEvent) => {
       if (isAnyModalOpen) return;
 
+      // 방향키와 스페이스에 대해서 스크롤 방지
+      if (
+        ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " "].includes(e.key)
+      ) {
+        e.preventDefault();
+      }
+
+      // 스페이스 눌렀을 때 포탈 or NPC 동작
       if (e.key === " ") {
         const route = getPortalRouteIfOnPortal();
         if (route) {
@@ -337,24 +339,36 @@ const LobbyCanvas: React.FC = () => {
           else if (npcIndex === 3) setNoticeModalOpen(true);
         }
       }
+
+      // pressedKeys에 true
       setPressedKeys((prev) => ({ ...prev, [e.key]: true }));
     };
 
-    const onKeyUp = (e: KeyboardEvent) => {
+    // up
+    const handleKeyUp = (e: KeyboardEvent) => {
       if (isAnyModalOpen) return;
       setPressedKeys((prev) => ({ ...prev, [e.key]: false }));
     };
 
-    window.addEventListener("keydown", onKeyDown);
-    window.addEventListener("keyup", onKeyUp);
-
-    return () => {
-      window.removeEventListener("keydown", onKeyDown);
-      window.removeEventListener("keyup", onKeyUp);
+    // blur (포커스를 잃으면 모든 키 false)
+    const handleBlur = () => {
+      setPressedKeys({});
     };
-  }, [isAnyModalOpen]);
 
-  // 방향 계산
+    // 등록
+    window.addEventListener("keydown", handleKeyDown, { passive: false });
+    window.addEventListener("keyup", handleKeyUp);
+    window.addEventListener("blur", handleBlur);
+
+    // 정리
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+      window.removeEventListener("blur", handleBlur);
+    };
+  }, [isAnyModalOpen, router]);
+
+  // 방향 계산 함수
   function handleDirectionKeys(): Direction {
     if (
       pressedKeys["w"] ||
@@ -405,7 +419,7 @@ const LobbyCanvas: React.FC = () => {
     const newDir = handleDirectionKeys();
     setDirection(newDir);
 
-    // 상하좌우
+    // 상하좌우 처리
     if (
       pressedKeys["w"] ||
       pressedKeys["W"] ||
@@ -451,6 +465,7 @@ const LobbyCanvas: React.FC = () => {
       }
     }
 
+    // 이동 여부에 따라 UserStore 및 소켓 Emit
     if (moved) {
       updateUserPosition(myUserId, x, y, newDir, true);
       emitMovement(x, y, newDir);
@@ -463,16 +478,14 @@ const LobbyCanvas: React.FC = () => {
 
   // ------------------ 카메라/줌 ------------------
   const zoomFactor = 2;
-
   function clamp(value: number, min: number, max: number) {
     return Math.max(min, Math.min(max, value));
   }
 
-  // rAF로 그리기
+  // rAF로 캔버스 그리기
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-
     canvas.width = MAP_CONSTANTS.CANVAS_WIDTH;
     canvas.height = MAP_CONSTANTS.CANVAS_HEIGHT;
 
@@ -484,12 +497,12 @@ const LobbyCanvas: React.FC = () => {
     let lastTime = 0;
     let animationId = 0;
 
-    // user별 애니메이션 프레임
+    // user별 애니메이션 (이동 프레임)
     const userFrameMap: Record<
       string,
       { frame: number; lastFrameTime: number }
     > = {};
-    const frameInterval = 200; // 이동 애니 속도
+    const frameInterval = 200; // 이동시 프레임 전환 속도
     const maxMovingFrame = 3; // 1..3
 
     const render = (time: number) => {
@@ -506,7 +519,6 @@ const LobbyCanvas: React.FC = () => {
 
         let cameraX = 0;
         let cameraY = 0;
-
         if (me) {
           const centerX = me.x + MAP_CONSTANTS.IMG_WIDTH / 2;
           const centerY = me.y + MAP_CONSTANTS.IMG_HEIGHT / 2;
@@ -521,6 +533,7 @@ const LobbyCanvas: React.FC = () => {
           cameraY = clamp(cameraY, 0, MAP_CONSTANTS.MAP_HEIGHT - viewHeight);
         }
 
+        // 카메라 적용
         ctx.save();
         ctx.scale(zoomFactor, zoomFactor);
         ctx.translate(-cameraX, -cameraY);
@@ -547,7 +560,7 @@ const LobbyCanvas: React.FC = () => {
               portal.height,
             );
           } else {
-            // 로드 전 임시사각
+            // GIF 로드 전 임시 표시
             ctx.fillStyle = "rgba(0,0,255,0.3)";
             ctx.fillRect(portal.x, portal.y, portal.width, portal.height);
           }
@@ -585,18 +598,17 @@ const LobbyCanvas: React.FC = () => {
           }
         });
 
-        // 6) 캐릭터(유저)
+        // 6) 캐릭터(유저) 스프라이트 애니메이션
         const now = performance.now();
         if (Object.keys(spriteImages).length === LAYER_ORDER.length) {
           users.forEach((user) => {
             const { id, x, y, direction, isMoving, nickname } = user;
-
             if (!userFrameMap[id]) {
-              userFrameMap[id] = { frame: 0, lastFrameTime: 0 };
+              userFrameMap[id] = { frame: 0, lastFrameTime: now };
             }
             const uf = userFrameMap[id];
 
-            // 프레임 갱신
+            // 이동 중이면 프레임 갱신
             if (isMoving) {
               if (now - uf.lastFrameTime > frameInterval) {
                 uf.lastFrameTime = now;
@@ -610,6 +622,7 @@ const LobbyCanvas: React.FC = () => {
               uf.lastFrameTime = now;
             }
 
+            // 스프라이트 시트에서 잘라 그리기
             const sx = uf.frame * FRAME_WIDTH;
             const sy = direction * FRAME_HEIGHT;
 
@@ -630,7 +643,7 @@ const LobbyCanvas: React.FC = () => {
             });
             ctx.restore();
 
-            // 닉네임
+            // 캐릭터 닉네임 표시
             ctx.font = "bold 12px Arial";
             ctx.fillStyle = "white";
             ctx.textAlign = "center";
@@ -647,11 +660,7 @@ const LobbyCanvas: React.FC = () => {
     return () => {
       cancelAnimationFrame(animationId);
     };
-  }, [
-    backgroundImage,
-    spriteImages,
-    npcImages, // NPC 로드
-  ]);
+  }, [backgroundImage, spriteImages, npcImages]);
 
   // ------------------ 리턴 ------------------
   return (
@@ -715,10 +724,15 @@ const LobbyCanvas: React.FC = () => {
       />
 
       <div className={Style.canvasContainerClass}>
-        {/* PortalList, NpcList는 DOM UI만 표시. 지금은 Canvas로 그리므로 빈 배열 */}
+        {/* 
+          PortalList, NpcList는 
+          '지금은 Canvas에서 모든 걸 그리므로' 
+          빈 배열을 넘기고 있음 
+        */}
         <PortalList portals={[]} />
         <NpcList npcs={[]} />
 
+        {/* 실제 Canvas */}
         <canvas ref={canvasRef} />
       </div>
     </>
