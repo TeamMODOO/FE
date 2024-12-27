@@ -22,32 +22,23 @@ import SolvedUsersContent from "../SolvedUsers/SolvedUsersContent";
 import Style from "./Canvas.style";
 
 /* =========================================
-   4방향 스프라이트: 행마다 방향이 다름
-   각 행(0~3)에 4프레임(0~3열)이 있다 가정
-   -----------------------------------------
+   4방향 스프라이트(행=방향, 열=프레임)
    - 행(row)
-     0 => Down
-     1 => Up
-     2 => Right
-     3 => Left
+       0 => Down
+       1 => Up
+       2 => Right
+       3 => Left
    - 열(col)
-     0 => Idle (정지)
-     1,2,3 => 이동 애니메이션 프레임
+       0 => Idle(정지)
+       1,2,3 => 이동 애니메이션 프레임
    ========================================= */
 const FRAME_WIDTH = 32;
 const FRAME_HEIGHT = 32;
-const FRAMES_PER_DIRECTION = 4; // 총 4프레임 (0=idle, 1,2,3=move)
 
-/**
- * 사용자 방향(Direction)을 나타내는 enum-like 값
- * 0=Down, 1=Up, 2=Right, 3=Left
- */
-type Direction = 0 | 1 | 2 | 3;
+// 레이어 순서 (body → eyes → clothes → hair)
+const LAYER_ORDER = ["body", "eyes", "clothes", "hair"] as const;
 
-/* 
-   스프라이트 레이어 경로 
-   (body, eyes, clothes, hair 등 필요에 따라 추가 가능)
-*/
+// 레이어별 PNG 경로
 const SPRITE_PATHS = {
   body: "/sprites/body.png",
   eyes: "/sprites/eyes.png",
@@ -55,9 +46,10 @@ const SPRITE_PATHS = {
   hair: "/sprites/hair.png",
 };
 
-const LAYER_ORDER = ["body", "eyes", "clothes", "hair"] as const;
+/** Direction: 0=Down, 1=Up, 2=Right, 3=Left */
+type Direction = 0 | 1 | 2 | 3;
 
-/** 오늘 문제를 푼 유저 타입 */
+/** 예시로 사용하는 SolvedUser 타입 */
 type SolvedUser = {
   userId: string;
   nickname: string;
@@ -136,11 +128,11 @@ const LobbyCanvas: React.FC = () => {
   const router = useRouter();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  // 1) 공통 소켓 연결
+  // (1) 공통 소켓 연결
   useMainSocketConnect();
 
-  // 2) 로비 전용 이벤트 + emitMovement
-  const myUserId = "1"; // 내 유저 ID (예시)
+  // (2) 로비 전용 이벤트 (emitMovement)
+  const myUserId = "1"; // 내 유저 ID
   const { emitMovement } = useLobbySocketEvents({
     roomId: "floor07",
     userId: myUserId,
@@ -149,18 +141,20 @@ const LobbyCanvas: React.FC = () => {
   // ------------------ 배경 이미지 로드 ------------------
   const [backgroundImage, setBackgroundImage] =
     useState<HTMLImageElement | null>(null);
+  useEffect(() => {
+    const bg = new Image();
+    bg.src = "/background/lobby.webp";
+    bg.onload = () => setBackgroundImage(bg);
+  }, []);
 
   // ------------------ 스프라이트 레이어 로드 ------------------
   const [spriteImages, setSpriteImages] = useState<
     Record<string, HTMLImageElement>
   >({});
-
-  //  (1) 레이어 PNG 로드
   useEffect(() => {
     const loaded: Record<string, HTMLImageElement> = {};
     const entries = Object.entries(SPRITE_PATHS);
     let count = 0;
-
     entries.forEach(([layer, path]) => {
       const img = new Image();
       img.src = path;
@@ -171,13 +165,10 @@ const LobbyCanvas: React.FC = () => {
           setSpriteImages(loaded);
         }
       };
-      img.onerror = (e) => {
-        // console.error(`Fail to load sprite [${path}]`, e);
-      };
     });
   }, []);
 
-  // ------------------ 모달/공지/QnA 상태 ------------------
+  // ------------------ 모달 / 공지 / QnA / NPC / 포탈 ------------------
   const [npc1ModalOpen, setNpc1ModalOpen] = useState(false);
   const [npc2ModalOpen, setNpc2ModalOpen] = useState(false);
   const [npc3ModalOpen, setNpc3ModalOpen] = useState(false);
@@ -200,7 +191,6 @@ const LobbyCanvas: React.FC = () => {
     setWriterMessage("");
   };
 
-  // ------------------ 일일 문제 & 풀이 유저 ------------------
   const [dailyProblem, setDailyProblem] = useState<{
     id: number;
     title: string;
@@ -211,12 +201,8 @@ const LobbyCanvas: React.FC = () => {
   const [dailySolvedUsers, setDailySolvedUsers] = useState<SolvedUser[]>([]);
   const [selectedQnaIndex, setSelectedQnaIndex] = useState<number | null>(null);
 
-  const handleQnaClick = (index: number) => {
-    setSelectedQnaIndex((prev) => (prev === index ? null : index));
-  };
-
-  const fetchDataFromServer = async () => {
-    // ex) 서버에서 문제/풀이 유저 불러오기
+  // 문제/풀이 유저 예시 데이터
+  useEffect(() => {
     setDailyProblem({
       id: 1018,
       title: "체스판 다시 칠하기",
@@ -236,10 +222,6 @@ const LobbyCanvas: React.FC = () => {
         solvedDate: getTodayString(),
       },
     ]);
-  };
-
-  useEffect(() => {
-    fetchDataFromServer();
   }, []);
 
   const handleSolveDailyProblem = () => {
@@ -247,9 +229,8 @@ const LobbyCanvas: React.FC = () => {
     setIsProblemSolved(true);
     alert(`문제 #${dailyProblem.id}를 푸셨군요!`);
 
-    const usersState = useUsersStore.getState().users;
-    const me = usersState.find((u) => u.id === myUserId);
-
+    const { users } = useUsersStore.getState();
+    const me = users.find((u) => u.id === myUserId);
     setDailySolvedUsers((prev) => [
       ...prev,
       {
@@ -261,11 +242,14 @@ const LobbyCanvas: React.FC = () => {
     ]);
   };
 
-  // 모달 열려있으면 이동 막기
+  const handleQnaClick = (index: number) => {
+    setSelectedQnaIndex((prev) => (prev === index ? null : index));
+  };
+
   const isAnyModalOpen =
     npc1ModalOpen || npc2ModalOpen || npc3ModalOpen || noticeModalOpen;
 
-  // ------------------ 포탈 / NPC 충돌 체크 ------------------
+  // ------------------ 포탈 / NPC 충돌 ------------------
   const getPortalRouteIfOnPortal = (): string | null => {
     const { users } = useUsersStore.getState();
     const me = users.find((u) => u.id === myUserId);
@@ -305,15 +289,49 @@ const LobbyCanvas: React.FC = () => {
     return null;
   };
 
-  // ------------------ 키 입력 & 이동, 방향 관리 ------------------
+  // ------------------ 키 입력 & 이동 ------------------
   const [pressedKeys, setPressedKeys] = useState<Record<string, boolean>>({});
-  const [direction, setDirection] = useState<Direction>(0); // 0=down,1=up,2=right,3=left
+  // 내 캐릭터(본인) 방향과 움직임
+  const [direction, setDirection] = useState<Direction>(0);
   const [isMoving, setIsMoving] = useState(false);
 
+  // 키보드 입력
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (isAnyModalOpen) return;
+      if (e.key === " ") {
+        // 스페이스 → 포탈orNPC
+        const route = getPortalRouteIfOnPortal();
+        if (route) {
+          router.push(route);
+          return;
+        }
+        const npcIndex = getNpcIndexIfOnNpc();
+        if (npcIndex !== null) {
+          if (npcIndex === 0) setNpc1ModalOpen(true);
+          else if (npcIndex === 1) setNpc2ModalOpen(true);
+          else if (npcIndex === 2) setNpc3ModalOpen(true);
+          else if (npcIndex === 3) setNoticeModalOpen(true);
+        }
+      }
+      setPressedKeys((prev) => ({ ...prev, [e.key]: true }));
+    };
+
+    const onKeyUp = (e: KeyboardEvent) => {
+      if (isAnyModalOpen) return;
+      setPressedKeys((prev) => ({ ...prev, [e.key]: false }));
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keyup", onKeyUp);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keyup", onKeyUp);
+    };
+  }, [isAnyModalOpen]);
+
+  // 간단한 방향 계산 (↓↑→← 순)
   const handleDirectionKeys = () => {
-    // 단순 예시: 가장 마지막으로 눌린 방향 키 기준
-    // (복수 키가 눌리면 우선순위 설정 가능)
-    // 여기서는 ↓↑→← 순으로 체크
     if (
       pressedKeys["w"] ||
       pressedKeys["W"] ||
@@ -346,43 +364,8 @@ const LobbyCanvas: React.FC = () => {
     ) {
       return 3; // Left
     }
-    return direction; // 기존 방향 유지
+    return direction; // 기존 유지
   };
-
-  // 키보드 감지
-  useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (isAnyModalOpen) return;
-      // 포탈 / NPC 상호작용
-      if (e.key === " ") {
-        const route = getPortalRouteIfOnPortal();
-        if (route) {
-          router.push(route);
-          return;
-        }
-        const npcIndex = getNpcIndexIfOnNpc();
-        if (npcIndex !== null) {
-          if (npcIndex === 0) setNpc1ModalOpen(true);
-          else if (npcIndex === 1) setNpc2ModalOpen(true);
-          else if (npcIndex === 2) setNpc3ModalOpen(true);
-          else if (npcIndex === 3) setNoticeModalOpen(true);
-        }
-      }
-      setPressedKeys((prev) => ({ ...prev, [e.key]: true }));
-    };
-
-    const onKeyUp = (e: KeyboardEvent) => {
-      if (isAnyModalOpen) return;
-      setPressedKeys((prev) => ({ ...prev, [e.key]: false }));
-    };
-
-    window.addEventListener("keydown", onKeyDown);
-    window.addEventListener("keyup", onKeyUp);
-    return () => {
-      window.removeEventListener("keydown", onKeyDown);
-      window.removeEventListener("keyup", onKeyUp);
-    };
-  }, [isAnyModalOpen]);
 
   // 실제 이동 로직
   useEffect(() => {
@@ -395,11 +378,11 @@ const LobbyCanvas: React.FC = () => {
     let { x, y } = users[meIndex];
     let moved = false;
 
-    // 방향 처리 (중복키 가능성 등을 간단히 처리)
-    const newDirection = handleDirectionKeys();
-    setDirection(newDirection);
+    // (A) 방향 처리
+    const newDir = handleDirectionKeys();
+    setDirection(newDir);
 
-    // 이동 처리
+    // (B) 좌표 이동
     if (
       pressedKeys["w"] ||
       pressedKeys["W"] ||
@@ -445,24 +428,20 @@ const LobbyCanvas: React.FC = () => {
       }
     }
 
-    // 이동 완료 -> Store 업데이트 & 소켓 emit
+    // (C) 결과 반영
     if (moved) {
-      updateUserPosition(myUserId, x, y);
-      emitMovement(x, y);
+      // Store + 소켓
+      updateUserPosition(myUserId, x, y, newDir, true); // isMoving=true
+      emitMovement(x, y, newDir);
       setIsMoving(true);
     } else {
+      // 움직임 없음
+      updateUserPosition(myUserId, x, y, newDir, false);
       setIsMoving(false);
     }
   }, [pressedKeys, isAnyModalOpen, emitMovement]);
 
-  // ------------------ 배경 이미지 로드 ------------------
-  useEffect(() => {
-    const bg = new Image();
-    bg.src = "/background/lobby.webp";
-    bg.onload = () => setBackgroundImage(bg);
-  }, []);
-
-  // ------------------ rAF로 그리기 (30fps) ------------------
+  // ------------------ rAF로 캔버스 그리기 (30fps) ------------------
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -478,11 +457,13 @@ const LobbyCanvas: React.FC = () => {
     let lastTime = 0;
     let animationId: number;
 
-    // 애니메이션 프레임 관련
-    let currentFrame = 0; // 0=Idle, 1..3=이동 프레임
-    const maxMovingFrame = 3; // 이동시 사용할 최대 프레임(1..3)
-    const frameInterval = 200; // ms(애니메이션 속도)
-    let lastFrameChangeTime = 0;
+    // 사용자별 애니메이션 프레임 추적용
+    const userFrameMap: Record<
+      string,
+      { frame: number; lastFrameTime: number }
+    > = {};
+    const frameInterval = 200; // ms
+    const maxMovingFrame = 3; // 1..3
 
     const render = (time: number) => {
       const delta = time - lastTime;
@@ -503,42 +484,36 @@ const LobbyCanvas: React.FC = () => {
           );
         }
 
-        // 3) 캐릭터 스프라이트 그리기
-        // spriteImages (body/eyes/clothes/hair)가 모두 로드되었는지
-        if (Object.keys(spriteImages).length >= LAYER_ORDER.length) {
+        // 3) 유저 스프라이트 그리기
+        const { users } = useUsersStore.getState();
+        if (Object.keys(spriteImages).length === LAYER_ORDER.length) {
           const now = performance.now();
 
-          // (A) 애니메이션 프레임 갱신 로직
-          if (isMoving) {
-            // 이동 중인 경우 → 1~3 프레임 반복
-            if (now - lastFrameChangeTime > frameInterval) {
-              lastFrameChangeTime = now;
-              currentFrame++;
-              if (currentFrame > maxMovingFrame) {
-                currentFrame = 1; // 1~3 반복
-              }
-            }
-          } else {
-            // 정지 상태 → 0번 프레임(Idle)
-            currentFrame = 0;
-          }
-
-          // (B) 그리기
-          const { users } = useUsersStore.getState();
           users.forEach((user) => {
-            // direction(row), currentFrame(col)
-            // row = direction(0~3), col= currentFrame(0~3)
-            const row = user.id === myUserId ? direction : 0;
-            // 위 예시에서는 다른 유저 방향 처리 로직이 없다면 임의로 0(Down) 잡음
-            // 실제론, 각 유저의 방향도 Store에 저장해주어야 함
+            const { id, x, y, direction, isMoving, nickname } = user;
+            if (!userFrameMap[id]) {
+              userFrameMap[id] = { frame: 0, lastFrameTime: 0 };
+            }
+            const uf = userFrameMap[id];
 
-            const sx = currentFrame * FRAME_WIDTH;
-            const sy = row * FRAME_HEIGHT;
+            // (A) frame 갱신
+            if (isMoving) {
+              if (now - uf.lastFrameTime > frameInterval) {
+                uf.lastFrameTime = now;
+                uf.frame++;
+                if (uf.frame > maxMovingFrame) {
+                  uf.frame = 1; // 1..3 반복
+                }
+              }
+            } else {
+              uf.frame = 0; // idle
+              uf.lastFrameTime = now;
+            }
 
-            // 실제 캔버스에 그릴 위치
-            const { x, y } = user;
+            // (B) draw
+            const sx = uf.frame * FRAME_WIDTH;
+            const sy = direction * FRAME_HEIGHT;
 
-            // 레이어 순서대로 draw
             ctx.save();
             LAYER_ORDER.forEach((layer) => {
               const img = spriteImages[layer];
@@ -556,27 +531,23 @@ const LobbyCanvas: React.FC = () => {
             });
             ctx.restore();
 
-            // 닉네임 표시
+            // (C) 닉네임
             ctx.font = "bold 12px Arial";
             ctx.fillStyle = "white";
             ctx.textAlign = "center";
-            ctx.fillText(
-              user.nickname,
-              x + FRAME_WIDTH / 2,
-              y + FRAME_HEIGHT + 12,
-            );
+            ctx.fillText(nickname, x + FRAME_WIDTH / 2, y + FRAME_HEIGHT + 12);
           });
         }
       }
-
       animationId = requestAnimationFrame(render);
     };
 
     animationId = requestAnimationFrame(render);
+
     return () => {
       cancelAnimationFrame(animationId);
     };
-  }, [backgroundImage, spriteImages, direction, isMoving]);
+  }, [backgroundImage, spriteImages]);
 
   // ------------------ 리턴 (모달 + NPC + 포탈 + Canvas) ------------------
   return (
