@@ -1,7 +1,7 @@
 export const MAP_CONSTANTS = {
   IMG_WIDTH: 60,
   IMG_HEIGHT: 90,
-  SPEED: 30,
+  SPEED: 3,
   CANVAS_WIDTH: 1150,
   CANVAS_HEIGHT: 830,
 };

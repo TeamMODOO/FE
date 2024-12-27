@@ -1,14 +1,10 @@
-// components/LobbyCanvas.tsx
 "use client";
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
-// (2) 로비 전용 소켓 로직 (emitMovement + 이벤트 구독)
 import useLobbySocketEvents from "@/hooks/useLobbySocketEvents";
-// (1) 공통 소켓 연결
 import useMainSocketConnect from "@/hooks/useMainSocketConnect";
-// (3) Zustand (유저 스토어)
 import useUsersStore from "@/store/useUsersStore";
 
 import { NoticeItem } from "../../_model/NoticeBoard";
@@ -16,7 +12,6 @@ import { NpcInfo } from "../../_model/Npc";
 import { PortalInfo } from "../../_model/Portal";
 import { QNA_LIST } from "../../data/qna";
 import DailyProblemContent from "../DailyProblem/DailyProblemContent";
-// 기타 import (모달, NPC, 포탈 등)
 import { MAP_CONSTANTS } from "../MapConstants";
 import NoticeBoardModal from "../NoticeBoardModal/NoticeBoardModal";
 import NpcList from "../Npc/NpcList";
@@ -25,14 +20,57 @@ import PortalList from "../Portal/PortalList";
 import QnaContent from "../Qna/QnaContent";
 import SolvedUsersContent from "../SolvedUsers/SolvedUsersContent";
 import Style from "./Canvas.style";
-import characterImages from "./CharacterArray";
 
-const getTodayString = () => {
+/* =========================================
+   4방향 스프라이트: 행마다 방향이 다름
+   각 행(0~3)에 4프레임(0~3열)이 있다 가정
+   -----------------------------------------
+   - 행(row)
+     0 => Down
+     1 => Up
+     2 => Right
+     3 => Left
+   - 열(col)
+     0 => Idle (정지)
+     1,2,3 => 이동 애니메이션 프레임
+   ========================================= */
+const FRAME_WIDTH = 32;
+const FRAME_HEIGHT = 32;
+const FRAMES_PER_DIRECTION = 4; // 총 4프레임 (0=idle, 1,2,3=move)
+
+/**
+ * 사용자 방향(Direction)을 나타내는 enum-like 값
+ * 0=Down, 1=Up, 2=Right, 3=Left
+ */
+type Direction = 0 | 1 | 2 | 3;
+
+/* 
+   스프라이트 레이어 경로 
+   (body, eyes, clothes, hair 등 필요에 따라 추가 가능)
+*/
+const SPRITE_PATHS = {
+  body: "/sprites/body.png",
+  eyes: "/sprites/eyes.png",
+  clothes: "/sprites/clothes.png",
+  hair: "/sprites/hair.png",
+};
+
+const LAYER_ORDER = ["body", "eyes", "clothes", "hair"] as const;
+
+/** 오늘 문제를 푼 유저 타입 */
+type SolvedUser = {
+  userId: string;
+  nickname: string;
+  solvedProblemId: number;
+  solvedDate: string;
+};
+
+function getTodayString() {
   const d = new Date();
   const mm = String(d.getMonth() + 1).padStart(2, "0");
   const dd = String(d.getDate()).padStart(2, "0");
   return `${d.getFullYear()}-${mm}-${dd}`;
-};
+}
 
 /** 포탈 정보 (예시) */
 const portals: PortalInfo[] = [
@@ -94,37 +132,52 @@ const npcs: NpcInfo[] = [
   },
 ];
 
-/** 오늘 문제를 푼 유저 타입 */
-type SolvedUser = {
-  userId: string;
-  nickname: string;
-  solvedProblemId: number;
-  solvedDate: string;
-};
-
 const LobbyCanvas: React.FC = () => {
   const router = useRouter();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  // 1) 공통 소켓 연결 (한 번만 있으면 되므로,
-  //    _app.tsx나 Layout에 배치해도 OK. 여기선 예시로 사용)
+  // 1) 공통 소켓 연결
   useMainSocketConnect();
 
   // 2) 로비 전용 이벤트 + emitMovement
-  const myUserId = "1";
+  const myUserId = "1"; // 내 유저 ID (예시)
   const { emitMovement } = useLobbySocketEvents({
     roomId: "floor07",
     userId: myUserId,
   });
 
-  // 3) 배경 / 캐릭터 이미지 로드
+  // ------------------ 배경 이미지 로드 ------------------
   const [backgroundImage, setBackgroundImage] =
     useState<HTMLImageElement | null>(null);
-  const [loadedCharacterImages, setLoadedCharacterImages] = useState<
+
+  // ------------------ 스프라이트 레이어 로드 ------------------
+  const [spriteImages, setSpriteImages] = useState<
     Record<string, HTMLImageElement>
   >({});
 
-  // -------- 모달/공지사항/QnA 관련 --------
+  //  (1) 레이어 PNG 로드
+  useEffect(() => {
+    const loaded: Record<string, HTMLImageElement> = {};
+    const entries = Object.entries(SPRITE_PATHS);
+    let count = 0;
+
+    entries.forEach(([layer, path]) => {
+      const img = new Image();
+      img.src = path;
+      img.onload = () => {
+        loaded[layer] = img;
+        count++;
+        if (count === entries.length) {
+          setSpriteImages(loaded);
+        }
+      };
+      img.onerror = (e) => {
+        // console.error(`Fail to load sprite [${path}]`, e);
+      };
+    });
+  }, []);
+
+  // ------------------ 모달/공지/QnA 상태 ------------------
   const [npc1ModalOpen, setNpc1ModalOpen] = useState(false);
   const [npc2ModalOpen, setNpc2ModalOpen] = useState(false);
   const [npc3ModalOpen, setNpc3ModalOpen] = useState(false);
@@ -147,7 +200,7 @@ const LobbyCanvas: React.FC = () => {
     setWriterMessage("");
   };
 
-  // -------- 일일 문제 & 풀이 유저 --------
+  // ------------------ 일일 문제 & 풀이 유저 ------------------
   const [dailyProblem, setDailyProblem] = useState<{
     id: number;
     title: string;
@@ -212,7 +265,7 @@ const LobbyCanvas: React.FC = () => {
   const isAnyModalOpen =
     npc1ModalOpen || npc2ModalOpen || npc3ModalOpen || noticeModalOpen;
 
-  // -------- 포탈 / NPC 충돌 체크 --------
+  // ------------------ 포탈 / NPC 충돌 체크 ------------------
   const getPortalRouteIfOnPortal = (): string | null => {
     const { users } = useUsersStore.getState();
     const me = users.find((u) => u.id === myUserId);
@@ -252,43 +305,22 @@ const LobbyCanvas: React.FC = () => {
     return null;
   };
 
-  // -------- 키 입력 & 이동 --------
+  // ------------------ 키 입력 & 이동, 방향 관리 ------------------
   const [pressedKeys, setPressedKeys] = useState<Record<string, boolean>>({});
-  const [isFacingRight, setIsFacingRight] = useState(false);
+  const [direction, setDirection] = useState<Direction>(0); // 0=down,1=up,2=right,3=left
+  const [isMoving, setIsMoving] = useState(false);
 
-  useEffect(() => {
-    if (isAnyModalOpen) return;
-
-    const { users, updateUserPosition } = useUsersStore.getState();
-    const meIndex = users.findIndex((u) => u.id === myUserId);
-    if (meIndex < 0) return;
-
-    let { x, y } = users[meIndex];
-    let moved = false;
-
-    // 예시: w, a, s, d (대소문자 + 한글 자판), arrow
+  const handleDirectionKeys = () => {
+    // 단순 예시: 가장 마지막으로 눌린 방향 키 기준
+    // (복수 키가 눌리면 우선순위 설정 가능)
+    // 여기서는 ↓↑→← 순으로 체크
     if (
       pressedKeys["w"] ||
       pressedKeys["W"] ||
       pressedKeys["ㅈ"] ||
       pressedKeys["ArrowUp"]
     ) {
-      if (y > 0) {
-        y -= MAP_CONSTANTS.SPEED;
-        moved = true;
-      }
-    }
-    if (
-      pressedKeys["a"] ||
-      pressedKeys["A"] ||
-      pressedKeys["ㅁ"] ||
-      pressedKeys["ArrowLeft"]
-    ) {
-      if (x > 0) {
-        x -= MAP_CONSTANTS.SPEED;
-        setIsFacingRight(false);
-        moved = true;
-      }
+      return 1; // Up
     }
     if (
       pressedKeys["s"] ||
@@ -296,10 +328,7 @@ const LobbyCanvas: React.FC = () => {
       pressedKeys["ㄴ"] ||
       pressedKeys["ArrowDown"]
     ) {
-      if (y < MAP_CONSTANTS.CANVAS_HEIGHT - MAP_CONSTANTS.IMG_HEIGHT) {
-        y += MAP_CONSTANTS.SPEED;
-        moved = true;
-      }
+      return 0; // Down
     }
     if (
       pressedKeys["d"] ||
@@ -307,26 +336,24 @@ const LobbyCanvas: React.FC = () => {
       pressedKeys["ㅇ"] ||
       pressedKeys["ArrowRight"]
     ) {
-      if (x < MAP_CONSTANTS.CANVAS_WIDTH - MAP_CONSTANTS.IMG_WIDTH) {
-        x += MAP_CONSTANTS.SPEED;
-        setIsFacingRight(true);
-        moved = true;
-      }
+      return 2; // Right
     }
-
-    if (moved) {
-      // 1) 로컬(전역 store) 위치 업데이트
-      updateUserPosition(myUserId, x, y);
-      // 2) 서버 emitMovement
-      emitMovement(x, y);
+    if (
+      pressedKeys["a"] ||
+      pressedKeys["A"] ||
+      pressedKeys["ㅁ"] ||
+      pressedKeys["ArrowLeft"]
+    ) {
+      return 3; // Left
     }
-  }, [pressedKeys, isAnyModalOpen, emitMovement]);
+    return direction; // 기존 방향 유지
+  };
 
-  // -------- 스페이스바 -> 포탈/NPC --------
+  // 키보드 감지
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (isAnyModalOpen) return;
-
+      // 포탈 / NPC 상호작용
       if (e.key === " ") {
         const route = getPortalRouteIfOnPortal();
         if (route) {
@@ -357,35 +384,85 @@ const LobbyCanvas: React.FC = () => {
     };
   }, [isAnyModalOpen]);
 
-  // -------- 배경 & 캐릭터 이미지 로드 --------
+  // 실제 이동 로직
+  useEffect(() => {
+    if (isAnyModalOpen) return;
+
+    const { users, updateUserPosition } = useUsersStore.getState();
+    const meIndex = users.findIndex((u) => u.id === myUserId);
+    if (meIndex < 0) return;
+
+    let { x, y } = users[meIndex];
+    let moved = false;
+
+    // 방향 처리 (중복키 가능성 등을 간단히 처리)
+    const newDirection = handleDirectionKeys();
+    setDirection(newDirection);
+
+    // 이동 처리
+    if (
+      pressedKeys["w"] ||
+      pressedKeys["W"] ||
+      pressedKeys["ㅈ"] ||
+      pressedKeys["ArrowUp"]
+    ) {
+      if (y > 0) {
+        y -= MAP_CONSTANTS.SPEED;
+        moved = true;
+      }
+    }
+    if (
+      pressedKeys["s"] ||
+      pressedKeys["S"] ||
+      pressedKeys["ㄴ"] ||
+      pressedKeys["ArrowDown"]
+    ) {
+      if (y < MAP_CONSTANTS.CANVAS_HEIGHT - MAP_CONSTANTS.IMG_HEIGHT) {
+        y += MAP_CONSTANTS.SPEED;
+        moved = true;
+      }
+    }
+    if (
+      pressedKeys["d"] ||
+      pressedKeys["D"] ||
+      pressedKeys["ㅇ"] ||
+      pressedKeys["ArrowRight"]
+    ) {
+      if (x < MAP_CONSTANTS.CANVAS_WIDTH - MAP_CONSTANTS.IMG_WIDTH) {
+        x += MAP_CONSTANTS.SPEED;
+        moved = true;
+      }
+    }
+    if (
+      pressedKeys["a"] ||
+      pressedKeys["A"] ||
+      pressedKeys["ㅁ"] ||
+      pressedKeys["ArrowLeft"]
+    ) {
+      if (x > 0) {
+        x -= MAP_CONSTANTS.SPEED;
+        moved = true;
+      }
+    }
+
+    // 이동 완료 -> Store 업데이트 & 소켓 emit
+    if (moved) {
+      updateUserPosition(myUserId, x, y);
+      emitMovement(x, y);
+      setIsMoving(true);
+    } else {
+      setIsMoving(false);
+    }
+  }, [pressedKeys, isAnyModalOpen, emitMovement]);
+
+  // ------------------ 배경 이미지 로드 ------------------
   useEffect(() => {
     const bg = new Image();
     bg.src = "/background/lobby.webp";
     bg.onload = () => setBackgroundImage(bg);
   }, []);
 
-  useEffect(() => {
-    const entries = Object.entries(characterImages);
-    if (entries.length === 0) return;
-
-    const tempObj: Record<string, HTMLImageElement> = {};
-    let loadedCount = 0;
-    const total = entries.length;
-
-    entries.forEach(([charType, url]) => {
-      const img = new Image();
-      img.src = url;
-      img.onload = () => {
-        tempObj[charType] = img;
-        loadedCount++;
-        if (loadedCount === total) {
-          setLoadedCharacterImages(tempObj);
-        }
-      };
-    });
-  }, []);
-
-  // -------- Canvas rAF 30fps --------
+  // ------------------ rAF로 그리기 (30fps) ------------------
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -398,9 +475,14 @@ const LobbyCanvas: React.FC = () => {
 
     const fps = 30;
     const frameDuration = 1000 / fps;
-
     let lastTime = 0;
     let animationId: number;
+
+    // 애니메이션 프레임 관련
+    let currentFrame = 0; // 0=Idle, 1..3=이동 프레임
+    const maxMovingFrame = 3; // 이동시 사용할 최대 프레임(1..3)
+    const frameInterval = 200; // ms(애니메이션 속도)
+    let lastFrameChangeTime = 0;
 
     const render = (time: number) => {
       const delta = time - lastTime;
@@ -409,6 +491,7 @@ const LobbyCanvas: React.FC = () => {
 
         // 1) Clear
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+
         // 2) 배경
         if (backgroundImage) {
           ctx.drawImage(
@@ -419,51 +502,73 @@ const LobbyCanvas: React.FC = () => {
             MAP_CONSTANTS.CANVAS_HEIGHT,
           );
         }
-        // 3) 캐릭터 (전역 store)
-        const { users } = useUsersStore.getState();
-        users.forEach((user) => {
-          const charImg = loadedCharacterImages[user.characterType];
-          if (!charImg) return;
 
-          const isMe = user.id === myUserId;
-          const facingRight = isMe ? isFacingRight : false;
+        // 3) 캐릭터 스프라이트 그리기
+        // spriteImages (body/eyes/clothes/hair)가 모두 로드되었는지
+        if (Object.keys(spriteImages).length >= LAYER_ORDER.length) {
+          const now = performance.now();
 
-          ctx.save();
-          if (facingRight) {
-            ctx.translate(
-              user.x + MAP_CONSTANTS.IMG_WIDTH / 2,
-              user.y + MAP_CONSTANTS.IMG_HEIGHT / 2,
-            );
-            ctx.scale(-1, 1);
-            ctx.drawImage(
-              charImg,
-              -MAP_CONSTANTS.IMG_WIDTH / 2,
-              -MAP_CONSTANTS.IMG_HEIGHT / 2,
-              MAP_CONSTANTS.IMG_WIDTH,
-              MAP_CONSTANTS.IMG_HEIGHT,
-            );
+          // (A) 애니메이션 프레임 갱신 로직
+          if (isMoving) {
+            // 이동 중인 경우 → 1~3 프레임 반복
+            if (now - lastFrameChangeTime > frameInterval) {
+              lastFrameChangeTime = now;
+              currentFrame++;
+              if (currentFrame > maxMovingFrame) {
+                currentFrame = 1; // 1~3 반복
+              }
+            }
           } else {
-            ctx.drawImage(
-              charImg,
-              user.x,
-              user.y,
-              MAP_CONSTANTS.IMG_WIDTH,
-              MAP_CONSTANTS.IMG_HEIGHT,
-            );
+            // 정지 상태 → 0번 프레임(Idle)
+            currentFrame = 0;
           }
-          ctx.restore();
 
-          // 닉네임 표시
-          ctx.font = "bold 12px Arial";
-          ctx.fillStyle = "white";
-          ctx.textAlign = "center";
-          ctx.fillText(
-            user.nickname,
-            user.x + MAP_CONSTANTS.IMG_WIDTH / 2,
-            user.y + MAP_CONSTANTS.IMG_HEIGHT + 10,
-          );
-        });
+          // (B) 그리기
+          const { users } = useUsersStore.getState();
+          users.forEach((user) => {
+            // direction(row), currentFrame(col)
+            // row = direction(0~3), col= currentFrame(0~3)
+            const row = user.id === myUserId ? direction : 0;
+            // 위 예시에서는 다른 유저 방향 처리 로직이 없다면 임의로 0(Down) 잡음
+            // 실제론, 각 유저의 방향도 Store에 저장해주어야 함
+
+            const sx = currentFrame * FRAME_WIDTH;
+            const sy = row * FRAME_HEIGHT;
+
+            // 실제 캔버스에 그릴 위치
+            const { x, y } = user;
+
+            // 레이어 순서대로 draw
+            ctx.save();
+            LAYER_ORDER.forEach((layer) => {
+              const img = spriteImages[layer];
+              ctx.drawImage(
+                img,
+                sx,
+                sy,
+                FRAME_WIDTH,
+                FRAME_HEIGHT,
+                x,
+                y,
+                FRAME_WIDTH,
+                FRAME_HEIGHT,
+              );
+            });
+            ctx.restore();
+
+            // 닉네임 표시
+            ctx.font = "bold 12px Arial";
+            ctx.fillStyle = "white";
+            ctx.textAlign = "center";
+            ctx.fillText(
+              user.nickname,
+              x + FRAME_WIDTH / 2,
+              y + FRAME_HEIGHT + 12,
+            );
+          });
+        }
       }
+
       animationId = requestAnimationFrame(render);
     };
 
@@ -471,9 +576,9 @@ const LobbyCanvas: React.FC = () => {
     return () => {
       cancelAnimationFrame(animationId);
     };
-  }, [backgroundImage, loadedCharacterImages, isFacingRight]);
+  }, [backgroundImage, spriteImages, direction, isMoving]);
 
-  // -------- 리턴 (모달들 + NPC/포탈 + Canvas) --------
+  // ------------------ 리턴 (모달 + NPC + 포탈 + Canvas) ------------------
   return (
     <>
       {/* NPC1 모달 */}
