@@ -19,12 +19,16 @@ const useMainSocketConnect = () => {
   const setIsConnected = useMainSocketStore((state) => state.setIsConnected);
 
   useEffect(() => {
-    // 실제 서버 주소
-    // const baseURL = process.env.NEXT_PUBLIC_BASE_URL;
-    // const newMainSocket = io(baseURL, { path: process.env.NEXT_APP_SOCKET_PATH });
+    const baseURL = process.env.NEXT_PUBLIC_BASE_URL;
 
-    const newMainSocket = io("http://127.0.0.1:8000", {
-      path: "/sockets",
+    // const clientId = 사용자 고유 ID 가져오기. 로컬 스토리지?
+    const clientId = "user_id"; // 여기를 실제 클라이언트 ID로 교체
+
+    const newMainSocket = io(baseURL, {
+      path: "/sio/sockets",
+      query: {
+        client_id: clientId, // 클라이언트 ID를 query로 전달
+      },
     });
 
     newMainSocket.on("connect", () => {
