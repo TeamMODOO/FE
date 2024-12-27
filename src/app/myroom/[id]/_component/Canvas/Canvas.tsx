@@ -1,20 +1,9 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import NextImage from "next/image";
 import React, { useEffect, useRef, useState } from "react";
 
-// (1) 사용자/가구 모델
-import { Funiture } from "../../_model/Funiture";
-import { Direction, User } from "../../_model/User";
-
-// (2) 모달들
-import BoardModal from "../BoardModal/BoardModal";
-import FurnitureInfoModal from "../FurnitureInfoModal/FurnitureInfoModal";
-import PortfolioModal from "../PortfolioModal/PortfolioModal";
-import ResumeModal from "../ResumeModal/ResumeModal";
-import TechStackModal from "../TechStackModal/TechStackModal";
-
+import { Button } from "@/components/ui/button";
 // (3) 스프라이트 로딩 훅 & 상수
 import useLoadSprites, {
   FRAME_HEIGHT,
@@ -22,6 +11,15 @@ import useLoadSprites, {
   LAYER_ORDER,
 } from "@/hooks/useLoadSprites";
 
+// (1) 사용자/가구 모델
+import { Funiture } from "../../_model/Funiture";
+import { Direction, User } from "../../_model/User";
+// (2) 모달들
+import BoardModal from "../BoardModal/BoardModal";
+import FurnitureInfoModal from "../FurnitureInfoModal/FurnitureInfoModal";
+import PortfolioModal from "../PortfolioModal/PortfolioModal";
+import ResumeModal from "../ResumeModal/ResumeModal";
+import TechStackModal from "../TechStackModal/TechStackModal";
 // (4) 스타일, 가구이미지
 import Style from "./Canvas.style";
 import interiorImages from "./Interior";
@@ -155,6 +153,48 @@ const MyRoomCanvas: React.FC = () => {
       y: 600,
       funitureType: "none",
       funiturename: "기술스택3",
+    },
+    {
+      id: "technologyStack-4",
+      x: 950,
+      y: 700,
+      funitureType: "none",
+      funiturename: "기술스택4",
+    },
+    {
+      id: "technologyStack-5",
+      x: 1150,
+      y: 680,
+      funitureType: "none",
+      funiturename: "기술스택5",
+    },
+    {
+      id: "technologyStack-6",
+      x: 1000,
+      y: 450,
+      funitureType: "none",
+      funiturename: "기술스택6",
+    },
+    {
+      id: "technologyStack-7",
+      x: 1160,
+      y: 400,
+      funitureType: "none",
+      funiturename: "기술스택7",
+    },
+    {
+      id: "technologyStack-8",
+      x: 1250,
+      y: 200,
+      funitureType: "none",
+      funiturename: "기술스택8",
+    },
+    {
+      id: "technologyStack-9",
+      x: 1350,
+      y: 100,
+      funitureType: "none",
+      funiturename: "기술스택9",
     },
   ]);
 
