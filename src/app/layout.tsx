@@ -3,7 +3,7 @@ import "@/styles/globals.css";
 import type { Metadata } from "next";
 import { SessionProvider } from "next-auth/react";
 
-import { HomeSideBar, MeetingRoomSideBar } from "@/components";
+import { HomeSideBar } from "@/components";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import { AppProviders } from "@/provider";
@@ -24,7 +24,6 @@ export default function RootLayout({
       <body className={cn("font-spoqa-han-sans-neo", "w-full", "h-dvh")}>
         <SessionProvider>
           <SidebarProvider>
-            <MeetingRoomSideBar />
             <HomeSideBar />
           </SidebarProvider>
           <AppProviders>{children}</AppProviders>
