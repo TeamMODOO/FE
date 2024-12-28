@@ -1,6 +1,5 @@
 "use client";
 
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import NextImage from "next/image";
 import React, { useEffect, useRef, useState } from "react";
 
@@ -628,28 +627,58 @@ const MyRoomCanvas: React.FC = () => {
     setResumeModalOpen(false);
     setResumeLink("");
   };
-  const handleSavePortfolio = () => {
+
+  const handleSavePortfolio = async () => {
     if (!portfolioFile) {
       setPortfolioModalOpen(false);
       return;
     }
-    const idx = portfolio.findIndex((p) => p.funitureType === "none");
-    if (idx !== -1) {
-      setPortfolio((prev) =>
-        prev.map((item, i) =>
-          i === idx
-            ? {
-                ...item,
-                funitureType: `portfolio/portfolio${idx + 1}`,
-                data: { fileName: portfolioFile.name },
-              }
-            : item,
-        ),
-      );
+
+    try {
+      // 1) FormData 생성
+      const formData = new FormData();
+      formData.append("file", portfolioFile);
+
+      // 2) /api/portfolio 로 POST
+      const res = await fetch("/api/portfolio", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (!data.success) {
+        throw new Error(data.error || "Upload failed");
+      }
+
+      // 3) 업로드된 S3 URL
+      const s3Url = data.url;
+      // console.log("S3 업로드 성공! URL:", s3Url);
+
+      // 4) 기존 로직 (state 갱신)
+      const idx = portfolio.findIndex((p) => p.funitureType === "none");
+      if (idx !== -1) {
+        setPortfolio((prev) =>
+          prev.map((item, i) =>
+            i === idx
+              ? {
+                  ...item,
+                  funitureType: `portfolio/portfolio${idx + 1}`,
+                  // 업로드된 파일 URL
+                  data: { fileName: portfolioFile.name, url: s3Url },
+                }
+              : item,
+          ),
+        );
+      }
+
+      // 5) 모달 닫기 & 파일 초기화
+      setPortfolioModalOpen(false);
+      setPortfolioFile(null);
+    } catch (error) {
+      // console.error("S3 업로드 중 오류 발생:", error);
     }
-    setPortfolioModalOpen(false);
-    setPortfolioFile(null);
   };
+
   const handleSaveTechStack = () => {
     if (!selectedTech) {
       setTechStackModalOpen(false);
