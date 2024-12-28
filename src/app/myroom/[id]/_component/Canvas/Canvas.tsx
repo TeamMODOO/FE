@@ -1,5 +1,6 @@
 "use client";
 
+import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import NextImage from "next/image";
 import React, { useEffect, useRef, useState } from "react";
 

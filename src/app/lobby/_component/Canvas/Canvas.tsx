@@ -110,9 +110,10 @@ const LobbyCanvas: React.FC = () => {
 
   // (2) 로비 소켓 이벤트
   const myUserId = "1";
+  const clientId = localStorage.getItem("client_id") || "anonymous";
   const { emitMovement } = useLobbySocketEvents({
     roomId: "floor07",
-    userId: "user_id",
+    userId: clientId,
   });
 
   // ★ 스프라이트 로딩 훅

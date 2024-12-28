@@ -3,6 +3,7 @@
 
 import { useEffect, useRef } from "react";
 import { io, Socket } from "socket.io-client";
+import { v4 as uuid } from "uuid";
 
 import useMainSocketStore from "@/store/useMainSocketStore";
 
@@ -22,7 +23,14 @@ const useMainSocketConnect = () => {
     const baseURL = process.env.NEXT_PUBLIC_BASE_URL;
 
     // const clientId = 사용자 고유 ID 가져오기. 로컬 스토리지?
-    const clientId = "user_id"; // 여기를 실제 클라이언트 ID로 교체
+    // const clientId = "user_id"; // 여기를 실제 클라이언트 ID로 교체
+
+    let clientId = localStorage.getItem("client_id");
+    if (!clientId) {
+      // 없다면 새로 생성 후 저장
+      clientId = uuid();
+      localStorage.setItem("client_id", clientId);
+    }
 
     const newMainSocket = io(baseURL, {
       path: "/sio/sockets",
