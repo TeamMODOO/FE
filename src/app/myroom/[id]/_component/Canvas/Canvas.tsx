@@ -14,7 +14,7 @@ import useLoadSprites, {
 // (소켓 연결 관련 훅들)
 import useMainSocketConnect from "@/hooks/useMainSocketConnect";
 import useMyRoomSocketEvents from "@/hooks/useMyRoomSocketEvents";
-// (3) Throttle 훅 (값 쓰로틀링)
+// (3) Throttle 훅 (값 쓰로틀 → 이번엔 “키 입력”을 쓰로틀)
 import useThrottle from "@/hooks/useThrottle";
 
 // (4) 모델/타입
@@ -64,7 +64,7 @@ const techStackList = [
 const MAP_CONSTANTS = {
   CANVAS_WIDTH: 1500,
   CANVAS_HEIGHT: 830,
-  SPEED: 2, // 캐릭터 이동 속도
+  SPEED: 30, // 캐릭터 이동 속도
 };
 
 // ★ 캐릭터를 2배로 크게 표시
@@ -310,9 +310,11 @@ const MyRoomCanvas: React.FC = () => {
       }
       setPressedKeys((prev) => ({ ...prev, [e.key]: true }));
     };
+
     const handleKeyUp = (e: KeyboardEvent) => {
       setPressedKeys((prev) => ({ ...prev, [e.key]: false }));
     };
+
     const handleBlur = () => {
       setPressedKeys({});
     };
@@ -331,11 +333,10 @@ const MyRoomCanvas: React.FC = () => {
   // --------------------------------------------------
   // (K) 방향 계산 함수
   // --------------------------------------------------
-  function getNewDirection(usersList: User[]): Direction {
+  function getNewDirection(usersList: User[]): Direction | null {
     const me = usersList.find((u) => u.id === myUserId);
     if (!me) return 0;
 
-    // Up
     if (
       pressedKeys["w"] ||
       pressedKeys["W"] ||
@@ -344,7 +345,6 @@ const MyRoomCanvas: React.FC = () => {
     ) {
       return 1; // Up
     }
-    // Down
     if (
       pressedKeys["s"] ||
       pressedKeys["S"] ||
@@ -353,7 +353,6 @@ const MyRoomCanvas: React.FC = () => {
     ) {
       return 0; // Down
     }
-    // Right
     if (
       pressedKeys["d"] ||
       pressedKeys["D"] ||
@@ -362,7 +361,6 @@ const MyRoomCanvas: React.FC = () => {
     ) {
       return 2; // Right
     }
-    // Left
     if (
       pressedKeys["a"] ||
       pressedKeys["A"] ||
@@ -372,8 +370,8 @@ const MyRoomCanvas: React.FC = () => {
       return 3; // Left
     }
 
-    // 아무 키도 누르지 않은 상태면 기존 유지
-    return me.direction ?? 0;
+    // 아무 키도 없으면 null (멈춤)
+    return null;
   }
 
   // --------------------------------------------------
@@ -395,32 +393,81 @@ const MyRoomCanvas: React.FC = () => {
   }, []);
 
   // --------------------------------------------------
-  // (M) "이동 좌표" state + throttledMovementData
-  //     ⇒ useThrottle에 "값"을 넣어서 100ms 단위로 emitMovement
+  // (M) 키 입력 자체를 쓰로틀(로비 방식)
   // --------------------------------------------------
-  // 1) 이동 좌표를 state로 관리
-  const [movementData, setMovementData] = useState<{
-    x: number;
-    y: number;
-    dir: Direction;
-  }>({ x: 500, y: 500, dir: 0 });
+  // → 100ms마다 "pressedKeys"를 "throttledPressedKeys"로 동기화
+  const throttledPressedKeys = useThrottle(pressedKeys, 100);
 
-  // 2) movementData를 100ms 단위로 쓰로틀링
-  const throttledMovementData = useThrottle(movementData, 100);
-
-  // 3) throttledMovementData가 변할 때 emitMovement
+  // --------------------------------------------------
+  // (N) useEffect: throttledPressedKeys 기반으로 "이동 자체"를 100ms 간격 수행
+  // --------------------------------------------------
   useEffect(() => {
-    // 만약 값이 처음 초기화된 상태(기존 값 x=0,y=0...)와 같으면 굳이 emit 안 해도 됨
-    // 여기서는 단순히 무조건 emitMovement 하는 예시
-    emitMovement(
-      throttledMovementData.x,
-      throttledMovementData.y,
-      throttledMovementData.dir,
-    );
-  }, [throttledMovementData, emitMovement]);
+    // 1) 다른 모달 등이 열려있으면 이동 X
+    // (원하신다면, 여기서 modal open 여부를 체크)
+    // 예) if (someModalOpen) return;
+
+    setUsers((prevUsers) => {
+      const newUsers = [...prevUsers];
+      const meIndex = newUsers.findIndex((u) => u.id === myUserId);
+      if (meIndex < 0) return newUsers;
+
+      const me = newUsers[meIndex];
+      let { x, y } = me;
+
+      // (a) 방향 계산
+      const newDir = getNewDirection(newUsers);
+      if (newDir === null) {
+        // 아무 키도 없으면 → 멈춤
+        newUsers[meIndex] = { ...me, isMoving: false };
+        return newUsers;
+      }
+
+      // (b) 실제 이동
+      let moved = false;
+      if (newDir === 1 && y > 0) {
+        // Up
+        y -= MAP_CONSTANTS.SPEED;
+        moved = true;
+      } else if (
+        newDir === 0 &&
+        y < MAP_CONSTANTS.CANVAS_HEIGHT - FRAME_HEIGHT * CHAR_SCALE
+      ) {
+        // Down
+        y += MAP_CONSTANTS.SPEED;
+        moved = true;
+      } else if (
+        newDir === 2 &&
+        x < MAP_CONSTANTS.CANVAS_WIDTH - FRAME_WIDTH * CHAR_SCALE
+      ) {
+        // Right
+        x += MAP_CONSTANTS.SPEED;
+        moved = true;
+      } else if (newDir === 3 && x > 0) {
+        // Left
+        x -= MAP_CONSTANTS.SPEED;
+        moved = true;
+      }
+
+      // (c) 반영
+      newUsers[meIndex] = {
+        ...me,
+        x,
+        y,
+        direction: newDir,
+        isMoving: moved,
+      };
+
+      // (d) 소켓 emit
+      if (moved) {
+        emitMovement(x, y, newDir);
+      }
+
+      return newUsers;
+    });
+  }, [throttledPressedKeys, emitMovement]);
 
   // --------------------------------------------------
-  // (N) rAF로 이동 & 그리기
+  // (O) rAF로 그리기
   // --------------------------------------------------
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -440,88 +487,7 @@ const MyRoomCanvas: React.FC = () => {
       if (delta >= frameDuration) {
         lastTime = time - (delta % frameDuration);
 
-        // (1) 캐릭터 이동 계산
-        setUsers((prevUsers) => {
-          const newDir = getNewDirection(prevUsers);
-
-          return prevUsers.map((user) => {
-            if (user.id !== myUserId) return user; // 자기 자신만 이동 처리
-
-            let { x, y } = user;
-            let moved = false;
-
-            // Up
-            if (
-              pressedKeys["w"] ||
-              pressedKeys["W"] ||
-              pressedKeys["ㅈ"] ||
-              pressedKeys["ArrowUp"]
-            ) {
-              if (y > 0) {
-                y -= MAP_CONSTANTS.SPEED;
-                moved = true;
-              }
-            }
-            // Down
-            if (
-              pressedKeys["s"] ||
-              pressedKeys["S"] ||
-              pressedKeys["ㄴ"] ||
-              pressedKeys["ArrowDown"]
-            ) {
-              if (
-                y + FRAME_HEIGHT * CHAR_SCALE + MAP_CONSTANTS.SPEED <=
-                MAP_CONSTANTS.CANVAS_HEIGHT
-              ) {
-                y += MAP_CONSTANTS.SPEED;
-                moved = true;
-              }
-            }
-            // Right
-            if (
-              pressedKeys["d"] ||
-              pressedKeys["D"] ||
-              pressedKeys["ㅇ"] ||
-              pressedKeys["ArrowRight"]
-            ) {
-              if (
-                x + FRAME_WIDTH * CHAR_SCALE + MAP_CONSTANTS.SPEED <=
-                MAP_CONSTANTS.CANVAS_WIDTH
-              ) {
-                x += MAP_CONSTANTS.SPEED;
-                moved = true;
-              }
-            }
-            // Left
-            if (
-              pressedKeys["a"] ||
-              pressedKeys["A"] ||
-              pressedKeys["ㅁ"] ||
-              pressedKeys["ArrowLeft"]
-            ) {
-              if (x > 0) {
-                x -= MAP_CONSTANTS.SPEED;
-                moved = true;
-              }
-            }
-
-            // 이동이 있었다면
-            if (moved) {
-              // (2) movementData 업데이트만 함
-              setMovementData({ x, y, dir: newDir });
-            }
-
-            return {
-              ...user,
-              x,
-              y,
-              direction: newDir,
-              isMoving: moved,
-            };
-          });
-        });
-
-        // (3) 캔버스 그리기
+        // 1) Clear
         ctx.clearRect(
           0,
           0,
@@ -529,7 +495,7 @@ const MyRoomCanvas: React.FC = () => {
           MAP_CONSTANTS.CANVAS_HEIGHT,
         );
 
-        // 배경
+        // 2) 배경
         if (backgroundImage) {
           ctx.drawImage(
             backgroundImage,
@@ -540,9 +506,10 @@ const MyRoomCanvas: React.FC = () => {
           );
         }
 
-        // 캐릭터 스프라이트
+        // 3) 캐릭터 스프라이트
         const now = performance.now();
         users.forEach((user) => {
+          // 보행 프레임 관리
           const frameData = userFrameRef.current[user.id];
           if (!frameData) {
             userFrameRef.current[user.id] = {
@@ -565,8 +532,9 @@ const MyRoomCanvas: React.FC = () => {
             frameData.lastFrameTime = now;
           }
 
+          // 스프라이트 그리기
           const sx = frameData.frame * FRAME_WIDTH;
-          const sy = user.direction! * FRAME_HEIGHT;
+          const sy = (user.direction ?? 0) * FRAME_HEIGHT;
 
           if (Object.keys(spriteImages).length === LAYER_ORDER.length) {
             ctx.save();
@@ -606,10 +574,10 @@ const MyRoomCanvas: React.FC = () => {
     return () => {
       cancelAnimationFrame(animationId);
     };
-  }, [backgroundImage, spriteImages, users, pressedKeys]);
+  }, [backgroundImage, spriteImages, users]);
 
   // --------------------------------------------------
-  // (O) 게시판 새 글 작성
+  // (P) 게시판 새 글 작성
   // --------------------------------------------------
   const handleAddComment = () => {
     if (!visitorName.trim() || !visitorMessage.trim()) return;
@@ -622,7 +590,7 @@ const MyRoomCanvas: React.FC = () => {
   };
 
   // --------------------------------------------------
-  // (P) 모달 열기
+  // (Q) 모달 열기
   // --------------------------------------------------
   const handleOpenResumeModal = () => {
     if (resume.filter((r) => r.funitureType !== "none").length >= 1) return;
@@ -639,7 +607,7 @@ const MyRoomCanvas: React.FC = () => {
   };
 
   // --------------------------------------------------
-  // (Q) 모달 저장
+  // (R) 모달 저장
   // --------------------------------------------------
   const handleSaveResume = () => {
     const idx = resume.findIndex((r) => r.funitureType === "none");
@@ -705,7 +673,7 @@ const MyRoomCanvas: React.FC = () => {
   };
 
   // --------------------------------------------------
-  // (R) 가구 클릭 → 상세
+  // (S) 가구 클릭 → 상세
   // --------------------------------------------------
   const handleFurnitureClick = (f: Funiture) => {
     // "none" 또는 "board" 타입이면 상세 모달 없음
@@ -725,7 +693,7 @@ const MyRoomCanvas: React.FC = () => {
     technologyStack.filter((t) => t.funitureType !== "none").length >= 9;
 
   // --------------------------------------------------
-  // (S) 렌더
+  // (T) 렌더
   // --------------------------------------------------
   return (
     <div className={Style.canvasContainerClass}>
