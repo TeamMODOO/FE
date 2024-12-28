@@ -1,0 +1,36 @@
+/* Modal.module.css */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999; /* Ensure it's on top */
+}
+
+.modal {
+  background: rgba(50, 50, 50, 0.9);
+  max-width: 500px;
+  padding: 20px;
+  border-radius: 8px;
+  position: relative;
+  color: white;
+}
+
+.closeBtn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  cursor: pointer;
+}
+
+.content {
+  padding: 10px;
+  max-width: 500px;
+  margin-top: 40px;
+  min-height: 400px;
+}
