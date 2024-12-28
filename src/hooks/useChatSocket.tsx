@@ -29,7 +29,7 @@ export const useChatSocket = ({ roomId }: ChatSocketType) => {
 
     const messageInfo = {
       room_id: roomId,
-      user_name: "user1",
+      user_name: "user_id",
       message: messageValue,
     };
 
