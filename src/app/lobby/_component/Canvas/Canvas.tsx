@@ -10,6 +10,7 @@ import useLoadSprites, {
 } from "@/hooks/useLoadSprites";
 import useLobbySocketEvents from "@/hooks/useLobbySocketEvents";
 import useMainSocketConnect from "@/hooks/useMainSocketConnect";
+import useThrottle from "@/hooks/useThrottle";
 import useUsersStore from "@/store/useUsersStore";
 
 import { NoticeItem } from "../../_model/NoticeBoard";
@@ -26,9 +27,7 @@ import QnaContent from "../Qna/QnaContent";
 import SolvedUsersContent from "../SolvedUsers/SolvedUsersContent";
 import Style from "./Canvas.style";
 
-/** 스프라이트/이동에 사용하는 타입들 */
 type Direction = 0 | 1 | 2 | 3; // 0=Down,1=Up,2=Right,3=Left
-
 type SolvedUser = {
   userId: string;
   nickname: string;
@@ -107,20 +106,19 @@ const LobbyCanvas: React.FC = () => {
   const router = useRouter();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  // 1) 공통 소켓 연결
-  useMainSocketConnect();
+  useMainSocketConnect(); // (1) 소켓 연결
 
-  // 2) 로비 소켓 이벤트
+  // (2) 로비 소켓 이벤트
   const myUserId = "1";
   const { emitMovement } = useLobbySocketEvents({
     roomId: "floor07",
     userId: "user_id",
   });
 
-  // ★ 스프라이트 로딩 훅 호출
+  // ★ 스프라이트 로딩 훅
   const spriteImages = useLoadSprites();
 
-  // ------------------ 배경 이미지 ------------------
+  // ------------------ 배경 ------------------
   const [backgroundImage, setBackgroundImage] =
     useState<HTMLImageElement | null>(null);
   useEffect(() => {
@@ -153,7 +151,7 @@ const LobbyCanvas: React.FC = () => {
     });
   }, []);
 
-  // ------------------ 모달/공지/QnA ------------------
+  // ------------------ 모달 관련 ------------------
   const [npc1ModalOpen, setNpc1ModalOpen] = useState(false);
   const [npc2ModalOpen, setNpc2ModalOpen] = useState(false);
   const [npc3ModalOpen, setNpc3ModalOpen] = useState(false);
@@ -176,6 +174,7 @@ const LobbyCanvas: React.FC = () => {
     setWriterMessage("");
   };
 
+  // ------------------ 데일리 문제/QnA 예시 ------------------
   const [dailyProblem, setDailyProblem] = useState<{
     id: number;
     title: string;
@@ -186,7 +185,6 @@ const LobbyCanvas: React.FC = () => {
   const [selectedQnaIndex, setSelectedQnaIndex] = useState<number | null>(null);
 
   useEffect(() => {
-    // 예시
     setDailyProblem({
       id: 1018,
       title: "체스판 다시 칠하기",
@@ -219,10 +217,11 @@ const LobbyCanvas: React.FC = () => {
     setSelectedQnaIndex((prev) => (prev === index ? null : index));
   };
 
+  // ------------------ 모달 열림 체크 ------------------
   const isAnyModalOpen =
     npc1ModalOpen || npc2ModalOpen || npc3ModalOpen || noticeModalOpen;
 
-  // ------------------ 포탈 / NPC 충돌 ------------------
+  // ------------------ 포탈 / NPC 충돌 체크 ------------------
   function getPortalRouteIfOnPortal(): string | null {
     const { users } = useUsersStore.getState();
     const me = users.find((u) => u.id === myUserId);
@@ -262,22 +261,11 @@ const LobbyCanvas: React.FC = () => {
     return null;
   }
 
-  // ------------------ 키 입력 & 이동 상태 ------------------
+  // --------------------------------------------------
+  // (A) 키 입력 상태 & 쓰로틀
+  // --------------------------------------------------
   const [pressedKeys, setPressedKeys] = useState<Record<string, boolean>>({});
-  const [direction, setDirection] = useState<Direction>(0);
-  const [isMoving, setIsMoving] = useState(false);
 
-  // ------------------------------
-  // 모달 닫힘 감지하여 pressedKeys 초기화
-  // ------------------------------
-  useEffect(() => {
-    if (!isAnyModalOpen) {
-      // 모든 모달이 닫힌 경우 → 키 상태 리셋
-      setPressedKeys({});
-    }
-  }, [isAnyModalOpen]);
-
-  // 키 이벤트 등록
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (isAnyModalOpen) return;
@@ -286,7 +274,7 @@ const LobbyCanvas: React.FC = () => {
         e.preventDefault();
       }
 
-      // 스페이스 → 포탈 or NPC
+      // Space → 포탈/NPC
       if (e.key === " ") {
         const route = getPortalRouteIfOnPortal();
         if (route) {
@@ -325,44 +313,25 @@ const LobbyCanvas: React.FC = () => {
     };
   }, [isAnyModalOpen, router]);
 
-  // 방향 계산
-  function handleDirectionKeys(): Direction {
-    if (
-      pressedKeys["w"] ||
-      pressedKeys["W"] ||
-      pressedKeys["ㅈ"] ||
-      pressedKeys["ArrowUp"]
-    ) {
-      return 1; // Up
-    }
-    if (
-      pressedKeys["s"] ||
-      pressedKeys["S"] ||
-      pressedKeys["ㄴ"] ||
-      pressedKeys["ArrowDown"]
-    ) {
-      return 0; // Down
-    }
-    if (
-      pressedKeys["d"] ||
-      pressedKeys["D"] ||
-      pressedKeys["ㅇ"] ||
-      pressedKeys["ArrowRight"]
-    ) {
-      return 2; // Right
-    }
-    if (
-      pressedKeys["a"] ||
-      pressedKeys["A"] ||
-      pressedKeys["ㅁ"] ||
-      pressedKeys["ArrowLeft"]
-    ) {
-      return 3; // Left
-    }
-    return direction; // 기존 유지
+  // 200ms 단위로 키 상태를 반영
+  const throttledPressedKeys = useThrottle(pressedKeys, 100);
+
+  // --------------------------------------------------
+  // (B) 방향 계산(핵심: 아무 키도 없으면 null)
+  // --------------------------------------------------
+  function getDirectionFromKeys(
+    keys: Record<string, boolean>,
+  ): Direction | null {
+    if (keys["w"] || keys["W"] || keys["ㅈ"] || keys["ArrowUp"]) return 1; // Up
+    if (keys["s"] || keys["S"] || keys["ㄴ"] || keys["ArrowDown"]) return 0; // Down
+    if (keys["d"] || keys["D"] || keys["ㅇ"] || keys["ArrowRight"]) return 2; // Right
+    if (keys["a"] || keys["A"] || keys["ㅁ"] || keys["ArrowLeft"]) return 3; // Left
+    return null; // ★ 아무 키도 없으면 null
   }
 
-  // 이동 로직
+  // --------------------------------------------------
+  // (C) 이동 로직
+  // --------------------------------------------------
   useEffect(() => {
     if (isAnyModalOpen) return;
 
@@ -370,74 +339,56 @@ const LobbyCanvas: React.FC = () => {
     const meIndex = users.findIndex((u) => u.id === myUserId);
     if (meIndex < 0) return;
 
-    let { x, y } = users[meIndex];
+    const me = users[meIndex];
+    let { x, y } = me;
+
+    // 1) 키 → 방향
+    const newDir = getDirectionFromKeys(throttledPressedKeys);
+    if (newDir === null) {
+      // ★ 아무 키도 없으면 => 멈춤 처리만
+      updateUserPosition(myUserId, x, y, me.direction, false);
+      return;
+    }
+
+    // 2) 실제 이동
     let moved = false;
-
-    const newDir = handleDirectionKeys();
-    setDirection(newDir);
-
-    // 상
-    if (
-      pressedKeys["w"] ||
-      pressedKeys["W"] ||
-      pressedKeys["ㅈ"] ||
-      pressedKeys["ArrowUp"]
+    if (newDir === 1 && y > 0) {
+      // Up
+      y -= MAP_CONSTANTS.SPEED;
+      moved = true;
+    } else if (
+      newDir === 0 &&
+      y < MAP_CONSTANTS.MAP_HEIGHT - MAP_CONSTANTS.IMG_HEIGHT
     ) {
-      if (y > 0) {
-        y -= MAP_CONSTANTS.SPEED;
-        moved = true;
-      }
-    }
-    // 하
-    if (
-      pressedKeys["s"] ||
-      pressedKeys["S"] ||
-      pressedKeys["ㄴ"] ||
-      pressedKeys["ArrowDown"]
+      // Down
+      y += MAP_CONSTANTS.SPEED;
+      moved = true;
+    } else if (
+      newDir === 2 &&
+      x < MAP_CONSTANTS.MAP_WIDTH - MAP_CONSTANTS.IMG_WIDTH
     ) {
-      if (y < MAP_CONSTANTS.MAP_HEIGHT - MAP_CONSTANTS.IMG_HEIGHT) {
-        y += MAP_CONSTANTS.SPEED;
-        moved = true;
-      }
-    }
-    // 우
-    if (
-      pressedKeys["d"] ||
-      pressedKeys["D"] ||
-      pressedKeys["ㅇ"] ||
-      pressedKeys["ArrowRight"]
-    ) {
-      if (x < MAP_CONSTANTS.MAP_WIDTH - MAP_CONSTANTS.IMG_WIDTH) {
-        x += MAP_CONSTANTS.SPEED;
-        moved = true;
-      }
-    }
-    // 좌
-    if (
-      pressedKeys["a"] ||
-      pressedKeys["A"] ||
-      pressedKeys["ㅁ"] ||
-      pressedKeys["ArrowLeft"]
-    ) {
-      if (x > 0) {
-        x -= MAP_CONSTANTS.SPEED;
-        moved = true;
-      }
+      // Right
+      x += MAP_CONSTANTS.SPEED;
+      moved = true;
+    } else if (newDir === 3 && x > 0) {
+      // Left
+      x -= MAP_CONSTANTS.SPEED;
+      moved = true;
     }
 
-    // 실제로 이동했다면
     if (moved) {
+      // 이동 발생
       updateUserPosition(myUserId, x, y, newDir, true);
       emitMovement(x, y, newDir);
-      setIsMoving(true);
     } else {
-      // 안 움직임
+      // 방향은 바꾸되, 이동은 못함(벽 등)
       updateUserPosition(myUserId, x, y, newDir, false);
-      setIsMoving(false);
     }
-  }, [pressedKeys, isAnyModalOpen, emitMovement]);
+  }, [throttledPressedKeys, isAnyModalOpen, emitMovement]);
 
-  // ------------------ 카메라/줌 & rAF 그리기 ------------------
+  // --------------------------------------------------
+  // (D) rAF로 그리기(카메라 & 스프라이트)
+  // --------------------------------------------------
   const zoomFactor = 2;
   function clamp(value: number, min: number, max: number) {
     return Math.max(min, Math.min(max, value));
@@ -457,12 +408,12 @@ const LobbyCanvas: React.FC = () => {
     let lastTime = 0;
     let animationId = 0;
 
-    // user별 애니메이션 프레임
+    // 유저별 보행 프레임
     const userFrameMap: Record<
       string,
       { frame: number; lastFrameTime: number }
     > = {};
-    const frameInterval = 200; // 이동시 프레임 전환 속도
+    const frameInterval = 200;
     const maxMovingFrame = 3;
 
     const render = (time: number) => {
@@ -551,10 +502,9 @@ const LobbyCanvas: React.FC = () => {
           }
         });
 
-        // 6) 캐릭터(유저) 스프라이트
+        // 6) 캐릭터
         const now = performance.now();
         if (Object.keys(spriteImages).length === LAYER_ORDER.length) {
-          // 스프라이트가 모두 로딩된 경우에만 그림
           users.forEach((user) => {
             const { id, x, y, direction, isMoving, nickname } = user;
             if (!userFrameMap[id]) {
@@ -578,10 +528,10 @@ const LobbyCanvas: React.FC = () => {
             const sx = uf.frame * FRAME_WIDTH;
             const sy = direction * FRAME_HEIGHT;
 
-            // ★ 분리된 스프라이트 로딩 훅에서 가져온 spriteImages 활용
             ctx.save();
             LAYER_ORDER.forEach((layer) => {
               const img = spriteImages[layer];
+              if (!img) return;
               ctx.drawImage(
                 img,
                 sx,
