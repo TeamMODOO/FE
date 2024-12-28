@@ -114,7 +114,7 @@ const LobbyCanvas: React.FC = () => {
   const myUserId = "1";
   const { emitMovement } = useLobbySocketEvents({
     roomId: "floor07",
-    userId: myUserId,
+    userId: "user_id",
   });
 
   // ★ 스프라이트 로딩 훅 호출
