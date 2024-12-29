@@ -42,6 +42,8 @@ export async function POST(req: NextRequest) {
       - "betterSolution": string (if isCorrect is true, possibly a more optimal code or empty if none, 한국어로 작성)
       - "hint": string (if isCorrect is false, provide a helpful hint, 한국어로 작성)
 
+      If you find any more optimal or alternative solution, put that source code in "betterSolution" as a string.
+
       The entire response MUST be valid JSON, with no additional text, no code fences, and no explanation outside of JSON. 
       No triple backticks, no phrases like "The user's code is correct.".
       Only respond with the JSON object itself.
@@ -62,8 +64,9 @@ ${userCode}
 
 Please analyze the user's code to determine if it solves the problem correctly.
 If correct, return { "isCorrect": true, "betterSolution": "..." }
-If no better solution, say "이미 모범 답안 수준이에요!" as "betterSolutuion".
+If no  better solution, say "이미 모범 답안 수준이에요!" as "betterSolutuion".
 If incorrect, return { "isCorrect": false, "betterSolution": "", "hint": "..." }
+If you find a more optimal or alternative solution, include its code in "betterSolution" as a string.
 Return valid JSON only, without any other text or formatting.
 No code fences, no 'Here is the JSON' or explanation.
     `;
