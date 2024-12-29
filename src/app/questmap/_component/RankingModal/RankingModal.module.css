@@ -1,0 +1,54 @@
+/* Modal.module.css */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999; /* Ensure it's on top */
+}
+
+.modal {
+  background: rgba(255, 255, 255, 0.9);
+  min-width: 500px;
+  padding: 20px;
+  border-radius: 8px;
+  position: relative;
+  color: black;
+}
+
+.closeBtn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  cursor: pointer;
+}
+
+.modalHeader {
+  margin: 2dvw;
+}
+
+.modalTitle {
+  color: red;
+  font-weight: bold;
+  font-size: 1.5rem;
+  margin-bottom: 5px;
+}
+
+.modalContent {
+  padding: 10px;
+  height: 40dvh;
+  overflow: auto;
+}
+
+.rankingItem {
+  display: flex;
+  justify-content: space-between;
+  text-align: center;
+  align-items: center;
+  justify-items: center;
+}
