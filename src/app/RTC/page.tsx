@@ -279,15 +279,11 @@ function RoomPage() {
 
     const device = deviceRef.current;
     const recvTransport = recvTransportRef.current;
-    if (!device || !recvTransport) {
-      throw new Error("Device or RecvTransport not initialized");
-    }
 
-    console.log("Device and Transport check:", {
-      hasDevice: !!device,
-      hasTransport: !!recvTransport,
-    });
-    if (!socket) return;
+    if (!device || !recvTransport || !socket) {
+      console.error("Required resources not initialized");
+      return;
+    }
 
     try {
       // 이미 존재하는 같은 종류의 스트림이 있는지 확인
@@ -315,8 +311,6 @@ function RoomPage() {
             rtpCapabilities: device.rtpCapabilities,
           },
           (response: any) => {
-            console.log("Consume response:", response); // 응답 로깅
-
             if (response.error) {
               reject(new Error(response.error));
             } else {
@@ -328,6 +322,7 @@ function RoomPage() {
 
       const { consumerData } = response as any;
 
+      // Consumer 생성 및 초기화
       const consumer = await recvTransport.consume({
         id: consumerData.id,
         producerId: consumerData.producerId,
@@ -335,18 +330,22 @@ function RoomPage() {
         rtpParameters: consumerData.rtpParameters,
       });
 
-      consumer.resume();
+      // Consumer 재시작
+      await consumer.resume();
 
-      // 새로운 MediaStream 생성 및 상태에 추가
+      // 새로운 MediaStream 생성
       const stream = new MediaStream();
       stream.addTrack(consumer.track);
 
+      // remoteStreams 상태 업데이트
       setRemoteStreams((prev) => {
-        // 중복 체크를 한 번 더 수행
+        // 중복 체크
         const exists = prev.some(
-          (stream) => stream.peerId === peerId && stream.kind === consumer.kind,
+          (s) => s.peerId === peerId && s.kind === consumer.kind,
         );
         if (exists) return prev;
+
+        // 새 스트림 추가
         return [
           ...prev,
           {
@@ -356,6 +355,8 @@ function RoomPage() {
           },
         ];
       });
+
+      // 피어 상태 업데이트
       setPeerStates((prev) => ({
         ...prev,
         [peerId]: {
@@ -363,31 +364,8 @@ function RoomPage() {
           [consumer.kind]: true,
         },
       }));
-
-      // 오디오 처리 로직
-      if (consumer.kind === "audio") {
-        const audioContext = new AudioContext();
-        const source = audioContext.createMediaStreamSource(stream);
-        const analyzer = audioContext.createAnalyser();
-        source.connect(analyzer);
-
-        const updateAudioLevel = () => {
-          const dataArray = new Uint8Array(analyzer.frequencyBinCount);
-          analyzer.getByteFrequencyData(dataArray);
-          const volume =
-            dataArray.reduce((acc, val) => acc + val, 0) / dataArray.length;
-
-          if (volume > 10) {
-            // 오디오 레벨이 임계값을 넘었을 때의 처리
-            // 필요한 경우 여기에 추가 로직 구현
-            console.log("Audio level:", volume);
-          }
-
-          requestAnimationFrame(updateAudioLevel);
-        };
-        updateAudioLevel();
-      }
     } catch (error) {
+      console.error("Error in consume:", error);
       setPeerStates((prev) => ({
         ...prev,
         [peerId]: {
@@ -395,10 +373,10 @@ function RoomPage() {
           [kind]: false,
         },
       }));
-
-      throw new Error("Error in consume:" + error);
+      throw error;
     }
   };
+
   const toggleCamera = async () => {
     if (!socket) return;
 

@@ -105,8 +105,7 @@ export function RemoteMedia({
 
     // 클린업 함수
     return () => {
-      const currentMediaRefs = mediaRefs;
-      currentMediaRefs.current.forEach((elements) => {
+      mediaRefs.current.forEach((elements) => {
         if (elements.video) {
           elements.video.pause();
           elements.video.srcObject = null;
@@ -118,7 +117,6 @@ export function RemoteMedia({
       });
     };
   }, [activeStreams]);
-
   // 개별 피어의 미디어 렌더링을 위한 컴포넌트
   const PeerMedia = ({ peerId }: { peerId: string }) => {
     const peerStreams = activeStreams.get(peerId) || {};
