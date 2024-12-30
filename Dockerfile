@@ -1,5 +1,5 @@
 # 베이스 이미지로 Node.js 20.1 사용
-FROM node:20.1-alpine AS base
+FROM node:20.10-alpine AS base
 
 # 1. 의존성 설치 단계
 FROM base AS deps
