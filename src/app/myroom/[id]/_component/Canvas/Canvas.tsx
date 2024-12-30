@@ -68,7 +68,7 @@ const MAP_CONSTANTS = {
 };
 
 // ★ 캐릭터를 2배로 크게 표시
-const CHAR_SCALE = 2; // 2배
+const CHAR_SCALE = 3; // 2배
 
 const MyRoomCanvas: React.FC = () => {
   // --------------------------------------------------
@@ -240,7 +240,7 @@ const MyRoomCanvas: React.FC = () => {
   const [visitorMessage, setVisitorMessage] = useState("");
 
   // --------------------------------------------------
-  // (F) 모달
+  // (F) 모달 (이력서/포트폴리오/기술스택)
   // --------------------------------------------------
   const [resumeModalOpen, setResumeModalOpen] = useState(false);
   const [portfolioModalOpen, setPortfolioModalOpen] = useState(false);
@@ -283,6 +283,37 @@ const MyRoomCanvas: React.FC = () => {
   // --------------------------------------------------
   const [pressedKeys, setPressedKeys] = useState<Record<string, boolean>>({});
 
+  // (J-1) 포탈 overlap 체크 함수
+  const checkPortalOverlap = () => {
+    // 우선 내 캐릭터(quest-user, 여기서는 myUserId=1) 찾아서 좌표 얻음
+    const me = users.find((u) => u.id === myUserId);
+    if (!me) return false;
+
+    // 캐릭터 크기 64×64
+    const [cl, cr, ct, cb] = [me.x, me.x + 64, me.y, me.y + 64];
+
+    // 아래에서 portalBox를 정의
+    // portalWidth = 200, portalHeight = 200 (조금 크게 표시)
+    const portalWidth = 200;
+    const portalHeight = 200;
+    const [pl, pr, pt, pb] = [
+      portal.x,
+      portal.x + portalWidth,
+      portal.y,
+      portal.y + portalHeight,
+    ];
+
+    // 충돌 판정
+    const overlap = cr > pl && cl < pr && cb > pt && ct < pb;
+    if (overlap) {
+      // 겹쳤을 때 콘솔 로그
+      // console.log(
+      //   `캐릭터 위치: (${me.x}, ${me.y}), 포탈 위치: (${portal.x}, ${portal.y})`,
+      // );
+    }
+    return overlap;
+  };
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // 이동키(WASD, ㅈㄴㅇㅁ, Arrow*)에 대해서는 기본 스크롤 동작 방지
@@ -308,6 +339,19 @@ const MyRoomCanvas: React.FC = () => {
       ) {
         e.preventDefault();
       }
+
+      // 스페이스바
+      if (e.key === " ") {
+        e.preventDefault();
+        // 스페이스바로 포탈 겹치면 이동
+        const overlapped = checkPortalOverlap();
+        if (overlapped) {
+          // 이동 (콘솔에 이미 캐릭터/포탈 위치 찍었음)
+          window.location.href = portal.route;
+          // 혹은 router.push(portal.route);
+        }
+      }
+
       setPressedKeys((prev) => ({ ...prev, [e.key]: true }));
     };
 
@@ -328,7 +372,8 @@ const MyRoomCanvas: React.FC = () => {
       window.removeEventListener("keyup", handleKeyUp);
       window.removeEventListener("blur", handleBlur);
     };
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [users]);
 
   // --------------------------------------------------
   // (K) 방향 계산 함수
@@ -402,10 +447,6 @@ const MyRoomCanvas: React.FC = () => {
   // (N) useEffect: throttledPressedKeys 기반으로 "이동 자체"를 100ms 간격 수행
   // --------------------------------------------------
   useEffect(() => {
-    // 1) 다른 모달 등이 열려있으면 이동 X
-    // (원하신다면, 여기서 modal open 여부를 체크)
-    // 예) if (someModalOpen) return;
-
     setUsers((prevUsers) => {
       const newUsers = [...prevUsers];
       const meIndex = newUsers.findIndex((u) => u.id === myUserId);
@@ -607,7 +648,7 @@ const MyRoomCanvas: React.FC = () => {
   };
 
   // --------------------------------------------------
-  // (R) 모달 저장
+  // (R) 모달 저장 (이력서/포트폴리오/기술스택)
   // --------------------------------------------------
   const handleSaveResume = () => {
     const idx = resume.findIndex((r) => r.funitureType === "none");
@@ -652,7 +693,6 @@ const MyRoomCanvas: React.FC = () => {
 
       // 3) 업로드된 S3 URL
       const s3Url = data.url;
-      // console.log("S3 업로드 성공! URL:", s3Url);
 
       // 4) 기존 로직 (state 갱신)
       const idx = portfolio.findIndex((p) => p.funitureType === "none");
@@ -663,7 +703,6 @@ const MyRoomCanvas: React.FC = () => {
               ? {
                   ...item,
                   funitureType: `portfolio/portfolio${idx + 1}`,
-                  // 업로드된 파일 URL
                   data: { fileName: portfolioFile.name, url: s3Url },
                 }
               : item,
@@ -675,7 +714,7 @@ const MyRoomCanvas: React.FC = () => {
       setPortfolioModalOpen(false);
       setPortfolioFile(null);
     } catch (error) {
-      // console.error("S3 업로드 중 오류 발생:", error);
+      // 업로드 실패 처리
     }
   };
 
@@ -713,6 +752,17 @@ const MyRoomCanvas: React.FC = () => {
   };
 
   // --------------------------------------------------
+  // (T) 포탈 (로비 이동용) - 크기 크게(200×200)
+  // --------------------------------------------------
+  const [portal] = useState({
+    id: "portal-to-lobby",
+    x: 1300,
+    y: 600,
+    route: "/lobby",
+    name: "로비 포탈",
+  });
+
+  // --------------------------------------------------
   // 버튼 비활성화 여부
   // --------------------------------------------------
   const isResumeButtonDisabled =
@@ -723,7 +773,7 @@ const MyRoomCanvas: React.FC = () => {
     technologyStack.filter((t) => t.funitureType !== "none").length >= 9;
 
   // --------------------------------------------------
-  // (T) 렌더
+  // (U) 렌더
   // --------------------------------------------------
   return (
     <div className={Style.canvasContainerClass}>
@@ -768,6 +818,30 @@ const MyRoomCanvas: React.FC = () => {
           </div>
         </div>
       ))}
+
+      {/* 포탈 (크기를 200×200으로 증가) */}
+      <div
+        className={Style.furnitureContainerClass}
+        style={{
+          left: portal.x,
+          top: portal.y,
+          width: 200,
+          height: 200, // 포탈 크게
+        }}
+        onClick={() => {
+          // 클릭 시 로비로 이동(옵션)
+          window.location.href = portal.route;
+        }}
+      >
+        <NextImage
+          src="/furniture/portal.gif"
+          alt={portal.name}
+          width={200} // 이미지 자체도 200×200
+          height={200}
+          priority
+        />
+        <div className={Style.furnitureTextClass}>{portal.name}</div>
+      </div>
 
       {/* 우측 하단 버튼 */}
       <div className={Style.bottomButtonsClass}>
