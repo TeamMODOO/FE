@@ -5,13 +5,15 @@ import * as mediasoupClient from "mediasoup-client";
 import { useEffect, useRef, useState } from "react";
 import { Socket } from "socket.io-client";
 
+import { RemoteStream } from "@/app/RTC/_model/webRTC.type";
 import useAudioSocketConnect from "@/hooks/socket/useAudioSocketConnect";
 import useAudioSocketStore from "@/store/useAudioSocketStore";
 
-import { Header } from "./_component/Header";
-import { LocalVideo } from "./_component/LocalVideo";
-import { RemoteMedia, RemoteStream } from "./_component/RemoteMedia";
-import { RoomJoinForm } from "./_component/RoomJoinForm";
+import ChatWidget from "./_components/ChatWidget";
+import { Header } from "./_components/Header";
+import { LocalVideo } from "./_components/LocalVideo";
+import { RemoteMedia } from "./_components/RemoteMedia";
+import { RoomJoinForm } from "./_components/RoomJoinForm";
 
 function RoomPage() {
   useAudioSocketConnect({ roomId: "123" });
@@ -52,20 +54,18 @@ function RoomPage() {
   useEffect(() => {
     if (!socket) return;
 
-    socket.on("connect", () => {
-      // console.log("Connected to server:", socket.id);
-    });
+    socket.on("connect", () => {});
 
-    socket.on("new-peer", ({ peerId }) => {
+    socket.on("new-peer", ({ peerId, state }) => {
       setPeers((prevPeers) => [...prevPeers, peerId]);
+
       setPeerStates((prevPeers) => ({
         ...prevPeers,
-        [peerId]: { audio: false, video: false },
+        [peerId]: { audio: false, video: false, ...state },
       }));
     });
 
     socket.on("peer-state-changed", ({ peerId, state }) => {
-      console.log("Peer state changed:", peerId, state);
       setPeerStates((prev) => ({
         ...prev,
         [peerId]: {
@@ -77,6 +77,7 @@ function RoomPage() {
 
     socket.on("peer-left", ({ peerId }) => {
       setPeers((prevPeers) => prevPeers.filter((id) => id !== peerId));
+
       setPeerStates((prev) => {
         const newStates = { ...prev };
         delete newStates[peerId];
@@ -180,7 +181,6 @@ function RoomPage() {
   };
 
   const joinRoom = () => {
-    console.log("Joining room:", roomId);
     if (!socket || !roomId) return;
 
     socket.emit(
@@ -196,6 +196,7 @@ function RoomPage() {
           recvTransportOptions,
           rtpCapabilities,
           peerIds,
+          peerStates,
           existingProducers,
         } = response;
 
@@ -275,24 +276,22 @@ function RoomPage() {
   };
 
   const consume = async ({ producerId, peerId, kind }: any) => {
-    console.log("Consume started:", { producerId, peerId, kind });
-
     const device = deviceRef.current;
     const recvTransport = recvTransportRef.current;
 
-    if (!device || !recvTransport || !socket) {
-      console.error("Required resources not initialized");
-      return;
-    }
+    if (!device || !recvTransport || !socket) return;
 
     try {
-      // 이미 존재하는 같은 종류의 스트림이 있는지 확인
+      // 이전 스트림 정리
       const existingStream = remoteStreams.find(
         (stream) => stream.peerId === peerId && stream.kind === kind,
       );
 
       if (existingStream) {
-        // 기존 스트림이 있다면 제거
+        // consumer가 있는 경우 명시적으로 close
+        if ("consumer" in existingStream) {
+          (existingStream.consumer as mediasoupClient.types.Consumer).close();
+        }
         setRemoteStreams((prev) =>
           prev.filter(
             (stream) => !(stream.peerId === peerId && stream.kind === kind),
@@ -300,7 +299,7 @@ function RoomPage() {
         );
       }
 
-      const response = await new Promise((resolve, reject) => {
+      const { consumerData }: any = await new Promise((resolve, reject) => {
         socket.emit(
           "consume",
           {
@@ -320,9 +319,6 @@ function RoomPage() {
         );
       });
 
-      const { consumerData } = response as any;
-
-      // Consumer 생성 및 초기화
       const consumer = await recvTransport.consume({
         id: consumerData.id,
         producerId: consumerData.producerId,
@@ -330,42 +326,44 @@ function RoomPage() {
         rtpParameters: consumerData.rtpParameters,
       });
 
-      // Consumer 재시작
-      await consumer.resume();
+      consumer.resume(); // 모든 consumer를 즉시 resume
 
-      // 새로운 MediaStream 생성
-      const stream = new MediaStream();
-      stream.addTrack(consumer.track);
+      const stream = new MediaStream([consumer.track]);
 
-      // remoteStreams 상태 업데이트
+      // consumer 정보를 포함하여 저장
       setRemoteStreams((prev) => {
-        // 중복 체크
-        const exists = prev.some(
-          (s) => s.peerId === peerId && s.kind === consumer.kind,
+        const withoutOld = prev.filter(
+          (s) => !(s.peerId === peerId && s.kind === kind),
         );
-        if (exists) return prev;
-
-        // 새 스트림 추가
         return [
-          ...prev,
+          ...withoutOld,
           {
             peerId,
             stream,
-            kind: consumer.kind,
+            kind,
+            consumer,
           },
         ];
       });
 
-      // 피어 상태 업데이트
-      setPeerStates((prev) => ({
-        ...prev,
-        [peerId]: {
-          ...prev[peerId],
-          [consumer.kind]: true,
-        },
-      }));
+      if (kind === "audio") {
+        setPeerStates((prev) => ({
+          ...prev,
+          [peerId]: {
+            ...prev[peerId],
+            [kind]: false,
+          },
+        }));
+      } else {
+        setPeerStates((prev) => ({
+          ...prev,
+          [peerId]: {
+            ...prev[peerId],
+            [kind]: true,
+          },
+        }));
+      }
     } catch (error) {
-      console.error("Error in consume:", error);
       setPeerStates((prev) => ({
         ...prev,
         [peerId]: {
@@ -373,7 +371,6 @@ function RoomPage() {
           [kind]: false,
         },
       }));
-      throw error;
     }
   };
 
@@ -469,7 +466,6 @@ function RoomPage() {
         });
       }
     } catch (error: any) {
-      console.error("Error starting camera:", error);
       throw new Error(`Failed to start camera: ${error.message}`);
     }
   };
@@ -564,6 +560,7 @@ function RoomPage() {
           </div>
         )}
       </div>
+      <ChatWidget />
     </div>
   );
 }
