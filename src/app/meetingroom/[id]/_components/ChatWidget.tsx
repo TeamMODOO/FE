@@ -20,7 +20,7 @@ export default function ChatWidget({ roomId }: { roomId: string }) {
   const { messageList, messageValue, setMessageValue, handleSendMessage } =
     useChatSocket({
       roomType: "meeting_room",
-      roomId: roomId,
+      roomId: "floor07", // 수정 필요
     });
 
   const scrollRef = useRef<HTMLDivElement>(null);

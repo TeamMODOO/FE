@@ -26,7 +26,7 @@ export default function ChattingWidget({ isOpen, setIsOpen }: ChatWidgetProps) {
   const { messageList, messageValue, setMessageValue, handleSendMessage } =
     useChatSocket({
       roomType: "floor",
-      roomId: "7",
+      roomId: "floor07",
     });
 
   const scrollRef = useRef<HTMLDivElement>(null);
