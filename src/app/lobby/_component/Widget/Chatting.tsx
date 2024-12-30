@@ -1,7 +1,7 @@
 "use client";
 
 import { MessageCircle, Send, X } from "lucide-react";
-import { RefObject, useEffect, useRef, useState } from "react";
+import { RefObject, useEffect, useRef } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -16,8 +16,13 @@ import { useChatSocket } from "@/hooks/chat/useChatSocket";
 import { ChatInput } from "./ChatInput";
 import { ScrollNotification } from "./ScrollNotification";
 
-export default function ChatWidget() {
-  const [isOpen, setIsOpen] = useState(false);
+// 부모에서 받아올 props 타입
+interface ChatWidgetProps {
+  isOpen: boolean;
+  setIsOpen: (open: boolean) => void;
+}
+
+export default function ChatWidget({ isOpen, setIsOpen }: ChatWidgetProps) {
   const { messageList, messageValue, setMessageValue, handleSendMessage } =
     useChatSocket({
       roomId: "floor07",

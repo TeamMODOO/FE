@@ -28,18 +28,18 @@ import PortalList from "../Portal/PortalList";
 import QnaContent from "../Qna/QnaContent";
 import Style from "./Canvas.style";
 
+// ------------------ 맵 상수 ------------------
 const MAP_CONSTANTS = {
-  // 아래 두 값은 초깃값(혹은 fallback)일 뿐,
-  // 실제로는 컴포넌트 마운트 시점에 window.innerWidth / window.innerHeight로 재할당 해줄 예정
+  // 초기값 (마운트 시에 window크기로 대체)
   CANVAS_WIDTH: 1400,
   CANVAS_HEIGHT: 800,
 
-  // 캐릭터(등등) 사이즈
+  // 캐릭터 크기
   IMG_WIDTH: 50,
   IMG_HEIGHT: 150,
   SPEED: 10,
 
-  // 실제 맵 전체의 크기
+  // 전체 맵 크기
   MAP_WIDTH: 1200,
   MAP_HEIGHT: 700,
 };
@@ -97,7 +97,7 @@ const npcs: NpcInfo[] = [
     height: 35,
     image: "/character/npc2.png",
     modalTitle: "NPC2 대화",
-    name: "NPC2", // ← QnA 기능 포함
+    name: "NPC2", // QnA
   },
   {
     x: 560,
@@ -110,14 +110,20 @@ const npcs: NpcInfo[] = [
   },
 ];
 
-const LobbyCanvas: React.FC = () => {
+// ------------------ LobbyCanvas 컴포넌트 ------------------
+interface LobbyCanvasProps {
+  // 채팅창 열림 여부
+  chatOpen: boolean;
+}
+
+const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
   const router = useRouter();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   // 소켓 연결
   useMainSocketConnect();
 
-  // (로비 소켓 이벤트) - 좌표 이동
+  // 로비 소켓 이벤트
   const myUserId = "1";
   const clientId = localStorage.getItem("client_id") || "anonymous";
   const { emitMovement } = useLobbySocketEvents({
@@ -125,30 +131,23 @@ const LobbyCanvas: React.FC = () => {
     userId: clientId,
   });
 
-  // --------------------------------------------------
-  // 1) 화면 사이즈를 가져와, CANVAS_WIDTH / CANVAS_HEIGHT를 갱신
-  // --------------------------------------------------
+  // 화면 사이즈 state
   const [canvasSize, setCanvasSize] = useState<{ w: number; h: number }>({
     w: MAP_CONSTANTS.CANVAS_WIDTH,
     h: MAP_CONSTANTS.CANVAS_HEIGHT,
   });
 
+  // 마운트 시점에 window 크기 → 고정
   useEffect(() => {
-    // 마운트 시점에 window 크기를 읽어서 고정
     const w = window.innerWidth;
     const h = window.innerHeight;
     setCanvasSize({ w, h });
-    // 리사이즈 이벤트는 등록하지 않음(요구사항대로)
   }, []);
 
-  // --------------------------------------------------
   // 스프라이트 로딩
-  // --------------------------------------------------
   const spriteImages = useLoadSprites();
 
-  // --------------------------------------------------
   // 배경
-  // --------------------------------------------------
   const [backgroundImage, setBackgroundImage] =
     useState<HTMLImageElement | null>(null);
   useEffect(() => {
@@ -157,14 +156,10 @@ const LobbyCanvas: React.FC = () => {
     bg.onload = () => setBackgroundImage(bg);
   }, []);
 
-  // --------------------------------------------------
   // 포탈 GIF
-  // --------------------------------------------------
   const portalGifRef = useRef<HTMLImageElement | null>(null);
 
-  // --------------------------------------------------
   // NPC 이미지
-  // --------------------------------------------------
   const [npcImages, setNpcImages] = useState<Record<string, HTMLImageElement>>(
     {},
   );
@@ -185,14 +180,13 @@ const LobbyCanvas: React.FC = () => {
     });
   }, []);
 
-  // --------------------------------------------------
   // 모달들
-  // --------------------------------------------------
   const [npc1ModalOpen, setNpc1ModalOpen] = useState(false);
-  // NPC2 → QnA
   const [npc2ModalOpen, setNpc2ModalOpen] = useState(false);
-  // 공지사항 NPC
   const [noticeModalOpen, setNoticeModalOpen] = useState(false);
+  const [meetingModalOpen, setMeetingModalOpen] = useState(false);
+
+  // 공지사항
   const [noticeList, setNoticeList] = useState<NoticeItem[]>([
     { id: 1, name: "운영자", message: "처음 오신 분들 환영합니다!" },
     { id: 2, name: "Alice", message: "안녕하세요! 반갑습니다." },
@@ -209,9 +203,7 @@ const LobbyCanvas: React.FC = () => {
     setWriterMessage("");
   };
 
-  // --------------------------------------------------
-  // 데일리문제(NPC1) & QnA(NPC2)
-  // --------------------------------------------------
+  // 데일리문제
   const [dailyProblem, setDailyProblem] = useState<{
     id: number;
     title: string;
@@ -220,14 +212,13 @@ const LobbyCanvas: React.FC = () => {
   const [isProblemSolved, setIsProblemSolved] = useState(false);
   const [dailySolvedUsers, setDailySolvedUsers] = useState<SolvedUser[]>([]);
 
-  // NPC2 QnA
+  // QnA
   const [selectedQnaIndex, setSelectedQnaIndex] = useState<number | null>(null);
   const handleQnaClick = (index: number) => {
     setSelectedQnaIndex((prev) => (prev === index ? null : index));
   };
 
   useEffect(() => {
-    // 예시: 매번 랜덤 문제 or 특정 문제
     setDailyProblem({
       id: 1018,
       title: "체스판 다시 칠하기",
@@ -256,20 +247,11 @@ const LobbyCanvas: React.FC = () => {
     }
   };
 
-  // --------------------------------------------------
-  // 회의실 모달
-  // --------------------------------------------------
-  const [meetingModalOpen, setMeetingModalOpen] = useState(false);
-
-  // --------------------------------------------------
-  // 모달 열림 여부 -> 이동키 막기
-  // --------------------------------------------------
+  // 모달 열림 여부
   const isAnyModalOpen =
     npc1ModalOpen || npc2ModalOpen || noticeModalOpen || meetingModalOpen;
 
-  // --------------------------------------------------
-  // 포탈 / NPC 충돌 (스페이스바)
-  // --------------------------------------------------
+  // 포탈/NPC 충돌
   function getPortalRouteIfOnPortal(): string | null {
     const { users } = useUsersStore.getState();
     const me = users.find((u) => u.id === myUserId);
@@ -285,7 +267,7 @@ const LobbyCanvas: React.FC = () => {
       ];
       const overlap = cl < pr && cr > pl && ct < pb && cb > pt;
       if (overlap) {
-        // 회의실 → 모달
+        // 회의실
         if (portal.route === "/meetingroom/123") {
           setMeetingModalOpen(true);
           return null;
@@ -316,14 +298,16 @@ const LobbyCanvas: React.FC = () => {
     return null;
   }
 
-  // --------------------------------------------------
-  // 키 입력
-  // --------------------------------------------------
+  // ------------------ 키 입력 ------------------
   const [pressedKeys, setPressedKeys] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (isAnyModalOpen) return;
+      // 만약 채팅창이 열려있거나 모달이 열려있으면 → 키 입력 무시
+      if (chatOpen || isAnyModalOpen) {
+        return;
+      }
+
       // 이동키/Space
       if (
         ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " "].includes(e.key)
@@ -354,7 +338,10 @@ const LobbyCanvas: React.FC = () => {
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
-      if (isAnyModalOpen) return;
+      // 채팅창 또는 모달 열림이면 무시
+      if (chatOpen || isAnyModalOpen) {
+        return;
+      }
       setPressedKeys((prev) => ({ ...prev, [e.key]: false }));
     };
 
@@ -371,25 +358,24 @@ const LobbyCanvas: React.FC = () => {
       window.removeEventListener("keyup", handleKeyUp);
       window.removeEventListener("blur", handleBlur);
     };
-  }, [isAnyModalOpen, router]);
+  }, [chatOpen, isAnyModalOpen, router]);
 
   const throttledPressedKeys = useThrottle(pressedKeys, 100);
 
-  // --------------------------------------------------
   // 이동 로직
-  // --------------------------------------------------
   function getDirectionFromKeys(
     keys: Record<string, boolean>,
   ): Direction | null {
-    if (keys["w"] || keys["W"] || keys["ㅈ"] || keys["ArrowUp"]) return 1; // Up
-    if (keys["s"] || keys["S"] || keys["ㄴ"] || keys["ArrowDown"]) return 0; // Down
-    if (keys["d"] || keys["D"] || keys["ㅇ"] || keys["ArrowRight"]) return 2; // Right
-    if (keys["a"] || keys["A"] || keys["ㅁ"] || keys["ArrowLeft"]) return 3; // Left
+    if (keys["w"] || keys["W"] || keys["ㅈ"] || keys["ArrowUp"]) return 1;
+    if (keys["s"] || keys["S"] || keys["ㄴ"] || keys["ArrowDown"]) return 0;
+    if (keys["d"] || keys["D"] || keys["ㅇ"] || keys["ArrowRight"]) return 2;
+    if (keys["a"] || keys["A"] || keys["ㅁ"] || keys["ArrowLeft"]) return 3;
     return null;
   }
 
   useEffect(() => {
-    if (isAnyModalOpen) return;
+    // 채팅창 or 모달 열려 있으면 이동X
+    if (chatOpen || isAnyModalOpen) return;
 
     const { users, updateUserPosition } = useUsersStore.getState();
     const meIndex = users.findIndex((u) => u.id === myUserId);
@@ -400,32 +386,27 @@ const LobbyCanvas: React.FC = () => {
 
     const newDir = getDirectionFromKeys(throttledPressedKeys);
     if (newDir === null) {
-      // 멈춤
       updateUserPosition(myUserId, x, y, me.direction, false);
       return;
     }
 
     let moved = false;
     if (newDir === 1 && y > 0) {
-      // Up
       y -= MAP_CONSTANTS.SPEED;
       moved = true;
     } else if (
       newDir === 0 &&
       y < MAP_CONSTANTS.MAP_HEIGHT - MAP_CONSTANTS.IMG_HEIGHT
     ) {
-      // Down
       y += MAP_CONSTANTS.SPEED;
       moved = true;
     } else if (
       newDir === 2 &&
       x < MAP_CONSTANTS.MAP_WIDTH - MAP_CONSTANTS.IMG_WIDTH
     ) {
-      // Right
       x += MAP_CONSTANTS.SPEED;
       moved = true;
     } else if (newDir === 3 && x > 0) {
-      // Left
       x -= MAP_CONSTANTS.SPEED;
       moved = true;
     }
@@ -436,37 +417,29 @@ const LobbyCanvas: React.FC = () => {
     } else {
       updateUserPosition(myUserId, x, y, newDir, false);
     }
-  }, [throttledPressedKeys, isAnyModalOpen, emitMovement]);
+  }, [throttledPressedKeys, isAnyModalOpen, chatOpen, emitMovement]);
 
-  // --------------------------------------------------
-  // requestAnimationFrame (배경, NPC, 포탈, 캐릭터 등)
-  // --------------------------------------------------
+  // requestAnimationFrame (배경, 캐릭터 등)
   const zoomFactor = 2;
   function clamp(value: number, min: number, max: number) {
     return Math.max(min, Math.min(max, value));
   }
 
   useEffect(() => {
-    // 매번 canvasSize 가 정해진 뒤에만 렌더 로직 수행
     if (!canvasRef.current) return;
 
     const canvas = canvasRef.current;
-
-    // ★ 여기서 실제 canvas 픽셀 크기를 지정
     canvas.width = canvasSize.w;
     canvas.height = canvasSize.h;
 
-    // 렌더링 컨텍스트
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // FPS
     const fps = 30;
     const frameDuration = 1000 / fps;
     let lastTime = 0;
     let animationId = 0;
 
-    // 캐릭터 애니메이션(Frame)
     const userFrameMap: Record<
       string,
       { frame: number; lastFrameTime: number }
@@ -479,10 +452,10 @@ const LobbyCanvas: React.FC = () => {
       if (delta >= frameDuration) {
         lastTime = time - (delta % frameDuration);
 
-        // 1) Clear
+        // Clear
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // 2) 카메라
+        // 카메라
         const { users } = useUsersStore.getState();
         const me = users.find((u) => u.id === myUserId);
 
@@ -496,7 +469,6 @@ const LobbyCanvas: React.FC = () => {
 
           cameraX = centerX - viewWidth / 2;
           cameraY = centerY - viewHeight / 2;
-
           cameraX = clamp(cameraX, 0, MAP_CONSTANTS.MAP_WIDTH - viewWidth);
           cameraY = clamp(cameraY, 0, MAP_CONSTANTS.MAP_HEIGHT - viewHeight);
         }
@@ -505,7 +477,7 @@ const LobbyCanvas: React.FC = () => {
         ctx.scale(zoomFactor, zoomFactor);
         ctx.translate(-cameraX, -cameraY);
 
-        // 3) 배경
+        // 배경
         if (backgroundImage) {
           ctx.drawImage(
             backgroundImage,
@@ -516,7 +488,7 @@ const LobbyCanvas: React.FC = () => {
           );
         }
 
-        // 4) 포탈
+        // 포탈
         portals.forEach((portal) => {
           if (portalGifRef.current) {
             ctx.drawImage(
@@ -527,11 +499,9 @@ const LobbyCanvas: React.FC = () => {
               portal.height,
             );
           } else {
-            // fallback
             ctx.fillStyle = "rgba(0,0,255,0.3)";
             ctx.fillRect(portal.x, portal.y, portal.width, portal.height);
           }
-
           ctx.font = "bold 12px Arial";
           ctx.fillStyle = "yellow";
           ctx.textAlign = "center";
@@ -542,7 +512,7 @@ const LobbyCanvas: React.FC = () => {
           );
         });
 
-        // 5) NPC
+        // NPC
         npcs.forEach((npc) => {
           const npcImg = npcImages[npc.image];
           if (npcImg) {
@@ -556,13 +526,12 @@ const LobbyCanvas: React.FC = () => {
               npc.y + npc.height + 12,
             );
           } else {
-            // fallback
             ctx.fillStyle = "rgba(255,0,0,0.3)";
             ctx.fillRect(npc.x, npc.y, npc.width, npc.height);
           }
         });
 
-        // 6) 캐릭터
+        // 캐릭터
         const now = performance.now();
         if (Object.keys(spriteImages).length === LAYER_ORDER.length) {
           users.forEach((user) => {
@@ -625,6 +594,7 @@ const LobbyCanvas: React.FC = () => {
     };
   }, [backgroundImage, spriteImages, npcImages, canvasSize]);
 
+  // ------------------ 렌더 ------------------
   return (
     <>
       {/* 숨긴 포탈 GIF 로딩 */}
@@ -675,11 +645,7 @@ const LobbyCanvas: React.FC = () => {
         onOpenChange={setMeetingModalOpen}
       />
 
-      {/*
-        2) 화면을 “고정된 사이즈의 캔버스”로 만듦
-           - 이후 화면 크기를 줄이거나 늘려도 캔버스는 변하지 않음
-           - 넘치면 브라우저 스크롤
-      */}
+      {/* 고정된 사이즈로 캔버스 */}
       <div
         className={Style.canvasContainerClass}
         style={{
@@ -688,8 +654,11 @@ const LobbyCanvas: React.FC = () => {
           overflow: "auto",
         }}
       >
+        {/* 포탈/NPC 컴포넌트(숨김) */}
         <PortalList portals={[]} />
         <NpcList npcs={[]} />
+
+        {/* Canvas */}
         <canvas ref={canvasRef} />
       </div>
     </>
