@@ -1,0 +1,134 @@
+/* src/app/quest/Quest.module.css */
+
+.container {
+  position: relative;
+  height: 100dvh;
+  background-image: url("/background/Quest_prev.webp");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  overflow: hidden;
+}
+
+/* 드래곤 날아가는 영역 */
+.dragonFlyWrapper {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+  width: 1600px;
+  height: 1600px;
+  z-index: 10; /* 다른 요소들보다 위에 보이도록 */
+}
+
+.dragonFly {
+  position: absolute;
+  /* 1.3초 동안 왼쪽→오른쪽 이동 */
+  animation: dragonFlight 1.5s linear forwards;
+}
+
+/* 왼쪽 밖에서 오른쪽 밖으로 지나가는 애니메이션 */
+@keyframes dragonFlight {
+  0% {
+    transform: translateX(-200vw);
+  }
+  100% {
+    transform: translateX(100vw);
+  }
+}
+
+/* 떠다니는 사각형 애니메이션 */
+@keyframes floatAnimation {
+  0% {
+    transform: translateY(100vh) translateX(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-10vh) translateX(calc(10vw - 20vw * random()));
+    opacity: 0;
+  }
+}
+
+.floatingSquare {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  background-color: orange;
+  opacity: 0;
+  animation: floatAnimation 8s linear infinite;
+  z-index: 1;
+}
+
+.floatingSquare:nth-child(1) {
+  left: 10%;
+  animation-delay: 0s;
+  animation-duration: 6s;
+  z-index: 1;
+}
+
+.floatingSquare:nth-child(2) {
+  left: 15%;
+  animation-delay: 2s;
+  animation-duration: 8s;
+  z-index: 1;
+}
+
+.floatingSquare:nth-child(3) {
+  left: 30%;
+  animation-delay: 2s;
+  animation-duration: 8s;
+  z-index: 1;
+}
+/* 
+.floatingSquare:nth-child(3) {
+  left: 50%;
+  animation-delay: 4s;
+  animation-duration: 7s;
+  z-index: 1;
+}
+
+.floatingSquare:nth-child(4) {
+  left: 65%;
+  animation-delay: 4s;
+  animation-duration: 7s;
+  z-index: 1;
+} */
+
+/* 덮개 영역 */
+.blackcover {
+  width: inherit;
+  height: inherit;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  z-index: 10;
+
+  opacity: 0;
+  animation: fadeIn 1s ease forwards;
+}
+
+/* 0% → 100%로 서서히 보이는 키프레임 */
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.leftsection {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.leftsection > image {
+  z-index: 2;
+}

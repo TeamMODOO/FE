@@ -27,9 +27,14 @@ export const useChatSocket = ({ roomId }: ChatSocketType) => {
       return;
     }
 
+    // 1) 로컬 스토리지에 있는 uuid 가져오기
+    const clientId = localStorage.getItem("client_id") || "anonymous";
+    // (만약 로컬 스토리지에 없다면 fallback으로 "anonymous")
+
+    // 2) 메시지 정보
     const messageInfo = {
       room_id: roomId,
-      user_name: "user1",
+      user_name: clientId,
       message: messageValue,
     };
 

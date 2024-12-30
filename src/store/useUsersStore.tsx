@@ -10,12 +10,23 @@ export interface User {
   y: number;
   characterType: string;
   avatarUrl?: string;
+
+  // 4방향(0=down,1=up,2=right,3=left)
+  direction: number;
+  // 움직이고 있는지 여부
+  isMoving: boolean;
 }
 
 interface UsersStore {
   users: User[];
   setUsers: (users: User[]) => void;
-  updateUserPosition: (userId: string, x: number, y: number) => void;
+  updateUserPosition: (
+    userId: string,
+    x: number,
+    y: number,
+    direction: number,
+    isMoving: boolean,
+  ) => void;
   addUser: (
     id: string,
     nickname: string,
@@ -34,6 +45,9 @@ const initialUsers: User[] = [
     y: 450,
     characterType: "character2",
     avatarUrl: "/character/character2.png",
+
+    direction: 0,
+    isMoving: false,
   },
   {
     id: "2",
@@ -42,6 +56,9 @@ const initialUsers: User[] = [
     y: 500,
     characterType: "character1",
     avatarUrl: "/character/character1.png",
+
+    direction: 0,
+    isMoving: false,
   },
   {
     id: "3",
@@ -50,6 +67,9 @@ const initialUsers: User[] = [
     y: 400,
     characterType: "character1",
     avatarUrl: "/character/character1.png",
+
+    direction: 0,
+    isMoving: false,
   },
   {
     id: "4",
@@ -58,6 +78,9 @@ const initialUsers: User[] = [
     y: 300,
     characterType: "character2",
     avatarUrl: "/character/character2.png",
+
+    direction: 0,
+    isMoving: false,
   },
 ];
 
@@ -66,14 +89,16 @@ const useUsersStore = create<UsersStore>((set) => ({
 
   setUsers: (users) => set({ users }),
 
-  updateUserPosition: (userId, x, y) =>
+  updateUserPosition: (userId, x, y, direction, isMoving) =>
     set((state) => ({
-      users: state.users.map((u) => (u.id === userId ? { ...u, x, y } : u)),
+      users: state.users.map((u) =>
+        u.id === userId ? { ...u, x, y, direction, isMoving } : u,
+      ),
     })),
 
   addUser: (id, nickname, x, y, avatarUrl) =>
     set((state) => {
-      // 이미 있으면 위치만 갱신 or 무시
+      // 이미 존재하면 위치만 갱신 or 무시
       const exists = state.users.find((u) => u.id === id);
       if (exists) {
         return {
@@ -88,6 +113,8 @@ const useUsersStore = create<UsersStore>((set) => ({
         y,
         characterType: "character1", // 기본값
         avatarUrl,
+        direction: 0,
+        isMoving: false,
       };
       return { users: [...state.users, newUser] };
     }),

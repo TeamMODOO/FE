@@ -1,0 +1,122 @@
+/* src/app/quest/_component/QuestSection/QuestSection.module.css */
+.container {
+  flex: 2;
+  background-color: rgba(0, 0, 1, 0.5);
+  color: white;
+  z-index: 3;
+  border-radius: 10px;
+  margin: 20px;
+  padding: 20px;
+}
+
+.questHeader {
+  color: red;
+  font-size: 30px;
+  height: 60px;
+  display: flex;
+}
+
+.title {
+  flex: 1;
+}
+
+.questionBoard {
+  display: flex;
+}
+
+.submitForm {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.selectLang {
+  background-color: rgba(0, 0, 0, 0.5);
+  margin: 0 10px;
+  margin-bottom: 10px;
+}
+
+.selectLang:focus {
+  outline: 2px solid red;
+  outline-offset: 2px;
+}
+
+.textEditor {
+  z-index: 10;
+}
+
+.submitForm > textarea {
+  background-color: rgba(0, 0, 0, 0.5);
+  resize: none;
+  border: none;
+  border-radius: 10px;
+  margin: 10px;
+  min-height: 80dvh;
+}
+
+.submitForm > textarea:focus {
+  outline: 2px solid red;
+  outline-offset: 2px;
+}
+
+.correctDiv {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.incorrectDiv {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.modalTitle {
+  text-align: center;
+  font-weight: bold;
+  font-size: 20px;
+}
+
+.modalSubTitle {
+  font-weight: bold;
+  color: hotpink;
+  margin: 5px;
+  flex: 0;
+}
+
+.modalUpperSection {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+
+.modalBottomSection {
+  background-color: dimgray;
+  border-radius: 5px;
+  padding: 10px;
+  margin-bottom: 10px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spinnerContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  margin-bottom: 10px; /* 텍스트와 간격 */
+  border: 5px solid #fff; /* 배경색에 맞춰 조정 */
+  border-top: 5px solid red; /* 원하는 색상 */
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
