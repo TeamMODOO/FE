@@ -3,7 +3,7 @@
 .container {
   position: relative;
   height: 100dvh;
-  background-image: url("/background/Quest_prev.webp");
+  background-image: url("/background/quest_prev.webp");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;

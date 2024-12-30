@@ -83,7 +83,7 @@ const QuestMapCanvas: React.FC = () => {
   const [bgImage, setBgImage] = useState<HTMLImageElement | null>(null);
   useEffect(() => {
     const img = new Image();
-    img.src = "/background/QuestMap.webp";
+    img.src = "/background/quest_map.webp";
     img.onload = () => setBgImage(img);
   }, []);
 
