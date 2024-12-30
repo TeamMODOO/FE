@@ -22,10 +22,11 @@ interface ChatWidgetProps {
   setIsOpen: (open: boolean) => void;
 }
 
-export default function ChatWidget({ isOpen, setIsOpen }: ChatWidgetProps) {
+export default function ChattingWidget({ isOpen, setIsOpen }: ChatWidgetProps) {
   const { messageList, messageValue, setMessageValue, handleSendMessage } =
     useChatSocket({
-      roomId: "floor07",
+      roomType: "floor",
+      roomId: "7",
     });
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -48,7 +49,7 @@ export default function ChatWidget({ isOpen, setIsOpen }: ChatWidgetProps) {
 
   const toggleChat = () => setIsOpen(!isOpen);
 
-  const submitForm = (e: React.FormEvent) => {
+  const sendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     handleSendMessage();
   };
@@ -64,18 +65,20 @@ export default function ChatWidget({ isOpen, setIsOpen }: ChatWidgetProps) {
             </Button>
           </CardHeader>
           <CardContent
-            className="grow overflow-auto"
+            className="flex grow flex-col overflow-auto"
             ref={scrollRef}
             onScroll={handleOnScroll}
           >
-            {messageList.map((list, index) => (
-              <div key={index} className="mb-2 rounded-lg bg-secondary p-2">
-                {list.user_name}: {list.message}
-              </div>
-            ))}
+            <div className="mt-auto">
+              {messageList.map((list, index) => (
+                <div key={index} className="mb-2 rounded-lg bg-secondary p-2">
+                  {list.user_name}: {list.message}
+                </div>
+              ))}
+            </div>
           </CardContent>
           <CardFooter>
-            <form onSubmit={submitForm} className="flex w-full gap-2">
+            <form onSubmit={sendMessage} className="flex w-full gap-2">
               <ChatInput
                 messageValue={messageValue}
                 setMessageValue={setMessageValue}
