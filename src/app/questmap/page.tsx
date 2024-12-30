@@ -1,6 +1,6 @@
 "use client";
 
-import useMainSocketConnect from "@/hooks/useMainSocketConnect";
+import useMainSocketConnect from "@/hooks/socket/useMainSocketConnect";
 
 import QuestMapCanvas from "./_component/QuestMapCanvas/QuestMapCanvas";
 

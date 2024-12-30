@@ -3,8 +3,6 @@ import "@/styles/globals.css";
 import type { Metadata } from "next";
 import { SessionProvider } from "next-auth/react";
 
-import { HomeSideBar, MeetingRoomSideBar } from "@/components";
-import { SidebarProvider } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import { AppProviders } from "@/provider";
 import { SpoqaHanSansNeo } from "@/styles/font";
@@ -23,10 +21,9 @@ export default function RootLayout({
     <html lang="en" className={SpoqaHanSansNeo.variable}>
       <body className={cn("font-spoqa-han-sans-neo", "w-full", "h-dvh")}>
         <SessionProvider>
-          <SidebarProvider>
-            <MeetingRoomSideBar />
-            <HomeSideBar />
-          </SidebarProvider>
+          {/* <SidebarProvider> */}
+          {/* <HomeSideBar /> */}
+          {/* </SidebarProvider> */}
           <AppProviders>{children}</AppProviders>
         </SessionProvider>
       </body>

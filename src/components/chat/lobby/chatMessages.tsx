@@ -1,9 +1,9 @@
 "use client";
 
-import { useChatSocket } from "@/hooks/useChatSocket";
+import { useChatSocket } from "@/hooks/chat/useChatSocket";
 
-import { ChatInput } from "./chatInput";
-import { ListMessages } from "./listMessages";
+import { ChatInput } from "./ChatInput";
+import { ListMessages } from "./ListMessages";
 
 export const ChatMessages = () => {
   const { messageList, messageValue, setMessageValue, handleSendMessage } =

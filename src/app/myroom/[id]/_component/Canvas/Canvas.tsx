@@ -5,6 +5,9 @@ import React, { useEffect, useRef, useState } from "react";
 
 // (1) UI & Hooks
 import { Button } from "@/components/ui/button";
+// (6) 스타일 & 가구이미지
+import useThrottle from "@/hooks/performance/useThrottle";
+import useMainSocketConnect from "@/hooks/socket/useMainSocketConnect";
 // (2) 스프라이트 로딩 훅 & 상수
 import useLoadSprites, {
   FRAME_HEIGHT,
@@ -12,11 +15,9 @@ import useLoadSprites, {
   LAYER_ORDER,
 } from "@/hooks/useLoadSprites";
 // (소켓 연결 관련 훅들)
-import useMainSocketConnect from "@/hooks/useMainSocketConnect";
 import useMyRoomSocketEvents from "@/hooks/useMyRoomSocketEvents";
-// (3) Throttle 훅 (값 쓰로틀 → 이번엔 “키 입력”을 쓰로틀)
-import useThrottle from "@/hooks/useThrottle";
 
+// (3) Throttle 훅 (값 쓰로틀 → 이번엔 “키 입력”을 쓰로틀)
 // (4) 모델/타입
 import { Funiture } from "../../_model/Funiture";
 import { Direction, User } from "../../_model/User";
@@ -26,7 +27,6 @@ import FurnitureInfoModal from "../FurnitureInfoModal/FurnitureInfoModal";
 import PortfolioModal from "../PortfolioModal/PortfolioModal";
 import ResumeModal from "../ResumeModal/ResumeModal";
 import TechStackModal from "../TechStackModal/TechStackModal";
-// (6) 스타일 & 가구이미지
 import Style from "./Canvas.style";
 import interiorImages from "./Interior";
 

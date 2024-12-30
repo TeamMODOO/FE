@@ -1,6 +1,6 @@
 import { RefObject, useRef } from "react";
 
-import { useChatScroll } from "@/hooks/useChatScroll";
+import { useChatScroll } from "@/hooks/chat/useChatScroll";
 import { ChattingType } from "@/model/chatting";
 
 import { Message } from "../message";
