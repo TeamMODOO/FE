@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 
@@ -42,10 +43,12 @@ const FriendDoor: React.FC<FriendDoorProps> = ({ friend }) => {
     >
       {/* 아바타 및 이름 */}
       <div className="absolute bottom-2 flex flex-col items-center justify-center">
-        <img
+        <Image
           src={friend.avatar}
           alt={`${friend.name} avatar`}
           className="mb-1 size-20 rounded-full"
+          width={40}
+          height={40}
         />
         <p className="bg-gray-200 text-center text-base font-bold text-black shadow-md">
           {friend.name}
