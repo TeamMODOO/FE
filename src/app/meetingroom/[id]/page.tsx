@@ -2,6 +2,7 @@
 "use client";
 
 import * as mediasoupClient from "mediasoup-client";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Socket } from "socket.io-client";
 
@@ -12,12 +13,16 @@ import ChatWidget from "./_components/ChatWidget";
 import { Header } from "./_components/Header";
 import { LocalVideo } from "./_components/LocalVideo";
 import { RemoteMedia } from "./_components/RemoteMedia";
-import { RoomJoinForm } from "./_components/RoomJoinForm";
 import { RemoteStream } from "./_model/webRTC.type";
 
 function RoomPage() {
-  useAudioSocketConnect({ roomId: "123" });
+  const router = useRouter();
+  const params = useParams();
+  const roomId = (params.id as string) ?? "99999";
+
+  useAudioSocketConnect({ roomId: roomId });
   const socket: Socket = useAudioSocketStore((state) => state.socket) as Socket;
+  const isConnected = useAudioSocketStore((state) => state.isConnected);
 
   const [device, setDevice] = useState<mediasoupClient.Device | null>(null);
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
@@ -32,7 +37,6 @@ function RoomPage() {
   const [audioProducer, setAudioProducer] =
     useState<mediasoupClient.types.Producer | null>(null);
 
-  const [roomId, setRoomId] = useState("");
   const [peers, setPeers] = useState<string[]>([]);
   const [peerStates, setPeerStates] = useState<
     Record<
@@ -52,9 +56,9 @@ function RoomPage() {
   const recvTransportRef = useRef<mediasoupClient.types.Transport | null>(null);
 
   useEffect(() => {
-    if (!socket) return;
+    if (!socket || !isConnected) return;
 
-    socket.on("connect", () => {});
+    joinRoom();
 
     socket.on("new-peer", ({ peerId, state }) => {
       setPeers((prevPeers) => [...prevPeers, peerId]);
@@ -78,6 +82,7 @@ function RoomPage() {
     socket.on("peer-left", ({ peerId }) => {
       setPeers((prevPeers) => prevPeers.filter((id) => id !== peerId));
 
+      // peer의 상태 정보를 제거합니다
       setPeerStates((prev) => {
         const newStates = { ...prev };
         delete newStates[peerId];
@@ -92,6 +97,26 @@ function RoomPage() {
     };
   }, [socket]);
 
+  useEffect(() => {
+    if (!socket || !isConnected) return;
+
+    const handleBeforeUnload = () => {
+      if (joined) {
+        socket.emit("leave-room", { roomId });
+      }
+    };
+
+    // 페이지 언로드 시 이벤트 처리
+    window.addEventListener("beforeunload", handleBeforeUnload);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      if (joined) {
+        socket.emit("leave-room", { roomId });
+      }
+    };
+  }, [socket, joined, roomId]);
+
   const createDevice = async (rtpCapabilities: any) => {
     const newDevice = new mediasoupClient.Device();
     await newDevice.load({ routerRtpCapabilities: rtpCapabilities });
@@ -104,7 +129,7 @@ function RoomPage() {
     device: mediasoupClient.Device,
     transportOptions: any,
   ) => {
-    if (!socket) return;
+    if (!socket || !isConnected) return;
 
     const newSendTransport = device.createSendTransport(transportOptions);
     newSendTransport.on("connect", ({ dtlsParameters }, callback, errback) => {
@@ -153,7 +178,7 @@ function RoomPage() {
   ) => {
     const newRecvTransport = device.createRecvTransport(transportOptions);
     newRecvTransport.on("connect", ({ dtlsParameters }, callback, errback) => {
-      if (!socket) return;
+      if (!socket || !isConnected) return;
 
       try {
         socket.emit("connect-transport", {
@@ -181,7 +206,7 @@ function RoomPage() {
   };
 
   const joinRoom = () => {
-    if (!socket || !roomId) return;
+    if (!socket || !isConnected || !roomId) return;
 
     socket.emit(
       "join-room",
@@ -196,7 +221,6 @@ function RoomPage() {
           recvTransportOptions,
           rtpCapabilities,
           peerIds,
-          peerStates,
           existingProducers,
         } = response;
 
@@ -240,12 +264,11 @@ function RoomPage() {
   };
 
   const leaveRoom = () => {
-    if (!socket) return;
+    if (!socket || !isConnected) return;
 
     socket.emit("leave-room", (response: any) => {
       if (response && response.error) {
         throw new Error("Error leaving room:", response.error);
-        return;
       }
       // 로컬 상태 초기화
       setJoined(false);
@@ -268,6 +291,7 @@ function RoomPage() {
       }
       // 이벤트 리스너 제거
       socket.off("new-producer", handleNewProducer);
+      router.push("/lobby");
     });
   };
 
@@ -375,7 +399,7 @@ function RoomPage() {
   };
 
   const toggleCamera = async () => {
-    if (!socket) return;
+    if (!socket || !isConnected) return;
 
     try {
       if (localStream) {
@@ -531,14 +555,6 @@ function RoomPage() {
         onCameraToggle={toggleCamera}
         onLeaveRoom={leaveRoom}
       />
-
-      {!joined && (
-        <RoomJoinForm
-          roomId={roomId}
-          onRoomIdChange={setRoomId}
-          onJoinRoom={joinRoom}
-        />
-      )}
 
       <div className="relative">
         {joined && (
