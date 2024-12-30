@@ -5,10 +5,11 @@ import { ChattingResponse, ChattingType } from "@/model/chatting";
 import useMainSocketStore from "@/store/useMainSocketStore";
 
 type ChatSocketType = {
+  roomType: string;
   roomId: string;
 };
 
-export const useChatSocket = ({ roomId }: ChatSocketType) => {
+export const useChatSocket = ({ roomType, roomId }: ChatSocketType) => {
   const mainSocket = useMainSocketStore((state) => state.socket);
   const [messageList, setMessageList] = useState<ChattingType[]>([]);
   const [messageValue, setMessageValue] = useState<string>("");
@@ -33,8 +34,10 @@ export const useChatSocket = ({ roomId }: ChatSocketType) => {
 
     // 2) 메시지 정보
     const messageInfo = {
+      room_type: roomType,
       room_id: roomId,
       client_id: clientId,
+      user_name: "anonymous", // 세션에서 받아오기
       message: messageValue,
     };
 
