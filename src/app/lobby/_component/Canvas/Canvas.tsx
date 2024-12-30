@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
@@ -159,7 +160,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
   const [backgroundImage, setBackgroundImage] =
     useState<HTMLImageElement | null>(null);
   useEffect(() => {
-    const bg = new Image();
+    const bg = new window.Image();
     bg.src = "/background/lobby.webp";
     bg.onload = () => setBackgroundImage(bg);
   }, []);
@@ -176,7 +177,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     let loadedCount = 0;
     const uniquePaths = Array.from(new Set(npcs.map((npc) => npc.image)));
     uniquePaths.forEach((path) => {
-      const img = new Image();
+      const img = new window.Image();
       img.src = path;
       img.onload = () => {
         temp[path] = img;
@@ -606,13 +607,15 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
   return (
     <>
       {/* 숨긴 포탈 GIF 로딩 */}
-      <img
-        ref={portalGifRef}
+      <Image
+        ref={portalGifRef as React.RefObject<HTMLImageElement>}
         src="/furniture/portal.gif"
         alt="portal"
+        width={1} // 실제 크기만큼 수정 가능
+        height={1}
         style={{ display: "none" }}
+        priority
       />
-
       {/* NPC1 모달 (데일리문제) */}
       <NpcModal
         isOpen={npc1ModalOpen}
@@ -621,7 +624,6 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
       >
         <DailyProblemContent />
       </NpcModal>
-
       {/* NPC2 모달 (QnA) */}
       <NpcModal
         isOpen={npc2ModalOpen}
@@ -634,7 +636,6 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
           handleQnaClick={handleQnaClick}
         />
       </NpcModal>
-
       {/* 공지사항 모달 */}
       <NoticeBoardModal
         open={noticeModalOpen}
@@ -646,13 +647,11 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
         setWriterMessage={setWriterMessage}
         handleAddNotice={handleAddNotice}
       />
-
       {/* 회의실 모달 */}
       <EnterMeetingRoom
         open={meetingModalOpen}
         onOpenChange={setMeetingModalOpen}
       />
-
       {/* 고정된 사이즈로 캔버스 */}
       <div
         className={Style.canvasContainerClass}
