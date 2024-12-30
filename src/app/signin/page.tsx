@@ -3,7 +3,7 @@ import Image from "next/image";
 import { signIn, signOut } from "@/auth";
 import { Button } from "@/components/ui/button";
 
-import styles from "./SignInPage.module.css";
+import styles from "./SignInpage.module.module.css";
 
 export default function SignInPage() {
   // 각각 별도의 Server Action 정의
