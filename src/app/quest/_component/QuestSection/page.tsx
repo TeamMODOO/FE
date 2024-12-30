@@ -8,6 +8,7 @@ import CodeMirror from "@uiw/react-codemirror";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { toast } from "react-hot-toast";
 
 import { Button } from "@/components/ui/button";
 
@@ -36,6 +37,13 @@ export default function QuestSection() {
   const router = useRouter();
   /** 문제 풀이 시작 여부 */
   const [isStart, setIsStart] = useState(false);
+
+  // src/app/quest/_component/QuestSection/page.tsx
+
+  // 'locked.webp' 이미지를 클릭 시에도 문제풀이를 시작시키는 함수
+  const handleLockedClick = () => {
+    setIsStart(true);
+  };
 
   /** (예시) 1시간(3600초) 타이머 */
   const [timeLeft, setTimeLeft] = useState(3600);
@@ -141,6 +149,19 @@ export default function QuestSection() {
     };
   }, [isStart]);
 
+  useEffect(() => {
+    // isStart인 상태에서 timeLeft가 0이 되면
+    if (isStart && timeLeft === 0) {
+      toast.error(
+        `아쉽습니다. 시간 초과로 인해 일일 챌린지를 해결하지 못했습니다.
+        (메인 화면으로 이동합니다...)`,
+      );
+      setTimeout(() => {
+        router.push("/lobby");
+      }, 5000);
+    }
+  }, [timeLeft, isStart, router]);
+
   /** 시간 포맷 */
   const hours = Math.floor(timeLeft / 3600);
   const minutes = Math.floor((timeLeft % 3600) / 60);
@@ -153,11 +174,14 @@ export default function QuestSection() {
   const buttonText = isStart ? "중단하고 나가기" : "문제 풀이 시작";
   const handleStartOrStop = () => {
     if (!isStart) {
-      // 아직 시작 전이면, 문제 풀이 시작
+      // 문제 풀이 시작 전이면 그냥 시작
       setIsStart(true);
     } else {
-      // 이미 시작 상태면 /lobby로 이동
-      router.push("/lobby");
+      // 이미 문제 풀이가 시작됐다면, 정말 나갈지 확인
+      const confirmResult = window.confirm("정말 포기하고 나가시겠습니까?");
+      if (confirmResult) {
+        router.push("/questmap");
+      }
     }
   };
 
@@ -202,6 +226,7 @@ export default function QuestSection() {
           qProblem={qProblem}
           qInput={qInput}
           qOutput={qOutput}
+          onLockedClick={handleLockedClick}
         />
 
         <section className={styles.submitForm}>
@@ -281,7 +306,7 @@ export default function QuestSection() {
                         </>
                       ) : (
                         <p className={styles.modalSubTitle}>
-                          더 나은 솔루션은 없습니다. 아주 훌륭합니다!
+                          이미 모범답안 수준입니다!
                         </p>
                       )}
                       <Button onClick={() => router.push("/questmap")}>

@@ -9,6 +9,7 @@ interface ProblemProps {
   qProblem: string;
   qInput: string;
   qOutput: string;
+  onLockedClick: () => void;
 }
 
 export default function Problem({
@@ -18,6 +19,7 @@ export default function Problem({
   qProblem,
   qInput,
   qOutput,
+  onLockedClick,
 }: ProblemProps) {
   return (
     <div className={styles.container}>
@@ -27,8 +29,18 @@ export default function Problem({
         style={{ display: isStart ? "none" : "flex" }}
       >
         <section className={styles.hideBody}>
-          <Image src="/etc/locked.webp" alt="locked" width={367} height={392} />
-          <p>우측 상단의 [문제 풀이 시작] 버튼을 클릭하세요.</p>
+          <Image
+            src="/etc/locked.webp"
+            alt="locked"
+            width={367}
+            height={392}
+            className={styles.lockedImage}
+            onClick={onLockedClick}
+          />
+          <p>
+            위 이미지 또는 우측 상단의 [문제 풀이 시작] 버튼을 클릭해, <br></br>
+            일일 퀘스트를 시작하세요.
+          </p>
         </section>
       </div>
 
