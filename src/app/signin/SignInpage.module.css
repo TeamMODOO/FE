@@ -2,7 +2,7 @@
   display: flex;
   justify-content: center;
   height: 100dvh;
-  background-image: url("/background/SignIn.png");
+  background-image: url("/background/sign_in.png");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;

@@ -2,7 +2,7 @@
   /* position을 relative로 설정하면 사이드 바 가릴 수 있음 */
   position: relative;
   min-height: 100dvh; /* 세로 길이 100% */
-  background-image: url("/background/QuestMap.webp");
+  background-image: url("/background/quest_map.webp");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
