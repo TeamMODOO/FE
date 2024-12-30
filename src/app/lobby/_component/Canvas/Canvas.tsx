@@ -20,7 +20,8 @@ import { NpcInfo } from "../../_model/Npc";
 import { PortalInfo } from "../../_model/Portal";
 import { QNA_LIST } from "../../data/qna";
 import DailyProblemContent from "../DailyProblem/DailyProblemContent";
-import { EnterMeetingRoom } from "../enter-meeting_room/enter-meeting_room";
+// ★ [추가] 미팅룸 모달 (버튼 제거 버전)
+import { EnterMeetingRoom } from "../EnterMeetingRoom/EnterMeetingRoom";
 import NoticeBoardModal from "../NoticeBoardModal/NoticeBoardModal";
 import NpcList from "../Npc/NpcList";
 import { NpcModal } from "../Npc/NpcModal";
@@ -28,21 +29,7 @@ import PortalList from "../Portal/PortalList";
 import QnaContent from "../Qna/QnaContent";
 import Style from "./Canvas.style";
 
-// ------------------ 맵 상수 ------------------
-const MAP_CONSTANTS = {
-  // 초기값 (마운트 시에 window크기로 대체)
-  CANVAS_WIDTH: 1400,
-  CANVAS_HEIGHT: 800,
-
-  // 캐릭터 크기
-  IMG_WIDTH: 50,
-  IMG_HEIGHT: 150,
-  SPEED: 10,
-
-  // 전체 맵 크기
-  MAP_WIDTH: 1200,
-  MAP_HEIGHT: 700,
-};
+// ★ [추가] 미팅룸 모달 (버튼 제거 버전)
 
 type Direction = 0 | 1 | 2 | 3; // 0=Down,1=Up,2=Right,3=Left
 type SolvedUser = {

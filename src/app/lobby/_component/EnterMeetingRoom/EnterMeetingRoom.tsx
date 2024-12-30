@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-import { RoomCard } from "./room";
+import { RoomCard } from "./Room";
 
 /**
  * 외부에서 모달 열림/닫힘을 제어하기 위해
@@ -52,7 +52,7 @@ export const EnterMeetingRoom: React.FC<EnterMeetingRoomProps> = ({
             <div className="h-full overflow-y-auto pr-4">
               <div className="mt-4 grid h-[310px] grid-cols-2 gap-4 overflow-y-auto pb-4">
                 {[...Array(6)].map((_, i) => (
-                  <RoomCard key={i} />
+                  <RoomCard key={i} id={String(i)} />
                 ))}
               </div>
             </div>
