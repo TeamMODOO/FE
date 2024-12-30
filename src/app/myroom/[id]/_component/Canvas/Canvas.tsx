@@ -5,7 +5,6 @@ import React, { useEffect, useRef, useState } from "react";
 
 // (1) UI & Hooks
 import { Button } from "@/components/ui/button";
-// (6) 스타일 & 가구이미지
 import useThrottle from "@/hooks/performance/useThrottle";
 import useMainSocketConnect from "@/hooks/socket/useMainSocketConnect";
 // (2) 스프라이트 로딩 훅 & 상수
@@ -17,7 +16,6 @@ import useLoadSprites, {
 // (소켓 연결 관련 훅들)
 import useMyRoomSocketEvents from "@/hooks/useMyRoomSocketEvents";
 
-// (3) Throttle 훅 (값 쓰로틀 → 이번엔 “키 입력”을 쓰로틀)
 // (4) 모델/타입
 import { Funiture } from "../../_model/Funiture";
 import { Direction, User } from "../../_model/User";
@@ -59,11 +57,9 @@ const techStackList = [
 ];
 
 // --------------------------------------------------
-// 캔버스/맵 상수
+// (A) 맵 상수 (속도만 남김)
 // --------------------------------------------------
 const MAP_CONSTANTS = {
-  CANVAS_WIDTH: 1500,
-  CANVAS_HEIGHT: 830,
   SPEED: 30, // 캐릭터 이동 속도
 };
 
@@ -82,14 +78,44 @@ const MyRoomCanvas: React.FC = () => {
   });
 
   // --------------------------------------------------
-  // (B) 캔버스 & 배경
+  // (B) 화면 사이즈 State + 캔버스 ref
   // --------------------------------------------------
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  // 1) 캔버스 사이즈를 저장할 state (초기값은 임의)
+  const [canvasSize, setCanvasSize] = useState({ w: 1500, h: 830 });
+
+  // 2) 마운트 시점에 한 번만 window 크기 읽어서 고정
+  useEffect(() => {
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    setCanvasSize({ w, h });
+  }, []);
+
+  // --------------------------------------------------
+  // (C) 배경 이미지 로드
+  // --------------------------------------------------
   const [backgroundImage, setBackgroundImage] =
     useState<HTMLImageElement | null>(null);
 
+  // 두 번째 useEffect에서 canvasRef.current.width/height를 지정
+  useEffect(() => {
+    if (!canvasRef.current) return;
+    const canvas = canvasRef.current;
+
+    // 여기서 실제 픽셀 크기를 고정
+    canvas.width = canvasSize.w;
+    canvas.height = canvasSize.h;
+
+    const bg = new Image();
+    bg.src = "/background/myroom.webp";
+    bg.onload = () => {
+      setBackgroundImage(bg);
+    };
+  }, [canvasSize]);
+
   // --------------------------------------------------
-  // (C) 사용자 목록 (간단 예시: local state)
+  // (D) 사용자 목록 (간단 예시: local state)
   // --------------------------------------------------
   const [users, setUsers] = useState<User[]>([
     {
@@ -113,7 +139,7 @@ const MyRoomCanvas: React.FC = () => {
   ]);
 
   // --------------------------------------------------
-  // (D) 가구
+  // (E) 가구: 이력서/포트폴리오/기술스택 등
   // --------------------------------------------------
   const [resume, setResume] = useState<Funiture[]>([
     {
@@ -164,22 +190,22 @@ const MyRoomCanvas: React.FC = () => {
     },
     {
       id: "technologyStack-3",
-      x: 1050,
-      y: 600,
+      x: 600,
+      y: 300,
       funitureType: "none",
       funiturename: "기술스택3",
     },
     {
       id: "technologyStack-4",
-      x: 950,
-      y: 700,
+      x: 650,
+      y: 550,
       funitureType: "none",
       funiturename: "기술스택4",
     },
     {
       id: "technologyStack-5",
       x: 1150,
-      y: 680,
+      y: 600,
       funitureType: "none",
       funiturename: "기술스택5",
     },
@@ -206,15 +232,15 @@ const MyRoomCanvas: React.FC = () => {
     },
     {
       id: "technologyStack-9",
-      x: 1350,
-      y: 100,
+      x: 750,
+      y: 400,
       funitureType: "none",
       funiturename: "기술스택9",
     },
   ]);
 
   // --------------------------------------------------
-  // (E) 게시판(방명록)
+  // (F) 게시판(방명록)
   // --------------------------------------------------
   const [board] = useState<Funiture[]>([
     {
@@ -240,7 +266,7 @@ const MyRoomCanvas: React.FC = () => {
   const [visitorMessage, setVisitorMessage] = useState("");
 
   // --------------------------------------------------
-  // (F) 모달 (이력서/포트폴리오/기술스택)
+  // (G) 모달 (이력서/포트폴리오/기술스택)
   // --------------------------------------------------
   const [resumeModalOpen, setResumeModalOpen] = useState(false);
   const [portfolioModalOpen, setPortfolioModalOpen] = useState(false);
@@ -251,49 +277,52 @@ const MyRoomCanvas: React.FC = () => {
   const [selectedTech, setSelectedTech] = useState("");
 
   // --------------------------------------------------
-  // (G) 가구 상세 모달
+  // (H) 가구 상세 모달
   // --------------------------------------------------
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [selectedFurnitureData, setSelectedFurnitureData] =
     useState<Funiture | null>(null);
 
   // --------------------------------------------------
-  // (H) 스프라이트 로딩 훅
+  // (I) 스프라이트 로딩 훅
   // --------------------------------------------------
   const spriteImages = useLoadSprites();
-
-  // --------------------------------------------------
-  // (I) 배경 로드
-  // --------------------------------------------------
-  useEffect(() => {
-    if (!canvasRef.current) return;
-    const canvas = canvasRef.current;
-    canvas.width = MAP_CONSTANTS.CANVAS_WIDTH;
-    canvas.height = MAP_CONSTANTS.CANVAS_HEIGHT;
-
-    const bg = new Image();
-    bg.src = "/background/myroom.webp";
-    bg.onload = () => {
-      setBackgroundImage(bg);
-    };
-  }, []);
 
   // --------------------------------------------------
   // (J) 키 입력 상태
   // --------------------------------------------------
   const [pressedKeys, setPressedKeys] = useState<Record<string, boolean>>({});
 
+  // --------------------------------------------------
+  // (K) 포탈: **useState + useEffect**로 "좌측 중앙" 정렬
+  // --------------------------------------------------
+  const [portal, setPortal] = useState({
+    id: "portal-to-lobby",
+    x: 1300, // 초기값
+    y: 600,
+    route: "/lobby",
+    name: "로비 포탈",
+  });
+
+  // 마운트 후 canvasSize가 정해진 뒤에, 좌측 중앙에 포탈 위치시키기
+  useEffect(() => {
+    setPortal((prev) => ({
+      ...prev,
+      x: 50, // 왼쪽에서 50px 떨어진 위치
+      // 높이가 200이므로, (전체 높이 - 200)/2 지점에 둠 → 세로 중앙
+      y: Math.max((canvasSize.h - 200) / 2, 0),
+    }));
+  }, [canvasSize]);
+
   // (J-1) 포탈 overlap 체크 함수
   const checkPortalOverlap = () => {
-    // 우선 내 캐릭터(quest-user, 여기서는 myUserId=1) 찾아서 좌표 얻음
     const me = users.find((u) => u.id === myUserId);
     if (!me) return false;
 
     // 캐릭터 크기 64×64
     const [cl, cr, ct, cb] = [me.x, me.x + 64, me.y, me.y + 64];
 
-    // 아래에서 portalBox를 정의
-    // portalWidth = 200, portalHeight = 200 (조금 크게 표시)
+    // portalWidth = 200, portalHeight = 200
     const portalWidth = 200;
     const portalHeight = 200;
     const [pl, pr, pt, pb] = [
@@ -305,18 +334,12 @@ const MyRoomCanvas: React.FC = () => {
 
     // 충돌 판정
     const overlap = cr > pl && cl < pr && cb > pt && ct < pb;
-    if (overlap) {
-      // 겹쳤을 때 콘솔 로그
-      // console.log(
-      //   `캐릭터 위치: (${me.x}, ${me.y}), 포탈 위치: (${portal.x}, ${portal.y})`,
-      // );
-    }
     return overlap;
   };
 
+  // 키다운 / 키업
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // 이동키(WASD, ㅈㄴㅇㅁ, Arrow*)에 대해서는 기본 스크롤 동작 방지
       if (
         [
           "w",
@@ -346,9 +369,7 @@ const MyRoomCanvas: React.FC = () => {
         // 스페이스바로 포탈 겹치면 이동
         const overlapped = checkPortalOverlap();
         if (overlapped) {
-          // 이동 (콘솔에 이미 캐릭터/포탈 위치 찍었음)
           window.location.href = portal.route;
-          // 혹은 router.push(portal.route);
         }
       }
 
@@ -372,11 +393,10 @@ const MyRoomCanvas: React.FC = () => {
       window.removeEventListener("keyup", handleKeyUp);
       window.removeEventListener("blur", handleBlur);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [users]);
+  }, [users, portal]);
 
   // --------------------------------------------------
-  // (K) 방향 계산 함수
+  // (L) 방향 계산 함수
   // --------------------------------------------------
   function getNewDirection(usersList: User[]): Direction | null {
     const me = usersList.find((u) => u.id === myUserId);
@@ -420,31 +440,28 @@ const MyRoomCanvas: React.FC = () => {
   }
 
   // --------------------------------------------------
-  // (L) 스프라이트 애니메이션 프레임 관리 (Ref)
+  // (M) 스프라이트 애니메이션 프레임 관리 (Ref)
   // --------------------------------------------------
   const userFrameRef = useRef<
     Record<string, { frame: number; lastFrameTime: number }>
   >({});
 
   useEffect(() => {
-    // 초기화
     users.forEach((u) => {
       userFrameRef.current[u.id] = {
         frame: 0,
         lastFrameTime: performance.now(),
       };
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // --------------------------------------------------
-  // (M) 키 입력 자체를 쓰로틀(로비 방식)
+  // (N) 키 입력 → 쓰로틀
   // --------------------------------------------------
-  // → 100ms마다 "pressedKeys"를 "throttledPressedKeys"로 동기화
   const throttledPressedKeys = useThrottle(pressedKeys, 100);
 
   // --------------------------------------------------
-  // (N) useEffect: throttledPressedKeys 기반으로 "이동 자체"를 100ms 간격 수행
+  // (O) 쓰로틀된 키 입력 기반 → 이동 처리
   // --------------------------------------------------
   useEffect(() => {
     setUsers((prevUsers) => {
@@ -455,31 +472,24 @@ const MyRoomCanvas: React.FC = () => {
       const me = newUsers[meIndex];
       let { x, y } = me;
 
-      // (a) 방향 계산
+      // (a) 방향
       const newDir = getNewDirection(newUsers);
       if (newDir === null) {
-        // 아무 키도 없으면 → 멈춤
         newUsers[meIndex] = { ...me, isMoving: false };
         return newUsers;
       }
 
-      // (b) 실제 이동
+      // (b) 실제 이동 (경계: canvasSize.w/h)
       let moved = false;
       if (newDir === 1 && y > 0) {
         // Up
         y -= MAP_CONSTANTS.SPEED;
         moved = true;
-      } else if (
-        newDir === 0 &&
-        y < MAP_CONSTANTS.CANVAS_HEIGHT - FRAME_HEIGHT * CHAR_SCALE
-      ) {
+      } else if (newDir === 0 && y < canvasSize.h - FRAME_HEIGHT * CHAR_SCALE) {
         // Down
         y += MAP_CONSTANTS.SPEED;
         moved = true;
-      } else if (
-        newDir === 2 &&
-        x < MAP_CONSTANTS.CANVAS_WIDTH - FRAME_WIDTH * CHAR_SCALE
-      ) {
+      } else if (newDir === 2 && x < canvasSize.w - FRAME_WIDTH * CHAR_SCALE) {
         // Right
         x += MAP_CONSTANTS.SPEED;
         moved = true;
@@ -505,10 +515,10 @@ const MyRoomCanvas: React.FC = () => {
 
       return newUsers;
     });
-  }, [throttledPressedKeys, emitMovement]);
+  }, [throttledPressedKeys, emitMovement, canvasSize]);
 
   // --------------------------------------------------
-  // (O) rAF로 그리기
+  // (P) rAF 렌더링 (배경+캐릭터)
   // --------------------------------------------------
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -529,28 +539,16 @@ const MyRoomCanvas: React.FC = () => {
         lastTime = time - (delta % frameDuration);
 
         // 1) Clear
-        ctx.clearRect(
-          0,
-          0,
-          MAP_CONSTANTS.CANVAS_WIDTH,
-          MAP_CONSTANTS.CANVAS_HEIGHT,
-        );
+        ctx.clearRect(0, 0, canvasSize.w, canvasSize.h);
 
         // 2) 배경
         if (backgroundImage) {
-          ctx.drawImage(
-            backgroundImage,
-            0,
-            0,
-            MAP_CONSTANTS.CANVAS_WIDTH,
-            MAP_CONSTANTS.CANVAS_HEIGHT,
-          );
+          ctx.drawImage(backgroundImage, 0, 0, canvasSize.w, canvasSize.h);
         }
 
         // 3) 캐릭터 스프라이트
         const now = performance.now();
         users.forEach((user) => {
-          // 보행 프레임 관리
           const frameData = userFrameRef.current[user.id];
           if (!frameData) {
             userFrameRef.current[user.id] = {
@@ -573,10 +571,10 @@ const MyRoomCanvas: React.FC = () => {
             frameData.lastFrameTime = now;
           }
 
-          // 스프라이트 그리기
           const sx = frameData.frame * FRAME_WIDTH;
           const sy = (user.direction ?? 0) * FRAME_HEIGHT;
 
+          // 스프라이트
           if (Object.keys(spriteImages).length === LAYER_ORDER.length) {
             ctx.save();
             LAYER_ORDER.forEach((layer) => {
@@ -596,7 +594,7 @@ const MyRoomCanvas: React.FC = () => {
             });
             ctx.restore();
 
-            // 닉네임 표시
+            // 닉네임
             ctx.font = "bold 14px Arial";
             ctx.fillStyle = "white";
             ctx.textAlign = "center";
@@ -615,10 +613,10 @@ const MyRoomCanvas: React.FC = () => {
     return () => {
       cancelAnimationFrame(animationId);
     };
-  }, [backgroundImage, spriteImages, users]);
+  }, [backgroundImage, spriteImages, users, canvasSize]);
 
   // --------------------------------------------------
-  // (P) 게시판 새 글 작성
+  // (Q) 게시판 새 글 작성
   // --------------------------------------------------
   const handleAddComment = () => {
     if (!visitorName.trim() || !visitorMessage.trim()) return;
@@ -631,7 +629,7 @@ const MyRoomCanvas: React.FC = () => {
   };
 
   // --------------------------------------------------
-  // (Q) 모달 열기
+  // (R) 모달 열기
   // --------------------------------------------------
   const handleOpenResumeModal = () => {
     if (resume.filter((r) => r.funitureType !== "none").length >= 1) return;
@@ -648,7 +646,7 @@ const MyRoomCanvas: React.FC = () => {
   };
 
   // --------------------------------------------------
-  // (R) 모달 저장 (이력서/포트폴리오/기술스택)
+  // (S) 모달 저장 (이력서/포트폴리오/기술스택)
   // --------------------------------------------------
   const handleSaveResume = () => {
     const idx = resume.findIndex((r) => r.funitureType === "none");
@@ -676,11 +674,9 @@ const MyRoomCanvas: React.FC = () => {
     }
 
     try {
-      // 1) FormData 생성
       const formData = new FormData();
       formData.append("file", portfolioFile);
 
-      // 2) /api/portfolio 로 POST
       const res = await fetch("/api/portfolio", {
         method: "POST",
         body: formData,
@@ -691,10 +687,7 @@ const MyRoomCanvas: React.FC = () => {
         throw new Error(data.error || "Upload failed");
       }
 
-      // 3) 업로드된 S3 URL
       const s3Url = data.url;
-
-      // 4) 기존 로직 (state 갱신)
       const idx = portfolio.findIndex((p) => p.funitureType === "none");
       if (idx !== -1) {
         setPortfolio((prev) =>
@@ -710,11 +703,10 @@ const MyRoomCanvas: React.FC = () => {
         );
       }
 
-      // 5) 모달 닫기 & 파일 초기화
       setPortfolioModalOpen(false);
       setPortfolioFile(null);
     } catch (error) {
-      // 업로드 실패 처리
+      // 실패 처리
     }
   };
 
@@ -742,25 +734,13 @@ const MyRoomCanvas: React.FC = () => {
   };
 
   // --------------------------------------------------
-  // (S) 가구 클릭 → 상세
+  // (T) 가구 클릭 → 상세 보기
   // --------------------------------------------------
   const handleFurnitureClick = (f: Funiture) => {
-    // "none" 또는 "board" 타입이면 상세 모달 없음
     if (f.funitureType === "none" || f.funitureType === "board") return;
     setSelectedFurnitureData(f);
     setViewModalOpen(true);
   };
-
-  // --------------------------------------------------
-  // (T) 포탈 (로비 이동용) - 크기 크게(200×200)
-  // --------------------------------------------------
-  const [portal] = useState({
-    id: "portal-to-lobby",
-    x: 1300,
-    y: 600,
-    route: "/lobby",
-    name: "로비 포탈",
-  });
 
   // --------------------------------------------------
   // 버튼 비활성화 여부
@@ -773,10 +753,21 @@ const MyRoomCanvas: React.FC = () => {
     technologyStack.filter((t) => t.funitureType !== "none").length >= 9;
 
   // --------------------------------------------------
-  // (U) 렌더
+  // (U) 렌더링
   // --------------------------------------------------
   return (
-    <div className={Style.canvasContainerClass}>
+    <div
+      className={Style.canvasContainerClass}
+      style={{
+        // 디스플레이 전 크기를 꽉 채우도록 고정
+        width: `${canvasSize.w}px`,
+        height: `${canvasSize.h}px`,
+        // 이후 창 크기를 변경해도 사이즈 불변 → 스크롤 가능
+        overflow: "auto",
+        position: "relative",
+      }}
+    >
+      {/* 절대위치 캔버스 */}
       <canvas ref={canvasRef} className={Style.absoluteCanvasClass} />
 
       {/* 가구 표시 (이력서/포트폴리오/기술스택) */}
@@ -819,31 +810,30 @@ const MyRoomCanvas: React.FC = () => {
         </div>
       ))}
 
-      {/* 포탈 (크기를 200×200으로 증가) */}
+      {/* 포탈 (크기 200×200, 좌측 중앙) */}
       <div
         className={Style.furnitureContainerClass}
         style={{
           left: portal.x,
           top: portal.y,
           width: 200,
-          height: 200, // 포탈 크게
+          height: 200,
         }}
         onClick={() => {
-          // 클릭 시 로비로 이동(옵션)
           window.location.href = portal.route;
         }}
       >
         <NextImage
           src="/furniture/portal.gif"
           alt={portal.name}
-          width={200} // 이미지 자체도 200×200
+          width={200}
           height={200}
           priority
         />
         <div className={Style.furnitureTextClass}>{portal.name}</div>
       </div>
 
-      {/* 우측 하단 버튼 */}
+      {/* 우측 하단 버튼들 */}
       <div className={Style.bottomButtonsClass}>
         <Button
           onClick={handleOpenResumeModal}

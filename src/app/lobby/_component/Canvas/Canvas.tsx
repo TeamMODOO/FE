@@ -20,15 +20,29 @@ import { NpcInfo } from "../../_model/Npc";
 import { PortalInfo } from "../../_model/Portal";
 import { QNA_LIST } from "../../data/qna";
 import DailyProblemContent from "../DailyProblem/DailyProblemContent";
-// ★ [추가] 미팅룸 모달 (버튼 제거 버전)
 import { EnterMeetingRoom } from "../enter-meeting_room/enter-meeting_room";
-import { MAP_CONSTANTS } from "../MapConstants";
 import NoticeBoardModal from "../NoticeBoardModal/NoticeBoardModal";
 import NpcList from "../Npc/NpcList";
 import { NpcModal } from "../Npc/NpcModal";
 import PortalList from "../Portal/PortalList";
 import QnaContent from "../Qna/QnaContent";
 import Style from "./Canvas.style";
+
+const MAP_CONSTANTS = {
+  // 아래 두 값은 초깃값(혹은 fallback)일 뿐,
+  // 실제로는 컴포넌트 마운트 시점에 window.innerWidth / window.innerHeight로 재할당 해줄 예정
+  CANVAS_WIDTH: 1400,
+  CANVAS_HEIGHT: 800,
+
+  // 캐릭터(등등) 사이즈
+  IMG_WIDTH: 50,
+  IMG_HEIGHT: 150,
+  SPEED: 10,
+
+  // 실제 맵 전체의 크기
+  MAP_WIDTH: 1200,
+  MAP_HEIGHT: 700,
+};
 
 type Direction = 0 | 1 | 2 | 3; // 0=Down,1=Up,2=Right,3=Left
 type SolvedUser = {
@@ -48,7 +62,7 @@ function getTodayString() {
 /** 포탈 정보 */
 const portals: PortalInfo[] = [
   {
-    x: 650,
+    x: 720,
     y: 250,
     width: 50,
     height: 50,
@@ -56,7 +70,7 @@ const portals: PortalInfo[] = [
     name: "마이룸",
   },
   {
-    x: 400,
+    x: 450,
     y: 250,
     width: 50,
     height: 50,
@@ -65,10 +79,10 @@ const portals: PortalInfo[] = [
   },
 ];
 
-/** NPC 정보 (NPC3 제거, NPC2에 QnA 기능 추가) */
+/** NPC 정보 */
 const npcs: NpcInfo[] = [
   {
-    x: 300,
+    x: 500,
     y: 400,
     width: 20,
     height: 35,
@@ -77,16 +91,16 @@ const npcs: NpcInfo[] = [
     name: "NPC1",
   },
   {
-    x: 330,
-    y: 300,
+    x: 730,
+    y: 380,
     width: 20,
     height: 35,
     image: "/character/npc2.png",
     modalTitle: "NPC2 대화",
-    name: "NPC2", // ← 이제 QnA 기능도 처리
+    name: "NPC2", // ← QnA 기능 포함
   },
   {
-    x: 490,
+    x: 560,
     y: 110,
     width: 100,
     height: 50,
@@ -111,10 +125,30 @@ const LobbyCanvas: React.FC = () => {
     userId: clientId,
   });
 
+  // --------------------------------------------------
+  // 1) 화면 사이즈를 가져와, CANVAS_WIDTH / CANVAS_HEIGHT를 갱신
+  // --------------------------------------------------
+  const [canvasSize, setCanvasSize] = useState<{ w: number; h: number }>({
+    w: MAP_CONSTANTS.CANVAS_WIDTH,
+    h: MAP_CONSTANTS.CANVAS_HEIGHT,
+  });
+
+  useEffect(() => {
+    // 마운트 시점에 window 크기를 읽어서 고정
+    const w = window.innerWidth;
+    const h = window.innerHeight;
+    setCanvasSize({ w, h });
+    // 리사이즈 이벤트는 등록하지 않음(요구사항대로)
+  }, []);
+
+  // --------------------------------------------------
   // 스프라이트 로딩
+  // --------------------------------------------------
   const spriteImages = useLoadSprites();
 
+  // --------------------------------------------------
   // 배경
+  // --------------------------------------------------
   const [backgroundImage, setBackgroundImage] =
     useState<HTMLImageElement | null>(null);
   useEffect(() => {
@@ -123,10 +157,14 @@ const LobbyCanvas: React.FC = () => {
     bg.onload = () => setBackgroundImage(bg);
   }, []);
 
-  // 포탈 GIF (숨김 로딩)
+  // --------------------------------------------------
+  // 포탈 GIF
+  // --------------------------------------------------
   const portalGifRef = useRef<HTMLImageElement | null>(null);
 
+  // --------------------------------------------------
   // NPC 이미지
+  // --------------------------------------------------
   const [npcImages, setNpcImages] = useState<Record<string, HTMLImageElement>>(
     {},
   );
@@ -147,26 +185,20 @@ const LobbyCanvas: React.FC = () => {
     });
   }, []);
 
-  // 모달들 (NPC 대화)
+  // --------------------------------------------------
+  // 모달들
+  // --------------------------------------------------
   const [npc1ModalOpen, setNpc1ModalOpen] = useState(false);
-
-  // NPC2는 NPC3 기능(QnA)을 통합
+  // NPC2 → QnA
   const [npc2ModalOpen, setNpc2ModalOpen] = useState(false);
-
-  // (기존 NPC3 제거)
-  // const [npc3ModalOpen, setNpc3ModalOpen] = useState(false);
-
-  // 공지사항 NPC 모달
+  // 공지사항 NPC
   const [noticeModalOpen, setNoticeModalOpen] = useState(false);
-
-  // 공지사항 목록
   const [noticeList, setNoticeList] = useState<NoticeItem[]>([
     { id: 1, name: "운영자", message: "처음 오신 분들 환영합니다!" },
     { id: 2, name: "Alice", message: "안녕하세요! 반갑습니다." },
   ]);
   const [writerName, setWriterName] = useState("");
   const [writerMessage, setWriterMessage] = useState("");
-
   const handleAddNotice = () => {
     if (!writerName.trim() || !writerMessage.trim()) return;
     setNoticeList((prev) => [
@@ -177,8 +209,9 @@ const LobbyCanvas: React.FC = () => {
     setWriterMessage("");
   };
 
-  // (데일리 문제 & QnA -> NPC1, NPC2 각각)
-  // NPC1: 데일리문제
+  // --------------------------------------------------
+  // 데일리문제(NPC1) & QnA(NPC2)
+  // --------------------------------------------------
   const [dailyProblem, setDailyProblem] = useState<{
     id: number;
     title: string;
@@ -187,13 +220,14 @@ const LobbyCanvas: React.FC = () => {
   const [isProblemSolved, setIsProblemSolved] = useState(false);
   const [dailySolvedUsers, setDailySolvedUsers] = useState<SolvedUser[]>([]);
 
-  // NPC2(=기존 NPC3) QnA
+  // NPC2 QnA
   const [selectedQnaIndex, setSelectedQnaIndex] = useState<number | null>(null);
   const handleQnaClick = (index: number) => {
     setSelectedQnaIndex((prev) => (prev === index ? null : index));
   };
 
   useEffect(() => {
+    // 예시: 매번 랜덤 문제 or 특정 문제
     setDailyProblem({
       id: 1018,
       title: "체스판 다시 칠하기",
@@ -222,14 +256,20 @@ const LobbyCanvas: React.FC = () => {
     }
   };
 
-  // ------------------ "회의실" 모달 ------------------
+  // --------------------------------------------------
+  // 회의실 모달
+  // --------------------------------------------------
   const [meetingModalOpen, setMeetingModalOpen] = useState(false);
 
-  // ------------------ 모달 열림 체크 (키 입력 막기) ------------------
+  // --------------------------------------------------
+  // 모달 열림 여부 -> 이동키 막기
+  // --------------------------------------------------
   const isAnyModalOpen =
     npc1ModalOpen || npc2ModalOpen || noticeModalOpen || meetingModalOpen;
 
-  // 포탈 & NPC 충돌 (스페이스바)
+  // --------------------------------------------------
+  // 포탈 / NPC 충돌 (스페이스바)
+  // --------------------------------------------------
   function getPortalRouteIfOnPortal(): string | null {
     const { users } = useUsersStore.getState();
     const me = users.find((u) => u.id === myUserId);
@@ -300,9 +340,6 @@ const LobbyCanvas: React.FC = () => {
         }
         const npcIndex = getNpcIndexIfOnNpc();
         if (npcIndex !== null) {
-          // NPC1 = 데일리문제
-          // NPC2 = (기존 NPC2 + NPC3) → QnA + 기존 기능
-          // "공지사항" = noticeModal
           if (npcIndex === 0) {
             setNpc1ModalOpen(true);
           } else if (npcIndex === 1) {
@@ -338,7 +375,9 @@ const LobbyCanvas: React.FC = () => {
 
   const throttledPressedKeys = useThrottle(pressedKeys, 100);
 
-  // ------------------ 이동 로직 ------------------
+  // --------------------------------------------------
+  // 이동 로직
+  // --------------------------------------------------
   function getDirectionFromKeys(
     keys: Record<string, boolean>,
   ): Direction | null {
@@ -399,26 +438,35 @@ const LobbyCanvas: React.FC = () => {
     }
   }, [throttledPressedKeys, isAnyModalOpen, emitMovement]);
 
-  // ------------------ rAF 렌더 (배경, NPC, 포탈, 캐릭터 등) ------------------
+  // --------------------------------------------------
+  // requestAnimationFrame (배경, NPC, 포탈, 캐릭터 등)
+  // --------------------------------------------------
   const zoomFactor = 2;
   function clamp(value: number, min: number, max: number) {
     return Math.max(min, Math.min(max, value));
   }
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    canvas.width = MAP_CONSTANTS.CANVAS_WIDTH;
-    canvas.height = MAP_CONSTANTS.CANVAS_HEIGHT;
+    // 매번 canvasSize 가 정해진 뒤에만 렌더 로직 수행
+    if (!canvasRef.current) return;
 
+    const canvas = canvasRef.current;
+
+    // ★ 여기서 실제 canvas 픽셀 크기를 지정
+    canvas.width = canvasSize.w;
+    canvas.height = canvasSize.h;
+
+    // 렌더링 컨텍스트
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+    // FPS
     const fps = 30;
     const frameDuration = 1000 / fps;
     let lastTime = 0;
     let animationId = 0;
 
+    // 캐릭터 애니메이션(Frame)
     const userFrameMap: Record<
       string,
       { frame: number; lastFrameTime: number }
@@ -479,6 +527,7 @@ const LobbyCanvas: React.FC = () => {
               portal.height,
             );
           } else {
+            // fallback
             ctx.fillStyle = "rgba(0,0,255,0.3)";
             ctx.fillRect(portal.x, portal.y, portal.width, portal.height);
           }
@@ -507,6 +556,7 @@ const LobbyCanvas: React.FC = () => {
               npc.y + npc.height + 12,
             );
           } else {
+            // fallback
             ctx.fillStyle = "rgba(255,0,0,0.3)";
             ctx.fillRect(npc.x, npc.y, npc.width, npc.height);
           }
@@ -573,7 +623,7 @@ const LobbyCanvas: React.FC = () => {
     return () => {
       cancelAnimationFrame(animationId);
     };
-  }, [backgroundImage, spriteImages, npcImages]);
+  }, [backgroundImage, spriteImages, npcImages, canvasSize]);
 
   return (
     <>
@@ -594,7 +644,7 @@ const LobbyCanvas: React.FC = () => {
         <DailyProblemContent />
       </NpcModal>
 
-      {/* NPC2 모달 (기존 NPC2 + NPC3 QnA) */}
+      {/* NPC2 모달 (QnA) */}
       <NpcModal
         isOpen={npc2ModalOpen}
         onClose={() => setNpc2ModalOpen(false)}
@@ -619,13 +669,25 @@ const LobbyCanvas: React.FC = () => {
         handleAddNotice={handleAddNotice}
       />
 
-      {/* 회의실 모달 (버튼X) */}
+      {/* 회의실 모달 */}
       <EnterMeetingRoom
         open={meetingModalOpen}
         onOpenChange={setMeetingModalOpen}
       />
 
-      <div className={Style.canvasContainerClass}>
+      {/*
+        2) 화면을 “고정된 사이즈의 캔버스”로 만듦
+           - 이후 화면 크기를 줄이거나 늘려도 캔버스는 변하지 않음
+           - 넘치면 브라우저 스크롤
+      */}
+      <div
+        className={Style.canvasContainerClass}
+        style={{
+          width: `${canvasSize.w}px`,
+          height: `${canvasSize.h}px`,
+          overflow: "auto",
+        }}
+      >
         <PortalList portals={[]} />
         <NpcList npcs={[]} />
         <canvas ref={canvasRef} />
