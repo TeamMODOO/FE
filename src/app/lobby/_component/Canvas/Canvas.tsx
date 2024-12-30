@@ -6,13 +6,13 @@ import { useEffect, useRef, useState } from "react";
 import useThrottle from "@/hooks/performance/useThrottle";
 // (1) 공통 소켓 연결
 import useMainSocketConnect from "@/hooks/socket/useMainSocketConnect";
-// (2) 로비 전용 소켓 로직 (emitMovement + 이벤트 구독)
 import useLoadSprites, {
   FRAME_HEIGHT,
   FRAME_WIDTH,
   LAYER_ORDER,
 } from "@/hooks/useLoadSprites";
 import useLobbySocketEvents from "@/hooks/useLobbySocketEvents";
+// (3) Zustand (유저 스토어)
 import useUsersStore from "@/store/useUsersStore";
 
 import { NoticeItem } from "../../_model/NoticeBoard";
