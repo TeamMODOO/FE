@@ -15,6 +15,7 @@ import useQuestMapSocketEvents from "@/hooks/useQuestMapSocketEvents";
 
 import { User } from "../../_model/User";
 import { NpcModal } from "../Npc/NpcModal";
+import RankingModal from "../RankingModal/RankingModal";
 import Style from "./QuestMapCanvas.style";
 
 /** NPC 정보 타입 */
@@ -502,7 +503,7 @@ const QuestMapCanvas: React.FC = () => {
       </div>
 
       {/* NPC1 모달 */}
-      <NpcModal
+      {/* <NpcModal
         isOpen={npc1ModalOpen}
         onClose={() => setNpc1ModalOpen(false)}
         title="퀘스트 NPC1 대화"
@@ -511,7 +512,10 @@ const QuestMapCanvas: React.FC = () => {
           <h3>NPC1 대화내용</h3>
           <p>이곳에 퀘스트 NPC1 대사를 넣어보세요.</p>
         </div>
-      </NpcModal>
+      </NpcModal> */}
+      {npc1ModalOpen && (
+        <RankingModal onClose={() => setNpc1ModalOpen(false)} />
+      )}
 
       {/* NPC2 모달 */}
       <NpcModal
