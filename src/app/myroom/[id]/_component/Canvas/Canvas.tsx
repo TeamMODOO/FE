@@ -13,7 +13,6 @@ import useLoadSprites, {
   FRAME_WIDTH,
   LAYER_ORDER,
 } from "@/hooks/useLoadSprites";
-// (소켓 연결 관련 훅들)
 import useMyRoomSocketEvents from "@/hooks/useMyRoomSocketEvents";
 
 // (4) 모델/타입
@@ -22,6 +21,7 @@ import { Direction, User } from "../../_model/User";
 // (5) 모달들
 import BoardModal from "../BoardModal/BoardModal";
 import FurnitureInfoModal from "../FurnitureInfoModal/FurnitureInfoModal";
+import PdfViewerModal from "../PortfolioModal/PdfViewerModal";
 import PortfolioModal from "../PortfolioModal/PortfolioModal";
 import ResumeModal from "../ResumeModal/ResumeModal";
 import TechStackModal from "../TechStackModal/TechStackModal";
@@ -140,6 +140,7 @@ const MyRoomCanvas: React.FC = () => {
 
   // --------------------------------------------------
   // (E) 가구: 이력서/포트폴리오/기술스택 등
+  //  - 파일 업로드 후 S3에 올리고, url을 data.url로 저장
   // --------------------------------------------------
   const [resume, setResume] = useState<Funiture[]>([
     {
@@ -284,6 +285,12 @@ const MyRoomCanvas: React.FC = () => {
     useState<Funiture | null>(null);
 
   // --------------------------------------------------
+  // (H-2) PDF 뷰어 모달 추가
+  // --------------------------------------------------
+  const [pdfModalOpen, setPdfModalOpen] = useState(false);
+  const [pdfUrl, setPdfUrl] = useState<string>(""); // iframe으로 보여줄 pdfUrl
+
+  // --------------------------------------------------
   // (I) 스프라이트 로딩 훅
   // --------------------------------------------------
   const spriteImages = useLoadSprites();
@@ -294,7 +301,7 @@ const MyRoomCanvas: React.FC = () => {
   const [pressedKeys, setPressedKeys] = useState<Record<string, boolean>>({});
 
   // --------------------------------------------------
-  // (K) 포탈: **useState + useEffect**로 "좌측 중앙" 정렬
+  // (K) 포탈
   // --------------------------------------------------
   const [portal, setPortal] = useState({
     id: "portal-to-lobby",
@@ -304,12 +311,11 @@ const MyRoomCanvas: React.FC = () => {
     name: "로비 포탈",
   });
 
-  // 마운트 후 canvasSize가 정해진 뒤에, 좌측 중앙에 포탈 위치시키기
+  // 캔버스 사이즈 확정 후, 좌측 중앙 배치
   useEffect(() => {
     setPortal((prev) => ({
       ...prev,
-      x: 50, // 왼쪽에서 50px 떨어진 위치
-      // 높이가 200이므로, (전체 높이 - 200)/2 지점에 둠 → 세로 중앙
+      x: 50,
       y: Math.max((canvasSize.h - 200) / 2, 0),
     }));
   }, [canvasSize]);
@@ -318,11 +324,8 @@ const MyRoomCanvas: React.FC = () => {
   const checkPortalOverlap = () => {
     const me = users.find((u) => u.id === myUserId);
     if (!me) return false;
-
-    // 캐릭터 크기 64×64
     const [cl, cr, ct, cb] = [me.x, me.x + 64, me.y, me.y + 64];
 
-    // portalWidth = 200, portalHeight = 200
     const portalWidth = 200;
     const portalHeight = 200;
     const [pl, pr, pt, pb] = [
@@ -331,13 +334,13 @@ const MyRoomCanvas: React.FC = () => {
       portal.y,
       portal.y + portalHeight,
     ];
-
-    // 충돌 판정
     const overlap = cr > pl && cl < pr && cb > pt && ct < pb;
     return overlap;
   };
 
-  // 키다운 / 키업
+  // --------------------------------------------------
+  // 키 이벤트
+  // --------------------------------------------------
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (
@@ -366,7 +369,6 @@ const MyRoomCanvas: React.FC = () => {
       // 스페이스바
       if (e.key === " ") {
         e.preventDefault();
-        // 스페이스바로 포탈 겹치면 이동
         const overlapped = checkPortalOverlap();
         if (overlapped) {
           window.location.href = portal.route;
@@ -435,12 +437,12 @@ const MyRoomCanvas: React.FC = () => {
       return 3; // Left
     }
 
-    // 아무 키도 없으면 null (멈춤)
+    // 아무 키도 없으면 null
     return null;
   }
 
   // --------------------------------------------------
-  // (M) 스프라이트 애니메이션 프레임 관리 (Ref)
+  // (M) 스프라이트 애니메이션 프레임 관리
   // --------------------------------------------------
   const userFrameRef = useRef<
     Record<string, { frame: number; lastFrameTime: number }>
@@ -461,7 +463,7 @@ const MyRoomCanvas: React.FC = () => {
   const throttledPressedKeys = useThrottle(pressedKeys, 100);
 
   // --------------------------------------------------
-  // (O) 쓰로틀된 키 입력 기반 → 이동 처리
+  // (O) 이동 처리
   // --------------------------------------------------
   useEffect(() => {
     setUsers((prevUsers) => {
@@ -479,7 +481,7 @@ const MyRoomCanvas: React.FC = () => {
         return newUsers;
       }
 
-      // (b) 실제 이동 (경계: canvasSize.w/h)
+      // (b) 실제 이동 (경계: canvasSize)
       let moved = false;
       if (newDir === 1 && y > 0) {
         // Up
@@ -499,7 +501,6 @@ const MyRoomCanvas: React.FC = () => {
         moved = true;
       }
 
-      // (c) 반영
       newUsers[meIndex] = {
         ...me,
         x,
@@ -508,7 +509,6 @@ const MyRoomCanvas: React.FC = () => {
         isMoving: moved,
       };
 
-      // (d) 소켓 emit
       if (moved) {
         emitMovement(x, y, newDir);
       }
@@ -687,7 +687,7 @@ const MyRoomCanvas: React.FC = () => {
         throw new Error(data.error || "Upload failed");
       }
 
-      const s3Url = data.url;
+      const s3Url = data.url; // 업로드된 PDF의 S3 URL
       const idx = portfolio.findIndex((p) => p.funitureType === "none");
       if (idx !== -1) {
         setPortfolio((prev) =>
@@ -696,7 +696,10 @@ const MyRoomCanvas: React.FC = () => {
               ? {
                   ...item,
                   funitureType: `portfolio/portfolio${idx + 1}`,
-                  data: { fileName: portfolioFile.name, url: s3Url },
+                  data: {
+                    fileName: portfolioFile.name,
+                    url: s3Url, // PDF URL 저장
+                  },
                 }
               : item,
           ),
@@ -734,10 +737,27 @@ const MyRoomCanvas: React.FC = () => {
   };
 
   // --------------------------------------------------
-  // (T) 가구 클릭 → 상세 보기
+  // (T) 가구 클릭 → 상세 or PDF 미리보기
   // --------------------------------------------------
   const handleFurnitureClick = (f: Funiture) => {
-    if (f.funitureType === "none" || f.funitureType === "board") return;
+    // 1) "none" 또는 "board"면 상세 없음
+    if (f.funitureType === "none" || f.funitureType === "board") {
+      return setIsBoardOpen(true);
+    }
+
+    // 2) "portfolio" 계열이면 → pdfUrl이 있는지 확인
+    if (f.funitureType?.startsWith("portfolio")) {
+      // 만약 f.data.url이 PDF라면 pdfModalOpen
+      const pdfLink = f.data?.url || "";
+      if (pdfLink) {
+        // PDF 미리보기
+        setPdfUrl(pdfLink);
+        setPdfModalOpen(true);
+        return;
+      }
+    }
+
+    // 3) 그 외 (resume, techstack 등) → 기존 상세모달
     setSelectedFurnitureData(f);
     setViewModalOpen(true);
   };
@@ -759,10 +779,8 @@ const MyRoomCanvas: React.FC = () => {
     <div
       className={Style.canvasContainerClass}
       style={{
-        // 디스플레이 전 크기를 꽉 채우도록 고정
         width: `${canvasSize.w}px`,
         height: `${canvasSize.h}px`,
-        // 이후 창 크기를 변경해도 사이즈 불변 → 스크롤 가능
         overflow: "auto",
         position: "relative",
       }}
@@ -892,6 +910,13 @@ const MyRoomCanvas: React.FC = () => {
         setVisitorName={setVisitorName}
         setVisitorMessage={setVisitorMessage}
         handleAddComment={handleAddComment}
+      />
+
+      {/* PDF 미리보기 모달 (추가) */}
+      <PdfViewerModal
+        open={pdfModalOpen}
+        onClose={setPdfModalOpen}
+        pdfUrl={pdfUrl}
       />
     </div>
   );
