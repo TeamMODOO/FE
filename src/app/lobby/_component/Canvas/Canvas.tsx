@@ -20,6 +20,8 @@ import { NpcInfo } from "../../_model/Npc";
 import { PortalInfo } from "../../_model/Portal";
 import { QNA_LIST } from "../../data/qna";
 import DailyProblemContent from "../DailyProblem/DailyProblemContent";
+// ★ [추가] 미팅룸 모달 (버튼 제거 버전)
+import { EnterMeetingRoom } from "../EnterMeetingRoom/EnterMeetingRoom";
 import { MAP_CONSTANTS } from "../MapConstants";
 import NoticeBoardModal from "../NoticeBoardModal/NoticeBoardModal";
 import NpcList from "../Npc/NpcList";
@@ -27,9 +29,6 @@ import { NpcModal } from "../Npc/NpcModal";
 import PortalList from "../Portal/PortalList";
 import QnaContent from "../Qna/QnaContent";
 import Style from "./Canvas.style";
-
-// ★ [추가] 미팅룸 모달 (버튼 제거 버전)
-import { EnterMeetingRoom } from "../enter-meeting_room/enter-meeting_room";
 
 type Direction = 0 | 1 | 2 | 3; // 0=Down,1=Up,2=Right,3=Left
 type SolvedUser = {
