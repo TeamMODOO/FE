@@ -10,7 +10,6 @@ import useLoadSprites, {
   LAYER_ORDER,
 } from "@/hooks/useLoadSprites";
 import useLobbySocketEvents from "@/hooks/useLobbySocketEvents";
-import useMainSocketConnect from "@/hooks/useMainSocketConnect";
 import useUsersStore from "@/store/useUsersStore";
 
 import { NoticeItem } from "../../_model/NoticeBoard";
