@@ -2,6 +2,7 @@ import "@/styles/globals.css";
 
 import type { Metadata } from "next";
 import { SessionProvider } from "next-auth/react";
+import { Toaster } from "react-hot-toast";
 
 import { cn } from "@/lib/utils";
 import { AppProviders } from "@/provider";
@@ -24,7 +25,10 @@ export default function RootLayout({
           {/* <SidebarProvider> */}
           {/* <HomeSideBar /> */}
           {/* </SidebarProvider> */}
-          <AppProviders>{children}</AppProviders>
+          <AppProviders>
+            {children}
+            <Toaster position="top-center" reverseOrder={false} />
+          </AppProviders>
         </SessionProvider>
       </body>
     </html>
