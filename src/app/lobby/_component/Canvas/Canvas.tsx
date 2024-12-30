@@ -62,7 +62,7 @@ function getTodayString() {
 /** 포탈 정보 */
 const portals: PortalInfo[] = [
   {
-    x: 650,
+    x: 720,
     y: 250,
     width: 50,
     height: 50,
@@ -70,7 +70,7 @@ const portals: PortalInfo[] = [
     name: "마이룸",
   },
   {
-    x: 400,
+    x: 450,
     y: 250,
     width: 50,
     height: 50,
@@ -82,7 +82,7 @@ const portals: PortalInfo[] = [
 /** NPC 정보 */
 const npcs: NpcInfo[] = [
   {
-    x: 300,
+    x: 500,
     y: 400,
     width: 20,
     height: 35,
@@ -91,8 +91,8 @@ const npcs: NpcInfo[] = [
     name: "NPC1",
   },
   {
-    x: 330,
-    y: 300,
+    x: 730,
+    y: 380,
     width: 20,
     height: 35,
     image: "/character/npc2.png",
@@ -100,7 +100,7 @@ const npcs: NpcInfo[] = [
     name: "NPC2", // ← QnA 기능 포함
   },
   {
-    x: 490,
+    x: 560,
     y: 110,
     width: 100,
     height: 50,
