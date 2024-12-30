@@ -1,4 +1,3 @@
-// hooks/useMainSocketConnect.ts
 "use client";
 
 import { useEffect, useRef } from "react";
