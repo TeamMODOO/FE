@@ -3,7 +3,7 @@ export const MAP_CONSTANTS = {
   CANVAS_HEIGHT: 800,
   IMG_WIDTH: 50,
   IMG_HEIGHT: 150,
-  SPEED: 6,
+  SPEED: 10,
 
   // 새로 추가 (맵 전체 크기)
   MAP_WIDTH: 1200, // 가로 2000px 맵
