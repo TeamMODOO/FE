@@ -20,6 +20,7 @@
 
   /* 2초 동안 0 → 투명(1→0) */
   animation: fadeOut 2s forwards;
+  z-index: 99;
 }
 
 /* 오버레이를 사라지게 하는 keyframes */
@@ -33,10 +34,23 @@
   }
 }
 
-/* 페이지 내부의 다른 스타일 */
-.title {
-  color: white;
-  font-size: 2rem;
-  text-align: center;
-  margin-top: 50px;
+/* ~아래 주석 부분 삭제하고 진행하면 됨~ */
+/* .tmp {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  top: 23dvh;
+  left: 32dvw;
+  justify-content: center;
+  align-items: center;
 }
+
+.tmp:hover {
+  cursor: pointer;
+}
+
+.npcName {
+  color: purple;
+  font-weight: bold;
+  font-size: 1.1rem;
+} */
