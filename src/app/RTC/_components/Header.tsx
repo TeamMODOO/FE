@@ -37,7 +37,7 @@ export function Header({
       </div>
       <div className="flex flex-wrap gap-4">
         <Button
-          variant={isMuted ? "outline" : "default"}
+          variant={isMuted ? "default" : "outline"}
           onClick={onMuteToggle}
         >
           {isMuted ? (
