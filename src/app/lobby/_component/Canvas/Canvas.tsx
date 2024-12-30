@@ -119,13 +119,21 @@ interface LobbyCanvasProps {
 const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
   const router = useRouter();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [clientId, setClientId] = useState<string>("anonymous");
 
   // 소켓 연결
   useMainSocketConnect();
 
   // 로비 소켓 이벤트
+  useEffect(() => {
+    // 클라이언트 사이드에서만 localStorage 접근
+    const storedClientId = localStorage.getItem("client_id");
+    if (storedClientId) {
+      setClientId(storedClientId);
+    }
+  }, []); // 빈 의존성 배열로 컴포넌트 마운트 시에만 실행
+
   const myUserId = "1";
-  const clientId = localStorage.getItem("client_id") || "anonymous";
   const { emitMovement } = useLobbySocketEvents({
     roomId: "floor07",
     userId: clientId,
