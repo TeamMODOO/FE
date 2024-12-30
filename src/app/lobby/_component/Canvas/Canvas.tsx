@@ -26,8 +26,10 @@ import NpcList from "../Npc/NpcList";
 import { NpcModal } from "../Npc/NpcModal";
 import PortalList from "../Portal/PortalList";
 import QnaContent from "../Qna/QnaContent";
-import SolvedUsersContent from "../SolvedUsers/SolvedUsersContent";
 import Style from "./Canvas.style";
+
+// ★ [추가] 미팅룸 모달 (버튼 제거 버전)
+import { EnterMeetingRoom } from "../enter-meeting_room/enter-meeting_room";
 
 type Direction = 0 | 1 | 2 | 3; // 0=Down,1=Up,2=Right,3=Left
 type SolvedUser = {
@@ -59,12 +61,12 @@ const portals: PortalInfo[] = [
     y: 250,
     width: 50,
     height: 50,
-    route: "/meetingroom/123",
+    route: "/meetingroom/123", // (회의실)
     name: "회의실",
   },
 ];
 
-/** NPC 정보 */
+/** NPC 정보 (NPC3 제거, NPC2에 QnA 기능 추가) */
 const npcs: NpcInfo[] = [
   {
     x: 300,
@@ -82,16 +84,7 @@ const npcs: NpcInfo[] = [
     height: 35,
     image: "/character/npc2.png",
     modalTitle: "NPC2 대화",
-    name: "NPC2",
-  },
-  {
-    x: 250,
-    y: 300,
-    width: 25,
-    height: 35,
-    image: "/character/npc3.png",
-    modalTitle: "NPC3 대화",
-    name: "NPC3",
+    name: "NPC2", // ← 이제 QnA 기능도 처리
   },
   {
     x: 490,
@@ -108,9 +101,10 @@ const LobbyCanvas: React.FC = () => {
   const router = useRouter();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  useMainSocketConnect(); // (1) 소켓 연결
+  // 소켓 연결
+  useMainSocketConnect();
 
-  // (2) 로비 소켓 이벤트
+  // (로비 소켓 이벤트) - 좌표 이동
   const myUserId = "1";
   const clientId = localStorage.getItem("client_id") || "anonymous";
   const { emitMovement } = useLobbySocketEvents({
@@ -118,10 +112,10 @@ const LobbyCanvas: React.FC = () => {
     userId: clientId,
   });
 
-  // ★ 스프라이트 로딩 훅
+  // 스프라이트 로딩
   const spriteImages = useLoadSprites();
 
-  // ------------------ 배경 ------------------
+  // 배경
   const [backgroundImage, setBackgroundImage] =
     useState<HTMLImageElement | null>(null);
   useEffect(() => {
@@ -130,10 +124,10 @@ const LobbyCanvas: React.FC = () => {
     bg.onload = () => setBackgroundImage(bg);
   }, []);
 
-  // ------------------ 포탈 GIF ------------------
+  // 포탈 GIF (숨김 로딩)
   const portalGifRef = useRef<HTMLImageElement | null>(null);
 
-  // ------------------ NPC 이미지 ------------------
+  // NPC 이미지
   const [npcImages, setNpcImages] = useState<Record<string, HTMLImageElement>>(
     {},
   );
@@ -154,12 +148,19 @@ const LobbyCanvas: React.FC = () => {
     });
   }, []);
 
-  // ------------------ 모달 관련 ------------------
+  // 모달들 (NPC 대화)
   const [npc1ModalOpen, setNpc1ModalOpen] = useState(false);
+
+  // NPC2는 NPC3 기능(QnA)을 통합
   const [npc2ModalOpen, setNpc2ModalOpen] = useState(false);
-  const [npc3ModalOpen, setNpc3ModalOpen] = useState(false);
+
+  // (기존 NPC3 제거)
+  // const [npc3ModalOpen, setNpc3ModalOpen] = useState(false);
+
+  // 공지사항 NPC 모달
   const [noticeModalOpen, setNoticeModalOpen] = useState(false);
 
+  // 공지사항 목록
   const [noticeList, setNoticeList] = useState<NoticeItem[]>([
     { id: 1, name: "운영자", message: "처음 오신 분들 환영합니다!" },
     { id: 2, name: "Alice", message: "안녕하세요! 반갑습니다." },
@@ -177,7 +178,8 @@ const LobbyCanvas: React.FC = () => {
     setWriterMessage("");
   };
 
-  // ------------------ 데일리 문제/QnA 예시 ------------------
+  // (데일리 문제 & QnA -> NPC1, NPC2 각각)
+  // NPC1: 데일리문제
   const [dailyProblem, setDailyProblem] = useState<{
     id: number;
     title: string;
@@ -185,7 +187,12 @@ const LobbyCanvas: React.FC = () => {
   } | null>(null);
   const [isProblemSolved, setIsProblemSolved] = useState(false);
   const [dailySolvedUsers, setDailySolvedUsers] = useState<SolvedUser[]>([]);
+
+  // NPC2(=기존 NPC3) QnA
   const [selectedQnaIndex, setSelectedQnaIndex] = useState<number | null>(null);
+  const handleQnaClick = (index: number) => {
+    setSelectedQnaIndex((prev) => (prev === index ? null : index));
+  };
 
   useEffect(() => {
     setDailyProblem({
@@ -216,15 +223,14 @@ const LobbyCanvas: React.FC = () => {
     }
   };
 
-  const handleQnaClick = (index: number) => {
-    setSelectedQnaIndex((prev) => (prev === index ? null : index));
-  };
+  // ------------------ "회의실" 모달 ------------------
+  const [meetingModalOpen, setMeetingModalOpen] = useState(false);
 
-  // ------------------ 모달 열림 체크 ------------------
+  // ------------------ 모달 열림 체크 (키 입력 막기) ------------------
   const isAnyModalOpen =
-    npc1ModalOpen || npc2ModalOpen || npc3ModalOpen || noticeModalOpen;
+    npc1ModalOpen || npc2ModalOpen || noticeModalOpen || meetingModalOpen;
 
-  // ------------------ 포탈 / NPC 충돌 체크 ------------------
+  // 포탈 & NPC 충돌 (스페이스바)
   function getPortalRouteIfOnPortal(): string | null {
     const { users } = useUsersStore.getState();
     const me = users.find((u) => u.id === myUserId);
@@ -239,7 +245,14 @@ const LobbyCanvas: React.FC = () => {
         portal.y + portal.height,
       ];
       const overlap = cl < pr && cr > pl && ct < pb && cb > pt;
-      if (overlap) return portal.route;
+      if (overlap) {
+        // 회의실 → 모달
+        if (portal.route === "/meetingroom/123") {
+          setMeetingModalOpen(true);
+          return null;
+        }
+        return portal.route;
+      }
     }
     return null;
   }
@@ -265,15 +278,17 @@ const LobbyCanvas: React.FC = () => {
   }
 
   // --------------------------------------------------
-  // (A) 키 입력 상태 & 쓰로틀
+  // 키 입력
   // --------------------------------------------------
   const [pressedKeys, setPressedKeys] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (isAnyModalOpen) return;
-      const blocked = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " "];
-      if (blocked.includes(e.key)) {
+      // 이동키/Space
+      if (
+        ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " "].includes(e.key)
+      ) {
         e.preventDefault();
       }
 
@@ -286,10 +301,16 @@ const LobbyCanvas: React.FC = () => {
         }
         const npcIndex = getNpcIndexIfOnNpc();
         if (npcIndex !== null) {
-          if (npcIndex === 0) setNpc1ModalOpen(true);
-          else if (npcIndex === 1) setNpc2ModalOpen(true);
-          else if (npcIndex === 2) setNpc3ModalOpen(true);
-          else if (npcIndex === 3) setNoticeModalOpen(true);
+          // NPC1 = 데일리문제
+          // NPC2 = (기존 NPC2 + NPC3) → QnA + 기존 기능
+          // "공지사항" = noticeModal
+          if (npcIndex === 0) {
+            setNpc1ModalOpen(true);
+          } else if (npcIndex === 1) {
+            setNpc2ModalOpen(true);
+          } else if (npcIndex === 2) {
+            setNoticeModalOpen(true);
+          }
         }
       }
 
@@ -316,12 +337,9 @@ const LobbyCanvas: React.FC = () => {
     };
   }, [isAnyModalOpen, router]);
 
-  // 200ms 단위로 키 상태를 반영
   const throttledPressedKeys = useThrottle(pressedKeys, 100);
 
-  // --------------------------------------------------
-  // (B) 방향 계산(핵심: 아무 키도 없으면 null)
-  // --------------------------------------------------
+  // ------------------ 이동 로직 ------------------
   function getDirectionFromKeys(
     keys: Record<string, boolean>,
   ): Direction | null {
@@ -329,12 +347,9 @@ const LobbyCanvas: React.FC = () => {
     if (keys["s"] || keys["S"] || keys["ㄴ"] || keys["ArrowDown"]) return 0; // Down
     if (keys["d"] || keys["D"] || keys["ㅇ"] || keys["ArrowRight"]) return 2; // Right
     if (keys["a"] || keys["A"] || keys["ㅁ"] || keys["ArrowLeft"]) return 3; // Left
-    return null; // ★ 아무 키도 없으면 null
+    return null;
   }
 
-  // --------------------------------------------------
-  // (C) 이동 로직
-  // --------------------------------------------------
   useEffect(() => {
     if (isAnyModalOpen) return;
 
@@ -345,15 +360,13 @@ const LobbyCanvas: React.FC = () => {
     const me = users[meIndex];
     let { x, y } = me;
 
-    // 1) 키 → 방향
     const newDir = getDirectionFromKeys(throttledPressedKeys);
     if (newDir === null) {
-      // ★ 아무 키도 없으면 => 멈춤 처리만
+      // 멈춤
       updateUserPosition(myUserId, x, y, me.direction, false);
       return;
     }
 
-    // 2) 실제 이동
     let moved = false;
     if (newDir === 1 && y > 0) {
       // Up
@@ -380,18 +393,14 @@ const LobbyCanvas: React.FC = () => {
     }
 
     if (moved) {
-      // 이동 발생
       updateUserPosition(myUserId, x, y, newDir, true);
       emitMovement(x, y, newDir);
     } else {
-      // 방향은 바꾸되, 이동은 못함(벽 등)
       updateUserPosition(myUserId, x, y, newDir, false);
     }
   }, [throttledPressedKeys, isAnyModalOpen, emitMovement]);
 
-  // --------------------------------------------------
-  // (D) rAF로 그리기(카메라 & 스프라이트)
-  // --------------------------------------------------
+  // ------------------ rAF 렌더 (배경, NPC, 포탈, 캐릭터 등) ------------------
   const zoomFactor = 2;
   function clamp(value: number, min: number, max: number) {
     return Math.max(min, Math.min(max, value));
@@ -411,7 +420,6 @@ const LobbyCanvas: React.FC = () => {
     let lastTime = 0;
     let animationId = 0;
 
-    // 유저별 보행 프레임
     const userFrameMap: Record<
       string,
       { frame: number; lastFrameTime: number }
@@ -568,10 +576,9 @@ const LobbyCanvas: React.FC = () => {
     };
   }, [backgroundImage, spriteImages, npcImages]);
 
-  // ------------------ 리턴 ------------------
   return (
     <>
-      {/* 숨긴 포탈 GIF */}
+      {/* 숨긴 포탈 GIF 로딩 */}
       <img
         ref={portalGifRef}
         src="/furniture/portal.gif"
@@ -579,36 +586,20 @@ const LobbyCanvas: React.FC = () => {
         style={{ display: "none" }}
       />
 
-      {/* NPC1 모달 */}
+      {/* NPC1 모달 (데일리문제) */}
       <NpcModal
         isOpen={npc1ModalOpen}
         onClose={() => setNpc1ModalOpen(false)}
         title="NPC1 대화"
       >
-        <DailyProblemContent
-          dailyProblem={dailyProblem}
-          isProblemSolved={isProblemSolved}
-          handleSolveDailyProblem={handleSolveDailyProblem}
-        />
+        <DailyProblemContent />
       </NpcModal>
 
-      {/* NPC2 모달 */}
+      {/* NPC2 모달 (기존 NPC2 + NPC3 QnA) */}
       <NpcModal
         isOpen={npc2ModalOpen}
         onClose={() => setNpc2ModalOpen(false)}
         title="NPC2 대화"
-      >
-        <SolvedUsersContent
-          dailySolvedUsers={dailySolvedUsers}
-          getTodayString={getTodayString}
-        />
-      </NpcModal>
-
-      {/* NPC3 모달 */}
-      <NpcModal
-        isOpen={npc3ModalOpen}
-        onClose={() => setNpc3ModalOpen(false)}
-        title="NPC3 대화"
       >
         <QnaContent
           qnaList={QNA_LIST}
@@ -627,6 +618,12 @@ const LobbyCanvas: React.FC = () => {
         setWriterName={setWriterName}
         setWriterMessage={setWriterMessage}
         handleAddNotice={handleAddNotice}
+      />
+
+      {/* 회의실 모달 (버튼X) */}
+      <EnterMeetingRoom
+        open={meetingModalOpen}
+        onOpenChange={setMeetingModalOpen}
       />
 
       <div className={Style.canvasContainerClass}>
