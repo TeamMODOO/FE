@@ -34,7 +34,7 @@ export const useChatSocket = ({ roomId }: ChatSocketType) => {
     // 2) 메시지 정보
     const messageInfo = {
       room_id: roomId,
-      user_name: clientId,
+      client_id: clientId,
       message: messageValue,
     };
 
