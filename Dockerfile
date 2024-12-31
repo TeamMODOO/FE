@@ -22,18 +22,20 @@ RUN \
 FROM base AS builder
 WORKDIR /app
 
-# 의존성 복사
-COPY --from=deps /app/node_modules ./node_modules
+# package.json 먼저 복사
+COPY package.json yarn.lock* ./
+
+# 개발 의존성을 포함한 모든 의존성 설치
+RUN yarn install --frozen-lockfile
+
+# 환경변수 설정 (.env 파일 복사)
+COPY .env .env
+
+# 빌드에 필요한 파일들 복사
 COPY . .
 
-# Next.js 환경변수 설정 (필요한 경우 .env.production 파일 생성 필요)
-# ENV NEXT_TELEMETRY_DISABLED 1
-
-# 프로덕션 빌드 실행
-RUN \
-  if [ -f yarn.lock ]; then yarn build; \
-  elif [ -f package-lock.json ]; then npm run build; \
-  fi
+# Next.js 빌드 실행
+RUN yarn build
 
 # 3. 프로덕션 단계
 FROM base AS runner
@@ -52,7 +54,7 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 
-# 폰트 파일 복사 (SpoqaHanSansNeo 폰트 사용 확인)
+# 폰트 파일 복사
 COPY --from=builder /app/public/fonts ./public/fonts
 
 # 사용자 권한 설정
@@ -68,5 +70,5 @@ EXPOSE 3000
 ENV PORT 3000
 ENV HOSTNAME "0.0.0.0"
 
-# 서버 실행
-CMD ["yarn", "start"] 
+# 서버 실행 (yarn start 대신 node server.js 사용)
+CMD ["node", "server.js"]
