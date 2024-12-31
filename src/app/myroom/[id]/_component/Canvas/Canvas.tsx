@@ -1,7 +1,7 @@
 "use client";
 
 import NextImage from "next/image";
-import { useSearchParams } from "next/navigation";
+import { useParams } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 
 // (1) UI & Hooks
@@ -728,20 +728,21 @@ const MyRoomCanvas: React.FC = () => {
     technologyStack.filter((t) => t.funitureType !== "none").length >= 9;
 
   // ----------------------- [추가] 주인의 구글ID를 받아서 API 요청 -----------------------
-  const searchParams = useSearchParams();
-  const googleIdParam = searchParams.get("google_id") || "demo_user_id";
+  const params = useParams() as { google_id?: string };
+  const googleId = params.google_id || null;
 
   // API 훅 호출
   const {
     data: ownerProfile,
     isLoading: isProfileLoading,
     isError: isProfileError,
-  } = useMyRoomOwnerProfile();
+  } = useMyRoomOwnerProfile(googleId);
 
-  // 가져온 데이터 -> resume / portfolio / technologyStack에 반영
+  // 가져온 데이터 → state 반영
   useEffect(() => {
     if (ownerProfile) {
-      // console.log("ownerProfile:", ownerProfile);
+      // 예: { bio, resume_url, portfolio_url, tech_stack }
+      // console.log("마이룸 주인 프로필:", ownerProfile);
 
       // resume_url
       if (ownerProfile.resume_url) {
@@ -758,26 +759,28 @@ const MyRoomCanvas: React.FC = () => {
           }),
         );
       }
-      // portfolio_url
+
+      // portfolio_url (array)
       if (
         ownerProfile.portfolio_url &&
         Array.isArray(ownerProfile.portfolio_url)
       ) {
         setPortfolio((prev) => {
           const newState = [...prev];
-          ownerProfile.portfolio_url.forEach((urlItem: string, i: number) => {
+          ownerProfile.portfolio_url.forEach((url: string, i: number) => {
             if (i < newState.length) {
               newState[i] = {
                 ...newState[i],
                 funitureType: `portfolio/portfolio${i + 1}`,
-                data: { url: urlItem, fileName: `portfolio${i + 1}.pdf` },
+                data: { url, fileName: `portfolio${i + 1}.pdf` },
               };
             }
           });
           return newState;
         });
       }
-      // tech_stack
+
+      // tech_stack (array)
       if (ownerProfile.tech_stack && Array.isArray(ownerProfile.tech_stack)) {
         setTechnologyStack((prev) => {
           const newState = [...prev];
