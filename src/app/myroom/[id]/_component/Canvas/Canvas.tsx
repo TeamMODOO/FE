@@ -30,7 +30,6 @@ import ResumeModal from "../ResumeModal/ResumeModal";
 import TechStackModal from "../TechStackModal/TechStackModal";
 import Style from "./Canvas.style";
 import interiorImages from "./Interior";
-// ----------------------------------------------------------------
 
 /** 예시: 기술 스택 목록 */
 const techStackList = [
@@ -453,7 +452,7 @@ const MyRoomCanvas: React.FC = () => {
     setUsers((prev) => {
       const newArr = [...prev];
       const meIdx = newArr.findIndex((u) => u.id === myUserId);
-      if (meIdx < 0) return prev;
+      if (meIdx < 0) return newArr;
 
       const me = newArr[meIdx];
       let { x, y } = me;
@@ -699,12 +698,29 @@ const MyRoomCanvas: React.FC = () => {
   };
 
   // --------------------------------------------------
-  // (T) 가구 클릭 → 상세 or PDF
+  // (T) 가구 클릭 → 상세 or PDF or alert
   // --------------------------------------------------
   const handleFurnitureClick = (f: Funiture) => {
-    if (f.funitureType === "none" || f.funitureType === "board") {
+    // --- [수정] "none" 분기에서 funiturename에 따라 다른 alert ---
+    if (f.funitureType === "none") {
+      if (f.funiturename.includes("이력서")) {
+        alert("정보가 없습니다. 버튼을 통해 이력서를 추가 해주세요!");
+      } else if (f.funiturename.includes("포트폴리오")) {
+        alert("정보가 없습니다. 버튼을 통해 포트폴리오를 추가 해주세요!");
+      } else if (f.funiturename.includes("기술스택")) {
+        alert("정보가 없습니다. 버튼을 통해 기술스택을 추가 해주세요!");
+      } else {
+        alert("정보가 없습니다. 추가해주세요!");
+      }
+      return;
+    }
+
+    // "board" → 게시판
+    if (f.funitureType === "board") {
       return setIsBoardOpen(true);
     }
+
+    // "portfolio" → PDF 미리보기
     if (f.funitureType?.startsWith("portfolio")) {
       const pdfLink = f.data?.url || "";
       if (pdfLink) {
@@ -712,7 +728,11 @@ const MyRoomCanvas: React.FC = () => {
         setPdfModalOpen(true);
         return;
       }
+      alert("포트폴리오 정보가 없습니다!");
+      return;
     }
+
+    // 그 외(이력서, 기술스택 등) → 상세 모달
     setSelectedFurnitureData(f);
     setViewModalOpen(true);
   };
@@ -741,9 +761,6 @@ const MyRoomCanvas: React.FC = () => {
   // 가져온 데이터 → state 반영
   useEffect(() => {
     if (ownerProfile) {
-      // 예: { bio, resume_url, portfolio_url, tech_stack }
-      // console.log("마이룸 주인 프로필:", ownerProfile);
-
       // resume_url
       if (ownerProfile.resume_url) {
         setResume((prev) =>
@@ -760,7 +777,7 @@ const MyRoomCanvas: React.FC = () => {
         );
       }
 
-      // portfolio_url (array)
+      // portfolio_url
       if (
         ownerProfile.portfolio_url &&
         Array.isArray(ownerProfile.portfolio_url)
@@ -780,7 +797,7 @@ const MyRoomCanvas: React.FC = () => {
         });
       }
 
-      // tech_stack (array)
+      // tech_stack
       if (ownerProfile.tech_stack && Array.isArray(ownerProfile.tech_stack)) {
         setTechnologyStack((prev) => {
           const newState = [...prev];
@@ -798,7 +815,6 @@ const MyRoomCanvas: React.FC = () => {
       }
     }
   }, [ownerProfile]);
-  // ---------------------------------------------------------------------------
 
   return (
     <div
