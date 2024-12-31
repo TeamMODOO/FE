@@ -1,19 +1,21 @@
 "use client";
 
 import NextImage from "next/image";
+import { useParams } from "next/navigation";
 import React, { useEffect, useRef, useState } from "react";
 
 // (1) UI & Hooks
 import { Button } from "@/components/ui/button";
-import useThrottle from "@/hooks/performance/useThrottle";
-import useMainSocketConnect from "@/hooks/socket/useMainSocketConnect";
+import { useMyRoomOwnerProfile } from "@/hooks/myroom/useMyRoomOwnerProfile";
+import useMyRoomSocketEvents from "@/hooks/myroom/useMyRoomSocketEvents";
 // (2) 스프라이트 로딩 훅 & 상수
 import useLoadSprites, {
   FRAME_HEIGHT,
   FRAME_WIDTH,
   LAYER_ORDER,
-} from "@/hooks/useLoadSprites";
-import useMyRoomSocketEvents from "@/hooks/useMyRoomSocketEvents";
+} from "@/hooks/performance/useLoadSprites";
+import useThrottle from "@/hooks/performance/useThrottle";
+import useMainSocketConnect from "@/hooks/socket/useMainSocketConnect";
 
 // (4) 모델/타입
 import { Funiture } from "../../_model/Funiture";
@@ -24,6 +26,7 @@ import FurnitureInfoModal from "../FurnitureInfoModal/FurnitureInfoModal";
 import PdfViewerModal from "../PortfolioModal/PdfViewerModal";
 import PortfolioModal from "../PortfolioModal/PortfolioModal";
 import ResumeModal from "../ResumeModal/ResumeModal";
+// ★ 변경된 TechStackModal
 import TechStackModal from "../TechStackModal/TechStackModal";
 import Style from "./Canvas.style";
 import interiorImages from "./Interior";
@@ -71,21 +74,18 @@ const MyRoomCanvas: React.FC = () => {
   // (A) 공통 소켓 연결 + 마이룸 소켓 이벤트
   // --------------------------------------------------
   useMainSocketConnect();
-  const myUserId = "1"; // 실제 로그인된 사용자의 id
+  const myUserId = "1";
   const { emitMovement } = useMyRoomSocketEvents({
     roomId: "myRoom-123",
     userId: myUserId,
   });
 
   // --------------------------------------------------
-  // (B) 화면 사이즈 State + 캔버스 ref
+  // (B) 화면 사이즈 & 캔버스
   // --------------------------------------------------
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-
-  // 1) 캔버스 사이즈를 저장할 state (초기값은 임의)
   const [canvasSize, setCanvasSize] = useState({ w: 1500, h: 830 });
 
-  // 2) 마운트 시점에 한 번만 window 크기 읽어서 고정
   useEffect(() => {
     const w = window.innerWidth;
     const h = window.innerHeight;
@@ -93,17 +93,14 @@ const MyRoomCanvas: React.FC = () => {
   }, []);
 
   // --------------------------------------------------
-  // (C) 배경 이미지 로드
+  // (C) 배경 이미지
   // --------------------------------------------------
   const [backgroundImage, setBackgroundImage] =
     useState<HTMLImageElement | null>(null);
 
-  // 두 번째 useEffect에서 canvasRef.current.width/height를 지정
   useEffect(() => {
     if (!canvasRef.current) return;
     const canvas = canvasRef.current;
-
-    // 여기서 실제 픽셀 크기를 고정
     canvas.width = canvasSize.w;
     canvas.height = canvasSize.h;
 
@@ -115,7 +112,7 @@ const MyRoomCanvas: React.FC = () => {
   }, [canvasSize]);
 
   // --------------------------------------------------
-  // (D) 사용자 목록 (간단 예시: local state)
+  // (D) 사용자 목록
   // --------------------------------------------------
   const [users, setUsers] = useState<User[]>([
     {
@@ -139,8 +136,7 @@ const MyRoomCanvas: React.FC = () => {
   ]);
 
   // --------------------------------------------------
-  // (E) 가구: 이력서/포트폴리오/기술스택 등
-  //  - 파일 업로드 후 S3에 올리고, url을 data.url로 저장
+  // (E) 이력서 / 포트폴리오 / 기술스택
   // --------------------------------------------------
   const [resume, setResume] = useState<Funiture[]>([
     {
@@ -267,15 +263,19 @@ const MyRoomCanvas: React.FC = () => {
   const [visitorMessage, setVisitorMessage] = useState("");
 
   // --------------------------------------------------
-  // (G) 모달 (이력서/포트폴리오/기술스택)
+  // (G) 모달들
   // --------------------------------------------------
   const [resumeModalOpen, setResumeModalOpen] = useState(false);
   const [portfolioModalOpen, setPortfolioModalOpen] = useState(false);
-  const [techStackModalOpen, setTechStackModalOpen] = useState(false);
 
+  // ★ 바뀐 부분: 다중 선택으로 변경
+  const [techStackModalOpen, setTechStackModalOpen] = useState(false);
+  const [selectedTechList, setSelectedTechList] = useState<string[]>([]);
+
+  // 이력서 링크
   const [resumeLink, setResumeLink] = useState("");
+  // 포트폴리오 파일
   const [portfolioFile, setPortfolioFile] = useState<File | null>(null);
-  const [selectedTech, setSelectedTech] = useState("");
 
   // --------------------------------------------------
   // (H) 가구 상세 모달
@@ -285,10 +285,10 @@ const MyRoomCanvas: React.FC = () => {
     useState<Funiture | null>(null);
 
   // --------------------------------------------------
-  // (H-2) PDF 뷰어 모달 추가
+  // (H-2) PDF 뷰어 모달
   // --------------------------------------------------
   const [pdfModalOpen, setPdfModalOpen] = useState(false);
-  const [pdfUrl, setPdfUrl] = useState<string>(""); // iframe으로 보여줄 pdfUrl
+  const [pdfUrl, setPdfUrl] = useState<string>("");
 
   // --------------------------------------------------
   // (I) 스프라이트 로딩 훅
@@ -305,13 +305,12 @@ const MyRoomCanvas: React.FC = () => {
   // --------------------------------------------------
   const [portal, setPortal] = useState({
     id: "portal-to-lobby",
-    x: 1300, // 초기값
+    x: 1300,
     y: 600,
     route: "/lobby",
     name: "로비 포탈",
   });
 
-  // 캔버스 사이즈 확정 후, 좌측 중앙 배치
   useEffect(() => {
     setPortal((prev) => ({
       ...prev,
@@ -320,8 +319,10 @@ const MyRoomCanvas: React.FC = () => {
     }));
   }, [canvasSize]);
 
-  // (J-1) 포탈 overlap 체크 함수
-  const checkPortalOverlap = () => {
+  // --------------------------------------------------
+  // 포탈 overlap
+  // --------------------------------------------------
+  function checkPortalOverlap() {
     const me = users.find((u) => u.id === myUserId);
     if (!me) return false;
     const [cl, cr, ct, cb] = [me.x, me.x + 64, me.y, me.y + 64];
@@ -334,13 +335,9 @@ const MyRoomCanvas: React.FC = () => {
       portal.y,
       portal.y + portalHeight,
     ];
-    const overlap = cr > pl && cl < pr && cb > pt && ct < pb;
-    return overlap;
-  };
+    return cr > pl && cl < pr && cb > pt && ct < pb;
+  }
 
-  // --------------------------------------------------
-  // 키 이벤트
-  // --------------------------------------------------
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (
@@ -365,23 +362,17 @@ const MyRoomCanvas: React.FC = () => {
       ) {
         e.preventDefault();
       }
-
-      // 스페이스바
       if (e.key === " ") {
         e.preventDefault();
-        const overlapped = checkPortalOverlap();
-        if (overlapped) {
+        if (checkPortalOverlap()) {
           window.location.href = portal.route;
         }
       }
-
       setPressedKeys((prev) => ({ ...prev, [e.key]: true }));
     };
-
     const handleKeyUp = (e: KeyboardEvent) => {
       setPressedKeys((prev) => ({ ...prev, [e.key]: false }));
     };
-
     const handleBlur = () => {
       setPressedKeys({});
     };
@@ -398,11 +389,11 @@ const MyRoomCanvas: React.FC = () => {
   }, [users, portal]);
 
   // --------------------------------------------------
-  // (L) 방향 계산 함수
+  // 방향 계산
   // --------------------------------------------------
   function getNewDirection(usersList: User[]): Direction | null {
     const me = usersList.find((u) => u.id === myUserId);
-    if (!me) return 0;
+    if (!me) return null;
 
     if (
       pressedKeys["w"] ||
@@ -436,13 +427,11 @@ const MyRoomCanvas: React.FC = () => {
     ) {
       return 3; // Left
     }
-
-    // 아무 키도 없으면 null
     return null;
   }
 
   // --------------------------------------------------
-  // (M) 스프라이트 애니메이션 프레임 관리
+  // 애니메이션 프레임
   // --------------------------------------------------
   const userFrameRef = useRef<
     Record<string, { frame: number; lastFrameTime: number }>
@@ -458,67 +447,59 @@ const MyRoomCanvas: React.FC = () => {
   }, []);
 
   // --------------------------------------------------
-  // (N) 키 입력 → 쓰로틀
+  // 키 입력 -> 쓰로틀
   // --------------------------------------------------
   const throttledPressedKeys = useThrottle(pressedKeys, 100);
 
   // --------------------------------------------------
-  // (O) 이동 처리
+  // 이동
   // --------------------------------------------------
   useEffect(() => {
-    setUsers((prevUsers) => {
-      const newUsers = [...prevUsers];
-      const meIndex = newUsers.findIndex((u) => u.id === myUserId);
-      if (meIndex < 0) return newUsers;
+    setUsers((prev) => {
+      const newArr = [...prev];
+      const meIdx = newArr.findIndex((u) => u.id === myUserId);
+      if (meIdx < 0) return newArr;
 
-      const me = newUsers[meIndex];
+      const me = newArr[meIdx];
       let { x, y } = me;
+      const newDir = getNewDirection(newArr);
 
-      // (a) 방향
-      const newDir = getNewDirection(newUsers);
       if (newDir === null) {
-        newUsers[meIndex] = { ...me, isMoving: false };
-        return newUsers;
+        newArr[meIdx] = { ...me, isMoving: false };
+        return newArr;
       }
 
-      // (b) 실제 이동 (경계: canvasSize)
       let moved = false;
       if (newDir === 1 && y > 0) {
-        // Up
         y -= MAP_CONSTANTS.SPEED;
         moved = true;
       } else if (newDir === 0 && y < canvasSize.h - FRAME_HEIGHT * CHAR_SCALE) {
-        // Down
         y += MAP_CONSTANTS.SPEED;
         moved = true;
       } else if (newDir === 2 && x < canvasSize.w - FRAME_WIDTH * CHAR_SCALE) {
-        // Right
         x += MAP_CONSTANTS.SPEED;
         moved = true;
       } else if (newDir === 3 && x > 0) {
-        // Left
         x -= MAP_CONSTANTS.SPEED;
         moved = true;
       }
 
-      newUsers[meIndex] = {
+      newArr[meIdx] = {
         ...me,
         x,
         y,
         direction: newDir,
         isMoving: moved,
       };
-
       if (moved) {
         emitMovement(x, y, newDir);
       }
-
-      return newUsers;
+      return newArr;
     });
   }, [throttledPressedKeys, emitMovement, canvasSize]);
 
   // --------------------------------------------------
-  // (P) rAF 렌더링 (배경+캐릭터)
+  // rAF 렌더
   // --------------------------------------------------
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -529,7 +510,6 @@ const MyRoomCanvas: React.FC = () => {
     let lastTime = 0;
     const fps = 30;
     const frameDuration = 1000 / fps;
-
     const frameInterval = 200;
     const maxMovingFrame = 3;
 
@@ -538,19 +518,18 @@ const MyRoomCanvas: React.FC = () => {
       if (delta >= frameDuration) {
         lastTime = time - (delta % frameDuration);
 
-        // 1) Clear
         ctx.clearRect(0, 0, canvasSize.w, canvasSize.h);
 
-        // 2) 배경
+        // 배경
         if (backgroundImage) {
           ctx.drawImage(backgroundImage, 0, 0, canvasSize.w, canvasSize.h);
         }
 
-        // 3) 캐릭터 스프라이트
+        // 캐릭터
         const now = performance.now();
         users.forEach((user) => {
-          const frameData = userFrameRef.current[user.id];
-          if (!frameData) {
+          const uf = userFrameRef.current[user.id];
+          if (!uf) {
             userFrameRef.current[user.id] = {
               frame: 0,
               lastFrameTime: now,
@@ -559,22 +538,19 @@ const MyRoomCanvas: React.FC = () => {
           }
 
           if (user.isMoving) {
-            if (now - frameData.lastFrameTime > frameInterval) {
-              frameData.lastFrameTime = now;
-              frameData.frame++;
-              if (frameData.frame > maxMovingFrame) {
-                frameData.frame = 1;
-              }
+            if (now - uf.lastFrameTime > frameInterval) {
+              uf.frame++;
+              if (uf.frame > maxMovingFrame) uf.frame = 1;
+              uf.lastFrameTime = now;
             }
           } else {
-            frameData.frame = 0;
-            frameData.lastFrameTime = now;
+            uf.frame = 0;
+            uf.lastFrameTime = now;
           }
 
-          const sx = frameData.frame * FRAME_WIDTH;
+          const sx = uf.frame * FRAME_WIDTH;
           const sy = (user.direction ?? 0) * FRAME_HEIGHT;
 
-          // 스프라이트
           if (Object.keys(spriteImages).length === LAYER_ORDER.length) {
             ctx.save();
             LAYER_ORDER.forEach((layer) => {
@@ -594,7 +570,6 @@ const MyRoomCanvas: React.FC = () => {
             });
             ctx.restore();
 
-            // 닉네임
             ctx.font = "bold 14px Arial";
             ctx.fillStyle = "white";
             ctx.textAlign = "center";
@@ -609,14 +584,13 @@ const MyRoomCanvas: React.FC = () => {
       animationId = requestAnimationFrame(loop);
     };
     animationId = requestAnimationFrame(loop);
-
     return () => {
       cancelAnimationFrame(animationId);
     };
   }, [backgroundImage, spriteImages, users, canvasSize]);
 
   // --------------------------------------------------
-  // (Q) 게시판 새 글 작성
+  // 게시판 글 작성
   // --------------------------------------------------
   const handleAddComment = () => {
     if (!visitorName.trim() || !visitorMessage.trim()) return;
@@ -629,7 +603,7 @@ const MyRoomCanvas: React.FC = () => {
   };
 
   // --------------------------------------------------
-  // (R) 모달 열기
+  // 모달 열기
   // --------------------------------------------------
   const handleOpenResumeModal = () => {
     if (resume.filter((r) => r.funitureType !== "none").length >= 1) return;
@@ -639,14 +613,15 @@ const MyRoomCanvas: React.FC = () => {
     if (portfolio.filter((p) => p.funitureType !== "none").length >= 3) return;
     setPortfolioModalOpen(true);
   };
+
+  // ★ 열기 (체크박스 버전)
   const handleOpenTechStackModal = () => {
-    if (technologyStack.filter((t) => t.funitureType !== "none").length >= 9)
-      return;
+    // 열기 전, selectedTechList를 초기화하거나 유지
     setTechStackModalOpen(true);
   };
 
   // --------------------------------------------------
-  // (S) 모달 저장 (이력서/포트폴리오/기술스택)
+  // (S) 이력서 / 포트폴리오 / 기술스택 저장
   // --------------------------------------------------
   const handleSaveResume = () => {
     const idx = resume.findIndex((r) => r.funitureType === "none");
@@ -672,7 +647,6 @@ const MyRoomCanvas: React.FC = () => {
       setPortfolioModalOpen(false);
       return;
     }
-
     try {
       const formData = new FormData();
       formData.append("file", portfolioFile);
@@ -681,13 +655,11 @@ const MyRoomCanvas: React.FC = () => {
         method: "POST",
         body: formData,
       });
-
       const data = await res.json();
       if (!data.success) {
         throw new Error(data.error || "Upload failed");
       }
-
-      const s3Url = data.url; // 업로드된 PDF의 S3 URL
+      const s3Url = data.url;
       const idx = portfolio.findIndex((p) => p.funitureType === "none");
       if (idx !== -1) {
         setPortfolio((prev) =>
@@ -696,16 +668,12 @@ const MyRoomCanvas: React.FC = () => {
               ? {
                   ...item,
                   funitureType: `portfolio/portfolio${idx + 1}`,
-                  data: {
-                    fileName: portfolioFile.name,
-                    url: s3Url, // PDF URL 저장
-                  },
+                  data: { fileName: portfolioFile.name, url: s3Url },
                 }
               : item,
           ),
         );
       }
-
       setPortfolioModalOpen(false);
       setPortfolioFile(null);
     } catch (error) {
@@ -713,57 +681,104 @@ const MyRoomCanvas: React.FC = () => {
     }
   };
 
+  // ★ (다중) 기술 스택 저장
   const handleSaveTechStack = () => {
-    if (!selectedTech) {
+    if (selectedTechList.length === 0) {
+      // 아무것도 선택 안 했다면 그냥 닫기
       setTechStackModalOpen(false);
       return;
     }
-    const idx = technologyStack.findIndex((t) => t.funitureType === "none");
-    if (idx !== -1) {
-      setTechnologyStack((prev) =>
-        prev.map((item, i) =>
-          i === idx
-            ? {
-                ...item,
-                funitureType: `technologyStack/technologyStack${idx + 1}`,
-                data: { stack: selectedTech },
-              }
-            : item,
-        ),
-      );
+
+    // 1) 현재 technologyStack 중 "none"인 게 몇 개인지
+    const noneSlots = technologyStack.filter((t) => t.funitureType === "none");
+    if (noneSlots.length === 0) {
+      alert("더 이상 기술 스택을 추가할 수 없습니다.");
+      setTechStackModalOpen(false);
+      return;
     }
+
+    // 2) 현재까지 이미 선택(추가)된 스택 개수
+    const usedCount = technologyStack.filter(
+      (t) => t.funitureType !== "none",
+    ).length;
+
+    // 3) 새로 추가할 스택 개수
+    const newCount = selectedTechList.length;
+    const totalCount = usedCount + newCount;
+
+    if (totalCount > 9) {
+      alert(
+        `최대 9개까지만 추가 가능합니다. 현재 ${usedCount}개 + 새로운 ${newCount}개 = ${totalCount}개 (초과)`,
+      );
+      return;
+    }
+
+    // 4) "none"인 슬롯 순서대로 채워넣기
+    //    selectedTechList 개수만큼
+    setTechnologyStack((prev) => {
+      const newState = [...prev];
+      let idxSlot = 0;
+      for (let i = 0; i < newState.length; i++) {
+        if (newState[i].funitureType === "none" && idxSlot < newCount) {
+          newState[i] = {
+            ...newState[i],
+            funitureType: `technologyStack/technologyStack${i + 1}`,
+            data: { stack: selectedTechList[idxSlot] },
+          };
+          idxSlot++;
+        }
+        if (idxSlot >= newCount) break;
+      }
+      return newState;
+    });
+
+    // 5) 선택 목록 초기화 + 모달 닫기
+    setSelectedTechList([]);
     setTechStackModalOpen(false);
-    setSelectedTech("");
   };
 
   // --------------------------------------------------
-  // (T) 가구 클릭 → 상세 or PDF 미리보기
+  // (T) 가구 클릭 → 상세 or PDF or alert
   // --------------------------------------------------
   const handleFurnitureClick = (f: Funiture) => {
-    // 1) "none" 또는 "board"면 상세 없음
-    if (f.funitureType === "none" || f.funitureType === "board") {
+    // "none" 분기
+    if (f.funitureType === "none") {
+      if (f.funiturename.includes("이력서")) {
+        alert("정보가 없습니다. 버튼을 통해 이력서를 추가 해주세요!");
+      } else if (f.funiturename.includes("포트폴리오")) {
+        alert("정보가 없습니다. 버튼을 통해 포트폴리오를 추가 해주세요!");
+      } else if (f.funiturename.includes("기술스택")) {
+        alert("정보가 없습니다. 버튼을 통해 기술스택을 추가 해주세요!");
+      } else {
+        alert("정보가 없습니다. 추가해주세요!");
+      }
+      return;
+    }
+
+    // "board" → 게시판
+    if (f.funitureType === "board") {
       return setIsBoardOpen(true);
     }
 
-    // 2) "portfolio" 계열이면 → pdfUrl이 있는지 확인
+    // "portfolio" → PDF
     if (f.funitureType?.startsWith("portfolio")) {
-      // 만약 f.data.url이 PDF라면 pdfModalOpen
       const pdfLink = f.data?.url || "";
       if (pdfLink) {
-        // PDF 미리보기
         setPdfUrl(pdfLink);
         setPdfModalOpen(true);
         return;
       }
+      alert("포트폴리오 정보가 없습니다!");
+      return;
     }
 
-    // 3) 그 외 (resume, techstack 등) → 기존 상세모달
+    // 그 외(이력서, 기술스택 등) → 상세 모달
     setSelectedFurnitureData(f);
     setViewModalOpen(true);
   };
 
   // --------------------------------------------------
-  // 버튼 비활성화 여부
+  // 버튼 비활성화
   // --------------------------------------------------
   const isResumeButtonDisabled =
     resume.filter((r) => r.funitureType !== "none").length >= 1;
@@ -772,9 +787,75 @@ const MyRoomCanvas: React.FC = () => {
   const isTechStackButtonDisabled =
     technologyStack.filter((t) => t.funitureType !== "none").length >= 9;
 
-  // --------------------------------------------------
-  // (U) 렌더링
-  // --------------------------------------------------
+  // ----------------------- [추가] 주인의 구글ID를 받아서 API 요청 -----------------------
+  const params = useParams() as { google_id?: string };
+  const googleId = params.google_id || null;
+
+  // API 훅 호출
+  const {
+    data: ownerProfile,
+    isLoading: isProfileLoading,
+    isError: isProfileError,
+  } = useMyRoomOwnerProfile(googleId);
+
+  // 가져온 데이터 → state 반영
+  useEffect(() => {
+    if (ownerProfile) {
+      // resume_url
+      if (ownerProfile.resume_url) {
+        setResume((prev) =>
+          prev.map((item, idx) => {
+            if (idx === 0) {
+              return {
+                ...item,
+                funitureType: "resume/resume1",
+                data: { resumeLink: ownerProfile.resume_url },
+              };
+            }
+            return item;
+          }),
+        );
+      }
+
+      // portfolio_url
+      if (
+        ownerProfile.portfolio_url &&
+        Array.isArray(ownerProfile.portfolio_url)
+      ) {
+        setPortfolio((prev) => {
+          const newState = [...prev];
+          ownerProfile.portfolio_url.forEach((url: string, i: number) => {
+            if (i < newState.length) {
+              newState[i] = {
+                ...newState[i],
+                funitureType: `portfolio/portfolio${i + 1}`,
+                data: { url, fileName: `portfolio${i + 1}.pdf` },
+              };
+            }
+          });
+          return newState;
+        });
+      }
+
+      // tech_stack
+      if (ownerProfile.tech_stack && Array.isArray(ownerProfile.tech_stack)) {
+        setTechnologyStack((prev) => {
+          const newState = [...prev];
+          ownerProfile.tech_stack.forEach((stackItem: string, i: number) => {
+            if (i < newState.length) {
+              newState[i] = {
+                ...newState[i],
+                funitureType: `technologyStack/technologyStack${i + 1}`,
+                data: { stack: stackItem },
+              };
+            }
+          });
+          return newState;
+        });
+      }
+    }
+  }, [ownerProfile]);
+
   return (
     <div
       className={Style.canvasContainerClass}
@@ -788,7 +869,7 @@ const MyRoomCanvas: React.FC = () => {
       {/* 절대위치 캔버스 */}
       <canvas ref={canvasRef} className={Style.absoluteCanvasClass} />
 
-      {/* 가구 표시 (이력서/포트폴리오/기술스택) */}
+      {/* 가구 표시 */}
       {[...resume, ...portfolio, ...technologyStack].map((item) => (
         <div
           key={item.id}
@@ -828,7 +909,7 @@ const MyRoomCanvas: React.FC = () => {
         </div>
       ))}
 
-      {/* 포탈 (크기 200×200, 좌측 중앙) */}
+      {/* 포탈 */}
       <div
         className={Style.furnitureContainerClass}
         style={{
@@ -881,6 +962,7 @@ const MyRoomCanvas: React.FC = () => {
         setResumeLink={setResumeLink}
         onSave={handleSaveResume}
       />
+
       <PortfolioModal
         open={portfolioModalOpen}
         onClose={setPortfolioModalOpen}
@@ -888,19 +970,23 @@ const MyRoomCanvas: React.FC = () => {
         setPortfolioFile={setPortfolioFile}
         onSave={handleSavePortfolio}
       />
+
+      {/* ★ 여러 개 선택할 수 있는 TechStackModal */}
       <TechStackModal
         open={techStackModalOpen}
         onClose={setTechStackModalOpen}
         techStackList={techStackList}
-        selectedTech={selectedTech}
-        setSelectedTech={setSelectedTech}
+        selectedTechList={selectedTechList}
+        setSelectedTechList={setSelectedTechList}
         onSave={handleSaveTechStack}
       />
+
       <FurnitureInfoModal
         open={viewModalOpen}
         onClose={setViewModalOpen}
         furniture={selectedFurnitureData}
       />
+
       <BoardModal
         open={isBoardOpen}
         onClose={setIsBoardOpen}
@@ -912,7 +998,6 @@ const MyRoomCanvas: React.FC = () => {
         handleAddComment={handleAddComment}
       />
 
-      {/* PDF 미리보기 모달 (추가) */}
       <PdfViewerModal
         open={pdfModalOpen}
         onClose={setPdfModalOpen}

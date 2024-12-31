@@ -9,20 +9,38 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 
-import { TechStackModalProps } from "../../_model/TechStack";
-// 추가: 스타일 import
 import Style from "./TechStackModal.style";
+
+export interface TechStackModalProps {
+  open: boolean;
+  onClose: (v: boolean) => void;
+  techStackList: string[];
+  selectedTechList: string[]; // ← 다중 선택 목록
+  setSelectedTechList: (list: string[]) => void; // ← 다중 선택 세터
+  onSave: () => void; // 최종 저장 (MyRoomCanvas에서 호출)
+}
 
 const TechStackModal: React.FC<TechStackModalProps> = ({
   open,
   onClose,
   techStackList,
-  selectedTech,
-  setSelectedTech,
+  selectedTechList,
+  setSelectedTechList,
   onSave,
 }) => {
+  // 체크박스 onChange
+  const handleCheckboxChange = (stack: string) => {
+    if (selectedTechList.includes(stack)) {
+      // 이미 선택되어 있으면 제거
+      const newList = selectedTechList.filter((item) => item !== stack);
+      setSelectedTechList(newList);
+    } else {
+      // 새로 추가
+      setSelectedTechList([...selectedTechList, stack]);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className={Style.dialogContent}>
@@ -31,21 +49,27 @@ const TechStackModal: React.FC<TechStackModalProps> = ({
         </DialogHeader>
 
         <div className={Style.container}>
-          <Input
-            placeholder="스택 검색(예: react)... (데모)"
-            className={Style.searchInput}
-          />
+          <div className="mb-2 mt-4 text-sm text-muted-foreground">
+            여러 개를 선택할 수 있습니다. (최대 9개)
+          </div>
 
           <div className={Style.stackList}>
-            {techStackList.map((stack) => (
-              <Button
-                key={stack}
-                variant={selectedTech === stack ? "default" : "outline"}
-                onClick={() => setSelectedTech(stack)}
-              >
-                {stack}
-              </Button>
-            ))}
+            {techStackList.map((stack) => {
+              const isChecked = selectedTechList.includes(stack);
+              return (
+                <label
+                  key={stack}
+                  className="flex items-center gap-2 rounded px-2 py-1 hover:bg-secondary"
+                >
+                  <input
+                    type="checkbox"
+                    checked={isChecked}
+                    onChange={() => handleCheckboxChange(stack)}
+                  />
+                  <span>{stack}</span>
+                </label>
+              );
+            })}
           </div>
 
           <div className={Style.bottomSection}>
