@@ -266,7 +266,19 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
   const isAnyModalOpen =
     npc1ModalOpen || npc2ModalOpen || noticeModalOpen || meetingModalOpen;
 
-  // 포탈/NPC 충돌 (스페이스바)
+  // ------------------ ※ 수정: 모달 열림/닫힘 시 pressedKeys 초기화 ------------------
+  const [pressedKeys, setPressedKeys] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    // 모달이 열리거나 닫힐 때, 키 상태를 초기화
+    // (모달 열림 시 키 입력 무시 / 모달 닫힘 후 이전 키 상태가 남지 않도록)
+    if (isAnyModalOpen) {
+      // 모달이 열릴 때
+      setPressedKeys({});
+    }
+  }, [isAnyModalOpen]);
+
+  // 포탈 / NPC 충돌
   function getPortalRouteIfOnPortal(): string | null {
     const { users } = useUsersStore.getState();
     const me = users.find((u) => u.id === myUserId);
@@ -282,7 +294,6 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
       ];
       const overlap = cl < pr && cr > pl && ct < pb && cb > pt;
       if (overlap) {
-        // [ 변경점: if문으로 route 체크 ]
         if (portal.route === "/meetingroom/123") {
           setMeetingModalOpen(true);
           return null;
@@ -290,15 +301,12 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
         if (portal.route === "/myroom/123") {
           // 세션 확인
           if (session?.user?.id) {
-            // 세션에 user.id가 있다면 → "/myroom/<user.id>" 로 이동
             return `/myroom/${session.user.id}`;
           } else {
-            // 세션이 없으면 alert
             alert("로그인이 필요합니다.");
             return null;
           }
         }
-        // 혹시 다른 포탈 route가 있다면 여기 처리
         return portal.route;
       }
     }
@@ -325,24 +333,19 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     return null;
   }
 
-  // ------------------ 키 입력 ------------------
-  const [pressedKeys, setPressedKeys] = useState<Record<string, boolean>>({});
-
+  // 키 입력 등록
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // 만약 채팅창이 열려있거나 모달이 열려있으면 → 키 입력 무시
       if (chatOpen || isAnyModalOpen) {
         return;
       }
 
-      // 이동키/Space
       if (
         ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " "].includes(e.key)
       ) {
         e.preventDefault();
       }
 
-      // Space → 포탈/NPC
       if (e.key === " ") {
         const route = getPortalRouteIfOnPortal();
         if (route) {
@@ -365,7 +368,6 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
-      // 채팅창 또는 모달 열림이면 무시
       if (chatOpen || isAnyModalOpen) {
         return;
       }
@@ -387,8 +389,6 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     };
   }, [chatOpen, isAnyModalOpen, router]);
 
-  const throttledPressedKeys = useThrottle(pressedKeys, 100);
-
   // 이동 로직
   function getDirectionFromKeys(
     keys: Record<string, boolean>,
@@ -400,8 +400,9 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     return null;
   }
 
+  const throttledPressedKeys = useThrottle(pressedKeys, 100);
+
   useEffect(() => {
-    // 채팅창 or 모달 열려 있으면 이동X
     if (chatOpen || isAnyModalOpen) return;
 
     const { users, updateUserPosition } = useUsersStore.getState();
@@ -446,7 +447,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     }
   }, [throttledPressedKeys, isAnyModalOpen, chatOpen, emitMovement]);
 
-  // requestAnimationFrame (배경, 캐릭터 등)
+  // requestAnimationFrame
   const zoomFactor = 2;
   function clamp(value: number, min: number, max: number) {
     return Math.max(min, Math.min(max, value));
