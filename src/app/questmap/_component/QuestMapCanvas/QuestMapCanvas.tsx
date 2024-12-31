@@ -4,14 +4,14 @@ import NextImage from "next/image";
 import { useRouter } from "next/navigation";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 
-import useThrottle from "@/hooks/performance/useThrottle";
-import useMainSocketConnect from "@/hooks/socket/useMainSocketConnect";
 import useLoadSprites, {
   FRAME_HEIGHT,
   FRAME_WIDTH,
   LAYER_ORDER,
-} from "@/hooks/useLoadSprites";
-import useQuestMapSocketEvents from "@/hooks/useQuestMapSocketEvents";
+} from "@/hooks/performance/useLoadSprites";
+import useThrottle from "@/hooks/performance/useThrottle";
+import useQuestMapSocketEvents from "@/hooks/questmap/useQuestMapSocketEvents";
+import useMainSocketConnect from "@/hooks/socket/useMainSocketConnect";
 
 import { User } from "../../_model/User";
 import { NpcModal } from "../Npc/NpcModal";
