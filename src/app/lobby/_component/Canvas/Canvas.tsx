@@ -2,6 +2,8 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+// ------------------ [NextAuth] ------------------
+import { useSession } from "next-auth/react";
 import { useEffect, useRef, useState } from "react";
 
 import useLobbySocketEvents from "@/hooks/lobby/useLobbySocketEvents";
@@ -40,7 +42,7 @@ const MAP_CONSTANTS = {
   IMG_HEIGHT: 150,
   SPEED: 10,
 
-  // 전체 맵 크기
+  // 실제 맵 전체 크기
   MAP_WIDTH: 1200,
   MAP_HEIGHT: 700,
 };
@@ -67,7 +69,7 @@ const portals: PortalInfo[] = [
     y: 250,
     width: 50,
     height: 50,
-    route: "/myroom/123",
+    route: "/myroom/123", // 마이룸
     name: "마이룸",
   },
   {
@@ -122,6 +124,10 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [clientId, setClientId] = useState<string>("anonymous");
 
+  // ------------------ 세션 정보 (NextAuth) ------------------
+  const { data: session } = useSession();
+  // session.user?.id 로 구글 ID를 가져온다고 가정
+
   // 소켓 연결
   useMainSocketConnect();
 
@@ -132,7 +138,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     if (storedClientId) {
       setClientId(storedClientId);
     }
-  }, []); // 빈 의존성 배열로 컴포넌트 마운트 시에만 실행
+  }, []);
 
   const myUserId = "1";
   const { emitMovement } = useLobbySocketEvents({
@@ -260,7 +266,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
   const isAnyModalOpen =
     npc1ModalOpen || npc2ModalOpen || noticeModalOpen || meetingModalOpen;
 
-  // 포탈/NPC 충돌
+  // 포탈/NPC 충돌 (스페이스바)
   function getPortalRouteIfOnPortal(): string | null {
     const { users } = useUsersStore.getState();
     const me = users.find((u) => u.id === myUserId);
@@ -276,11 +282,23 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
       ];
       const overlap = cl < pr && cr > pl && ct < pb && cb > pt;
       if (overlap) {
-        // 회의실
+        // [ 변경점: if문으로 route 체크 ]
         if (portal.route === "/meetingroom/123") {
           setMeetingModalOpen(true);
           return null;
         }
+        if (portal.route === "/myroom/123") {
+          // 세션 확인
+          if (session?.user?.id) {
+            // 세션에 user.id가 있다면 → "/myroom/<user.id>" 로 이동
+            return `/myroom/${session.user.id}`;
+          } else {
+            // 세션이 없으면 alert
+            alert("로그인이 필요합니다.");
+            return null;
+          }
+        }
+        // 혹시 다른 포탈 route가 있다면 여기 처리
         return portal.route;
       }
     }
@@ -616,6 +634,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
         style={{ display: "none" }}
         priority
       />
+
       {/* NPC1 모달 (데일리문제) */}
       <NpcModal
         isOpen={npc1ModalOpen}
@@ -624,6 +643,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
       >
         <DailyProblemContent />
       </NpcModal>
+
       {/* NPC2 모달 (QnA) */}
       <NpcModal
         isOpen={npc2ModalOpen}
@@ -636,6 +656,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
           handleQnaClick={handleQnaClick}
         />
       </NpcModal>
+
       {/* 공지사항 모달 */}
       <NoticeBoardModal
         open={noticeModalOpen}
@@ -647,11 +668,13 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
         setWriterMessage={setWriterMessage}
         handleAddNotice={handleAddNotice}
       />
+
       {/* 회의실 모달 */}
       <EnterMeetingRoom
         open={meetingModalOpen}
         onOpenChange={setMeetingModalOpen}
       />
+
       {/* 고정된 사이즈로 캔버스 */}
       <div
         className={Style.canvasContainerClass}
