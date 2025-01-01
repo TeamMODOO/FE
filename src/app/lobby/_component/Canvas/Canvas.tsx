@@ -13,7 +13,6 @@ import useLoadSprites, {
   LAYER_ORDER,
 } from "@/hooks/performance/useLoadSprites";
 import useThrottle from "@/hooks/performance/useThrottle";
-import useMainSocketConnect from "@/hooks/socket/useMainSocketConnect";
 // (3) Zustand (유저 스토어)
 import useUsersStore from "@/store/useUsersStore";
 
@@ -124,7 +123,6 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
   }, []);
 
   // 소켓 연결
-  useMainSocketConnect();
   const { emitMovement } = useLobbySocketEvents({
     roomId: "floor07",
     userId: clientId,

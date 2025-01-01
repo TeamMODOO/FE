@@ -11,7 +11,6 @@ import useLoadSprites, {
 } from "@/hooks/performance/useLoadSprites";
 import useThrottle from "@/hooks/performance/useThrottle";
 import useQuestMapSocketEvents from "@/hooks/questmap/useQuestMapSocketEvents";
-import useMainSocketConnect from "@/hooks/socket/useMainSocketConnect";
 
 import { User } from "../../_model/User";
 import { NpcModal } from "../Npc/NpcModal";
@@ -66,7 +65,6 @@ const QuestMapCanvas: React.FC = () => {
   // --------------------------------------------------
   // (2) 소켓 연결
   // --------------------------------------------------
-  useMainSocketConnect();
   const { emitMovement } = useQuestMapSocketEvents({
     roomId: "questroom01",
     userId: "quest-user",
