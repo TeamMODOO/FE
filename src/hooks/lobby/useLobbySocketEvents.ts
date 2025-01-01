@@ -1,4 +1,4 @@
-// hooks/useLobbySocketEvents.ts
+// **수정 후 코드**: hooks/useLobbySocketEvents.ts
 "use client";
 
 import { useCallback, useEffect } from "react";
@@ -16,10 +16,11 @@ interface MovementInfo {
   room_id: string;
   position_x: number;
   position_y: number;
+  direction: number; // 서버에서 보내주는 방향
 }
 
 interface SCEnterRoomData {
-  user_name: string;
+  user_name: string; // 서버에서 보내주는 user id (또는 닉네임)
   position: {
     x: number;
     y: number;
@@ -41,7 +42,6 @@ export default function useLobbySocketEvents({
   // -----------------------------
   // (1) 내 캐릭터 이동 emit
   // -----------------------------
-  // hooks/useLobbySocketEvents.ts
   const emitMovement = useCallback(
     (x: number, y: number, direction: number) => {
       if (!mainSocket) return;
@@ -64,32 +64,23 @@ export default function useLobbySocketEvents({
     if (!mainSocket) return;
 
     const onMovement = (data: MovementInfo) => {
-      // data = { user_id, room_id, position_x, position_y }
-      // 내 화면에만 해당 사용자 위치 업데이트
-      // (간단히) 기존 사용자 위치 비교 -> 방향 추론
+      // data = { user_id, room_id, position_x, position_y, direction }
+
+      // 우선, 스토어에 해당 user가 없으면 addUser
       const movingUser = users.find((u) => u.id === data.user_id);
-      if (!movingUser) return;
-
-      const oldX = movingUser.x;
-      const oldY = movingUser.y;
-      const newX = data.position_x;
-      const newY = data.position_y;
-
-      let direction = movingUser.direction;
-      const isMoving = true;
-
-      const dx = newX - oldX;
-      const dy = newY - oldY;
-
-      if (Math.abs(dx) > Math.abs(dy)) {
-        // 좌우
-        direction = dx > 0 ? 2 : 3; // 2=Right, 3=Left
-      } else if (Math.abs(dy) > 0) {
-        // 상하
-        direction = dy > 0 ? 0 : 1; // 0=Down, 1=Up
+      if (!movingUser) {
+        addUser(data.user_id, data.user_id, data.position_x, data.position_y);
       }
 
-      updateUserPosition(data.user_id, newX, newY, direction, isMoving);
+      // 캐릭터 이동/방향 업데이트
+      const isMoving = true;
+      updateUserPosition(
+        data.user_id,
+        data.position_x,
+        data.position_y,
+        data.direction,
+        isMoving,
+      );
 
       // (추가) 잠시 뒤 새 movement 없으면 isMoving=false 로 만드는 타이머
       if (moveStopTimers[data.user_id]) {
@@ -104,7 +95,13 @@ export default function useLobbySocketEvents({
           // 위치 그대로, direction 그대로, isMoving만 false
           useUsersStore
             .getState()
-            .updateUserPosition(data.user_id, newX, newY, direction, false);
+            .updateUserPosition(
+              data.user_id,
+              data.position_x,
+              data.position_y,
+              data.direction,
+              false,
+            );
         }
       }, 200); // 200ms 뒤에 갱신 없음 -> 멈춤 처리
     };
@@ -114,7 +111,7 @@ export default function useLobbySocketEvents({
     return () => {
       mainSocket.off("SC_MOVEMENT_INFO", onMovement);
     };
-  }, [mainSocket, users, updateUserPosition]);
+  }, [mainSocket, users, updateUserPosition, addUser]);
 
   // -----------------------------
   // (3) 새 유저 입장 수신 (SC_ENTER_ROOM)
@@ -124,13 +121,8 @@ export default function useLobbySocketEvents({
 
     const onEnterRoom = (data: SCEnterRoomData) => {
       // ex) { user_name, position: {x, y}, img_url, ...}
-      addUser(
-        data.user_name,
-        data.user_name,
-        data.position.x,
-        data.position.y,
-        data.img_url,
-      );
+      // user_name을 id 로 사용 (또는 서버에서 user_id 라는 키로 내려주면 더 명확)
+      addUser(data.user_name, data.user_name, data.position.x, data.position.y);
     };
     mainSocket.on("SC_ENTER_ROOM", onEnterRoom);
 
