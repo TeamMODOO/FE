@@ -1,7 +1,6 @@
 import "@/styles/globals.css";
 
 import type { Metadata } from "next";
-import { SessionProvider } from "next-auth/react";
 import { Toaster } from "react-hot-toast";
 
 import { cn } from "@/lib/utils";
@@ -24,15 +23,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={SpoqaHanSansNeo.variable}>
       <body className={cn("font-spoqa-han-sans-neo", "w-full", "h-dvh")}>
-        <SessionProvider>
-          {/* <SidebarProvider> */}
-          {/* <HomeSideBar /> */}
-          {/* </SidebarProvider> */}
-          <AppProviders>
-            {children}
-            <Toaster position="top-center" reverseOrder={false} />
-          </AppProviders>
-        </SessionProvider>
+        <AppProviders>
+          {children}
+          <Toaster position="top-center" reverseOrder={false} />
+        </AppProviders>
       </body>
     </html>
   );
