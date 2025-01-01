@@ -25,7 +25,7 @@ import FurnitureInfoModal from "../FurnitureInfoModal/FurnitureInfoModal";
 import PdfViewerModal from "../PortfolioModal/PdfViewerModal";
 import PortfolioModal from "../PortfolioModal/PortfolioModal";
 import ResumeModal from "../ResumeModal/ResumeModal";
-// ★ 변경된 TechStackModal
+// ★ 변경된 TechStackModal (다중 체크박스)
 import TechStackModal from "../TechStackModal/TechStackModal";
 import Style from "./Canvas.style";
 import interiorImages from "./Interior";
@@ -70,7 +70,7 @@ const CHAR_SCALE = 3; // 2배
 
 const MyRoomCanvas: React.FC = () => {
   // --------------------------------------------------
-  // (A) 공통 소켓 연결 + 마이룸 소켓 이벤트
+  // (A) 소켓 연결 + 마이룸 소켓 이벤트
   // --------------------------------------------------
   const myUserId = "1";
   const { emitMovement } = useMyRoomSocketEvents({
@@ -266,13 +266,11 @@ const MyRoomCanvas: React.FC = () => {
   const [resumeModalOpen, setResumeModalOpen] = useState(false);
   const [portfolioModalOpen, setPortfolioModalOpen] = useState(false);
 
-  // ★ 바뀐 부분: 다중 선택으로 변경
+  // **체크박스로 다중 선택** TechStackModal
   const [techStackModalOpen, setTechStackModalOpen] = useState(false);
   const [selectedTechList, setSelectedTechList] = useState<string[]>([]);
 
-  // 이력서 링크
   const [resumeLink, setResumeLink] = useState("");
-  // 포트폴리오 파일
   const [portfolioFile, setPortfolioFile] = useState<File | null>(null);
 
   // --------------------------------------------------
@@ -318,6 +316,25 @@ const MyRoomCanvas: React.FC = () => {
   }, [canvasSize]);
 
   // --------------------------------------------------
+  // (L) 현재 모달 열림 여부 → 입력 로직에서 체크
+  // --------------------------------------------------
+  const isAnyModalOpen =
+    resumeModalOpen ||
+    portfolioModalOpen ||
+    techStackModalOpen ||
+    viewModalOpen ||
+    isBoardOpen ||
+    pdfModalOpen;
+
+  // ★★★ 추가: 모달이 닫힐 때 pressedKeys 초기화
+  useEffect(() => {
+    // 만약 모달이 *모두* 닫혀 있는 상태가 되었다면 → pressedKeys를 초기화
+    if (!isAnyModalOpen) {
+      setPressedKeys({});
+    }
+  }, [isAnyModalOpen]);
+
+  // --------------------------------------------------
   // 포탈 overlap
   // --------------------------------------------------
   function checkPortalOverlap() {
@@ -336,8 +353,17 @@ const MyRoomCanvas: React.FC = () => {
     return cr > pl && cl < pr && cb > pt && ct < pb;
   }
 
+  // --------------------------------------------------
+  // 키 이벤트
+  // --------------------------------------------------
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // 모달이 열려 있으면 이동/스페이스바 로직 막고, 입력 허용
+      if (isAnyModalOpen) {
+        return;
+      }
+
+      // 모달이 닫혀 있을 때만 이동/스페이스 처리
       if (
         [
           "w",
@@ -356,10 +382,12 @@ const MyRoomCanvas: React.FC = () => {
           "ArrowDown",
           "ArrowLeft",
           "ArrowRight",
+          " ",
         ].includes(e.key)
       ) {
         e.preventDefault();
       }
+
       if (e.key === " ") {
         e.preventDefault();
         if (checkPortalOverlap()) {
@@ -368,9 +396,14 @@ const MyRoomCanvas: React.FC = () => {
       }
       setPressedKeys((prev) => ({ ...prev, [e.key]: true }));
     };
+
     const handleKeyUp = (e: KeyboardEvent) => {
+      if (isAnyModalOpen) {
+        return;
+      }
       setPressedKeys((prev) => ({ ...prev, [e.key]: false }));
     };
+
     const handleBlur = () => {
       setPressedKeys({});
     };
@@ -384,7 +417,7 @@ const MyRoomCanvas: React.FC = () => {
       window.removeEventListener("keyup", handleKeyUp);
       window.removeEventListener("blur", handleBlur);
     };
-  }, [users, portal]);
+  }, [users, portal, isAnyModalOpen]);
 
   // --------------------------------------------------
   // 방향 계산
@@ -612,9 +645,7 @@ const MyRoomCanvas: React.FC = () => {
     setPortfolioModalOpen(true);
   };
 
-  // ★ 열기 (체크박스 버전)
   const handleOpenTechStackModal = () => {
-    // 열기 전, selectedTechList를 초기화하거나 유지
     setTechStackModalOpen(true);
   };
 
@@ -679,15 +710,13 @@ const MyRoomCanvas: React.FC = () => {
     }
   };
 
-  // ★ (다중) 기술 스택 저장
   const handleSaveTechStack = () => {
     if (selectedTechList.length === 0) {
-      // 아무것도 선택 안 했다면 그냥 닫기
       setTechStackModalOpen(false);
       return;
     }
 
-    // 1) 현재 technologyStack 중 "none"인 게 몇 개인지
+    // 현재 technologyStack 중 "none"인 개수
     const noneSlots = technologyStack.filter((t) => t.funitureType === "none");
     if (noneSlots.length === 0) {
       alert("더 이상 기술 스택을 추가할 수 없습니다.");
@@ -695,12 +724,11 @@ const MyRoomCanvas: React.FC = () => {
       return;
     }
 
-    // 2) 현재까지 이미 선택(추가)된 스택 개수
+    // 이미 선택된(채워진) 개수
     const usedCount = technologyStack.filter(
       (t) => t.funitureType !== "none",
     ).length;
-
-    // 3) 새로 추가할 스택 개수
+    // 새로 추가할 개수
     const newCount = selectedTechList.length;
     const totalCount = usedCount + newCount;
 
@@ -711,8 +739,7 @@ const MyRoomCanvas: React.FC = () => {
       return;
     }
 
-    // 4) "none"인 슬롯 순서대로 채워넣기
-    //    selectedTechList 개수만큼
+    // "none" 슬롯에 넣기
     setTechnologyStack((prev) => {
       const newState = [...prev];
       let idxSlot = 0;
@@ -730,16 +757,15 @@ const MyRoomCanvas: React.FC = () => {
       return newState;
     });
 
-    // 5) 선택 목록 초기화 + 모달 닫기
+    // 선택 목록 초기화
     setSelectedTechList([]);
     setTechStackModalOpen(false);
   };
 
   // --------------------------------------------------
-  // (T) 가구 클릭 → 상세 or PDF or alert
+  // (T) 가구 클릭
   // --------------------------------------------------
   const handleFurnitureClick = (f: Funiture) => {
-    // "none" 분기
     if (f.funitureType === "none") {
       if (f.funiturename.includes("이력서")) {
         alert("정보가 없습니다. 버튼을 통해 이력서를 추가 해주세요!");
@@ -753,12 +779,10 @@ const MyRoomCanvas: React.FC = () => {
       return;
     }
 
-    // "board" → 게시판
     if (f.funitureType === "board") {
       return setIsBoardOpen(true);
     }
 
-    // "portfolio" → PDF
     if (f.funitureType?.startsWith("portfolio")) {
       const pdfLink = f.data?.url || "";
       if (pdfLink) {
@@ -770,7 +794,6 @@ const MyRoomCanvas: React.FC = () => {
       return;
     }
 
-    // 그 외(이력서, 기술스택 등) → 상세 모달
     setSelectedFurnitureData(f);
     setViewModalOpen(true);
   };
@@ -969,7 +992,7 @@ const MyRoomCanvas: React.FC = () => {
         onSave={handleSavePortfolio}
       />
 
-      {/* ★ 여러 개 선택할 수 있는 TechStackModal */}
+      {/* (다중) 기술 스택 모달 */}
       <TechStackModal
         open={techStackModalOpen}
         onClose={setTechStackModalOpen}
