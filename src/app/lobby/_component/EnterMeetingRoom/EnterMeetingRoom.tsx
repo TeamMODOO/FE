@@ -12,13 +12,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useCreateMeetingRoom } from "@/queries/lobby/useMeetingRoomCreate";
+import { useMeetingRoom } from "@/queries/lobby/useMeetingRoomQuery";
 
 import { RoomCard } from "./Room";
 
-/**
- * 외부에서 모달 열림/닫힘을 제어하기 위해
- * open, onOpenChange를 props로 받도록
- */
 interface EnterMeetingRoomProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -29,13 +27,18 @@ export const EnterMeetingRoom: React.FC<EnterMeetingRoomProps> = ({
   onOpenChange,
 }) => {
   const [roomName, setRoomName] = useState("");
+  const { data, isLoading, isError } = useMeetingRoom();
+  const createMeetingRoom = useCreateMeetingRoom();
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    createMeetingRoom.mutate({
+      title: roomName,
+    });
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      {/*
-        (★) DialogTrigger 제거
-        => 이제 버튼 없이, 외부에서 open=true로 열기
-      */}
       <DialogContent className="h-[400px] w-[800px]">
         <Tabs defaultValue="participate" className="flex size-full flex-col">
           <DialogHeader>
@@ -70,7 +73,7 @@ export const EnterMeetingRoom: React.FC<EnterMeetingRoomProps> = ({
                   placeholder="방 이름을 입력하세요"
                 />
               </div>
-              <Button type="submit" className="mt-4">
+              <Button type="submit" className="mt-4" onClick={handleSubmit}>
                 생성하기
               </Button>
             </div>
