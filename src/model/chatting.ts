@@ -7,5 +7,5 @@ export interface ChattingResponse {
 }
 
 export interface ChattingType extends ChattingResponse {
-  create_at: string;
+  create_at: Date;
 }
