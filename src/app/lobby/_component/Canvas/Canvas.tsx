@@ -131,6 +131,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
   const { emitMovement } = useLobbySocketEvents({
     roomId: "floor07",
     userId: localClientId, // 로컬스토리지 uuid 사용
+    userNickname: session?.user?.name || "Guest",
   });
 
   // (3) 내가 스토어에 등록되어 있는지 확인, 없으면 addUser
