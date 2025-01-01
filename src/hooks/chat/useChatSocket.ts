@@ -1,4 +1,5 @@
 "use client";
+import { useSession } from "next-auth/react";
 import { useCallback, useEffect, useState } from "react";
 
 import { ChattingResponse, ChattingType } from "@/model/chatting";
@@ -13,11 +14,19 @@ export const useChatSocket = ({ roomType, roomId }: ChatSocketType) => {
   const mainSocket = useMainSocketStore((state) => state.socket);
   const [messageList, setMessageList] = useState<ChattingType[]>([]);
   const [messageValue, setMessageValue] = useState<string>("");
+  const { data: session, status } = useSession();
+  // const [userName, setUserName] = useState<string>("Guest");
+  // useEffect(() => {
+  //   if (status === "loading") return;
+
+  //   if (status === "authenticated" && session && session?.user?.name)
+  //     setUserName(session.user.name);
+  // }, [status, session]);
 
   const addMessage = useCallback((newMessage: ChattingResponse) => {
     const addMessageInfo = {
       ...newMessage,
-      create_at: new Date().toISOString(),
+      create_at: new Date(),
     };
 
     setMessageList((prev) => [...prev, addMessageInfo]);
@@ -30,6 +39,7 @@ export const useChatSocket = ({ roomType, roomId }: ChatSocketType) => {
 
     // 1) 로컬 스토리지에 있는 uuid 가져오기
     const clientId = localStorage.getItem("client_id") || "anonymous";
+
     // (만약 로컬 스토리지에 없다면 fallback으로 "anonymous")
 
     // 2) 메시지 정보
@@ -37,7 +47,7 @@ export const useChatSocket = ({ roomType, roomId }: ChatSocketType) => {
       room_type: roomType,
       room_id: roomId,
       client_id: clientId,
-      user_name: "anonymous", // 세션에서 받아오기
+      user_name: session && session.user ? session.user.name : "Guest",
       message: messageValue,
     };
 
