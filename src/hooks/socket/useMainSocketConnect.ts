@@ -1,5 +1,6 @@
 "use client";
 
+import { useSession } from "next-auth/react";
 import { useEffect, useRef } from "react";
 import { io, Socket } from "socket.io-client";
 import { v4 as uuid } from "uuid";
@@ -8,8 +9,6 @@ import useMainSocketStore from "@/store/useMainSocketStore";
 
 /**
  * 전역적으로 소켓을 연결하는 훅 (공통)
- * - 불필요한 이벤트는 등록하지 않고,
- *   단순히 connect / disconnect + store 관리만 한다.
  */
 const useMainSocketConnect = () => {
   const mainSocketRef = useRef<Socket | null>(null);
@@ -18,26 +17,37 @@ const useMainSocketConnect = () => {
   const setMainSocket = useMainSocketStore((state) => state.setSocket);
   const setIsConnected = useMainSocketStore((state) => state.setIsConnected);
 
-  useEffect(() => {
-    const baseURL = process.env.NEXT_PUBLIC_BASE_URL;
+  // NextAuth session
+  const { data: session, status } = useSession();
 
-    // const clientId = 사용자 고유 ID 가져오기. 로컬 스토리지?
-    // const clientId = "user_id"; // 여기를 실제 클라이언트 ID로 교체
+  useEffect(() => {
+    // 1) 세션 로딩 중이면 소켓 연결 X
+    if (status === "loading") {
+      return;
+    }
+
+    // 2) 세션에서 user_name 가져오기 (없으면 "Guest")
+    const userName = session?.user?.name || "Guest";
+
+    // 3) 소켓 접속 로직
+    const baseURL = process.env.NEXT_PUBLIC_BASE_URL;
 
     let clientId = localStorage.getItem("client_id");
     if (!clientId) {
-      // 없다면 새로 생성 후 저장
       clientId = uuid();
       localStorage.setItem("client_id", clientId);
     }
 
-    const newMainSocket = io(baseURL, {
+    // 4) io 연결
+    const newMainSocket = io(baseURL!, {
       path: "/sio/sockets",
       query: {
-        client_id: clientId, // 클라이언트 ID를 query로 전달
+        client_id: clientId, // 클라이언트 ID
+        user_name: userName, // 세션에서 가져온 닉네임(혹은 이름)
       },
     });
 
+    // 5) 이벤트 등록
     newMainSocket.on("connect", () => {
       mainSocketRef.current = newMainSocket;
       setMainSocket(newMainSocket);
@@ -46,7 +56,7 @@ const useMainSocketConnect = () => {
     });
 
     newMainSocket.on("connect_error", (error) => {
-      // console.log("[useMainSocketConnect] connect_error:", error);
+      // console.error("[useMainSocketConnect] connect_error:", error);
     });
 
     newMainSocket.on("disconnect", (reason) => {
@@ -54,7 +64,7 @@ const useMainSocketConnect = () => {
       // console.log("[useMainSocketConnect] disconnected:", reason);
     });
 
-    // unmount 시
+    // 6) unmount 시 해제
     return () => {
       setMainSocket(null);
       setIsConnected(false);
@@ -67,9 +77,9 @@ const useMainSocketConnect = () => {
       }
       // console.log("[useMainSocketConnect] End Socket Connection");
     };
-  }, [setMainSocket, setIsConnected]);
+  }, [status, session, setMainSocket, setIsConnected]);
 
-  // 커스텀 훅이므로 return 없이 내부에서만 동작
+  // 커스텀 훅이므로 return 없음
 };
 
 export default useMainSocketConnect;
