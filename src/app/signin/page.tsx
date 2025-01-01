@@ -7,7 +7,7 @@ import styles from "./SignInpage.module.css";
 
 export default function SignInPage() {
   // 각각 별도의 Server Action 정의
-  async function handleSignIn() {
+  async function handleGoogleSignIn() {
     "use server";
     const result = await signIn("google", {
       callbackUrl: "/registeravatar",
@@ -35,24 +35,44 @@ export default function SignInPage() {
           width={1396}
           height={474}
         />
-        {/* 구글 로그인 버튼 */}
-        <form action={handleSignIn}>
-          <Button className={styles.googleLoginButton}>
-            <Image
-              src="/button/google_login_button.png"
-              alt="google 로그인"
-              width={700}
-              height={160}
-            />
-            <Image
-              className={styles.googleLoginButtonHover}
-              src="/button/google_login_button_hover.png"
-              alt="google 로그인_호버"
-              width={350}
-              height={80}
-            />
-          </Button>
-        </form>
+
+        <div className={styles.buttonSection}>
+          {/* 구글 로그인 버튼 */}
+          <form action={handleGoogleSignIn}>
+            <Button className={styles.googleLoginButton}>
+              <Image
+                src="/button/google_login_button.png"
+                alt="google 로그인"
+                width={350}
+                height={80}
+              />
+              <Image
+                className={styles.googleLoginButtonHover}
+                src="/button/google_login_button_hover.png"
+                alt="google 로그인_호버"
+                width={350}
+                height={80}
+              />
+            </Button>
+          </form>
+          <form>
+            <Button className={styles.guestLoginButton}>
+              <Image
+                src="/button/guest_login_button.png"
+                alt="guest 로그인"
+                width={350}
+                height={80}
+              />
+              <Image
+                className={styles.guestLoginButtonHover}
+                src="/button/guest_login_button_hover.png"
+                alt="guest 로그인"
+                width={350}
+                height={80}
+              />
+            </Button>
+          </form>
+        </div>
       </div>
     </div>
   );

@@ -72,6 +72,19 @@
   align-items: center;
 }
 
+.buttonSection {
+  background-color: rgba(0, 0, 0, 0.5);
+  width: 30dvw;
+  height: 30dvh;
+  border-radius: 10px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 3dvh;
+}
+
 @keyframes fadeOpacity {
   0%,
   100% {
@@ -88,18 +101,27 @@
 }
 
 .googleLoginButton {
-  width: 20vw;
-  height: auto;
+  /* width: 20vw; */
+  /* height: auto; */
   padding: 0;
   border-radius: 50px;
 }
 
 .googleLoginButtonHover {
-  width: 20vw;
-  height: auto;
+  /* width: 20vw; */
+  /* height: auto; */
   display: none;
   /* padding: 0; */
   /* border-radius: 50px; */
+}
+
+.guestLoginButton {
+  padding: 0;
+  border-radius: 50px;
+}
+
+.guestLoginButtonHover {
+  display: none;
 }
 
 .googleLoginButton:hover img:last-child {
@@ -107,5 +129,13 @@
 }
 
 .googleLoginButton:hover img:first-child {
+  display: none;
+}
+
+.guestLoginButton:hover img:last-child {
+  display: block;
+}
+
+.guestLoginButton:hover img:first-child {
   display: none;
 }
