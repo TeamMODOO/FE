@@ -8,10 +8,7 @@
   overflow: hidden;
 }
 
-/* 
-  (1) 드래곤 위치 영역 
-  - 처음에는 숨겨놓고 (opacity: 0)
-*/
+/* 드래곤 날아가는 영역 */
 .dragonFlyWrapper {
   position: absolute;
   top: 50%;
@@ -22,34 +19,33 @@
   z-index: 10;
 }
 
-/* (2) "숨긴 상태" */
 .dragonHidden {
   opacity: 0;
-  /* 위치만 차지하고 실제로는 보이지 않음 */
 }
 
-/* (3) 날아가는 애니메이션 (좌→우, opacity 0→1) */
 .dragonFly {
   position: absolute;
+  /* 1.5초 동안 왼쪽에서 오른쪽으로 이동 */
   animation: dragonFlight 1.5s linear forwards;
 }
 
-/* (3-1) 좌→우 이동 + 페이드 인 */
 @keyframes dragonFlight {
   0% {
     transform: translateX(-200vw);
     opacity: 0;
   }
+
   50% {
-    opacity: 1; /* 0% → 50% 구간에서 서서히 나타나도록 할 수도 있음 */
+    opacity: 1;
   }
+
   100% {
     transform: translateX(100vw);
     opacity: 1;
   }
 }
 
-/* ===== 떠다니는 사각형들 ===== */
+/* 떠다니는 사각형 애니메이션 */
 @keyframes floatAnimation {
   0% {
     transform: translateY(100vh) translateX(0);
@@ -81,27 +77,28 @@
   left: 10%;
   animation-delay: 0s;
   animation-duration: 6s;
+  z-index: 1;
 }
 .floatingSquare:nth-child(2) {
   left: 15%;
   animation-delay: 2s;
   animation-duration: 8s;
+  z-index: 1;
 }
 .floatingSquare:nth-child(3) {
   left: 30%;
   animation-delay: 2s;
   animation-duration: 8s;
+  z-index: 1;
 }
 
-/* ===== 검은 덮개 영역 ===== */
+/* 덮개 영역 */
 .blackcover {
   width: inherit;
   height: inherit;
   background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   z-index: 10;
-
-  /* 등장 애니메이션(필요시) */
   opacity: 0;
   animation: fadeIn 1s ease forwards;
 }
@@ -120,4 +117,8 @@
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
+}
+
+.leftsection > image {
+  z-index: 2;
 }
