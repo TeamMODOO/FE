@@ -15,7 +15,6 @@ import useLoadSprites, {
   LAYER_ORDER,
 } from "@/hooks/performance/useLoadSprites";
 import useThrottle from "@/hooks/performance/useThrottle";
-import useMainSocketConnect from "@/hooks/socket/useMainSocketConnect";
 
 // (4) 모델/타입
 import { Funiture } from "../../_model/Funiture";
@@ -73,7 +72,6 @@ const MyRoomCanvas: React.FC = () => {
   // --------------------------------------------------
   // (A) 공통 소켓 연결 + 마이룸 소켓 이벤트
   // --------------------------------------------------
-  useMainSocketConnect();
   const myUserId = "1";
   const { emitMovement } = useMyRoomSocketEvents({
     roomId: "myRoom-123",
