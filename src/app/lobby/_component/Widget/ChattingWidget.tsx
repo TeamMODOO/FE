@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/card";
 import { useChatScroll } from "@/hooks/chat/useChatScroll";
 import { useChatSocket } from "@/hooks/chat/useChatSocket";
+import { formatTime } from "@/lib/utils/date";
 
 import { ChatInput } from "./ChatInput";
 import { ScrollNotification } from "./ScrollNotification";
@@ -71,8 +72,18 @@ export default function ChattingWidget({ isOpen, setIsOpen }: ChatWidgetProps) {
           >
             <div className="mt-auto">
               {messageList.map((list, index) => (
-                <div key={index} className="mb-2 rounded-lg bg-secondary p-2">
-                  {list.user_name}: {list.message}
+                <div key={index} className="mb-2">
+                  <div className="rounded-lg bg-secondary p-3">
+                    <div className="flex flex-col gap-1">
+                      <div className="flex justify-between">
+                        <span className="font-medium">{list.user_name}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {formatTime(list.create_at)}
+                        </span>
+                      </div>
+                      <span className="text-sm">{list.message}</span>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
