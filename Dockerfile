@@ -42,8 +42,8 @@ FROM base AS runner
 WORKDIR /app
 
 # 실행에 필요한 환경변수 설정
-ENV NODE_ENV production
-ENV NEXT_TELEMETRY_DISABLED 1
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
 
 # 시스템 의존성 설치
 RUN addgroup --system --gid 1001 nodejs
@@ -67,8 +67,8 @@ USER nextjs
 EXPOSE 3000
 
 # 환경변수 설정 - hostname 0.0.0.0으로 설정하여 컨테이너 외부에서 접근 가능하도록 함
-ENV PORT 3000
-ENV HOSTNAME "0.0.0.0"
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
 
 # 서버 실행 (yarn start 대신 node server.js 사용)
 CMD ["node", "server.js"]
