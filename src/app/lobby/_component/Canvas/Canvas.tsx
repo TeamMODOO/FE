@@ -599,7 +599,6 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
         style={{ display: "none" }}
         priority
       />
-
       {/* NPC1 모달 (데일리문제) */}
       <NpcModal
         isOpen={npc1ModalOpen}
@@ -608,7 +607,6 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
       >
         <DailyProblemContent />
       </NpcModal>
-
       {/* NPC2 모달 (QnA) */}
       <NpcModal
         isOpen={npc2ModalOpen}
@@ -621,7 +619,6 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
           handleQnaClick={handleQnaClick}
         />
       </NpcModal>
-
       {/* 공지사항 모달 */}
       <NoticeBoardModal
         open={noticeModalOpen}
@@ -633,13 +630,11 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
         setWriterMessage={setWriterMessage}
         handleAddNotice={handleAddNotice}
       />
-
       {/* 회의실 모달 */}
       <EnterMeetingRoom
         open={meetingModalOpen}
         onOpenChange={setMeetingModalOpen}
       />
-
       {/* 고정된 사이즈로 캔버스 */}
       <div
         className={Style.canvasContainerClass}
