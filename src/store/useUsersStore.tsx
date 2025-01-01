@@ -1,4 +1,4 @@
-// **수정 후 코드**: store/useUsersStore.ts
+// store/useUsersStore.ts
 "use client";
 
 import { create } from "zustand";
@@ -6,12 +6,11 @@ import { create } from "zustand";
 type Direction = 0 | 1 | 2 | 3;
 
 export interface User {
-  id: string; // 구글 로그인 시 세션의 user.id 를 그대로 사용
+  id: string; // 여기선 로컬스토리지 uuid (혹은 세션ID) 등 유니크 식별자
   x: number;
   y: number;
   characterType: string;
   nickname: string;
-
   direction: Direction; // 0=Down,1=Up,2=Right,3=Left
   isMoving?: boolean;
 }
@@ -42,12 +41,18 @@ const useUsersStore = create<UsersStore>((set) => ({
     set((state) => ({
       users: state.users.map((u) =>
         u.id === userId
-          ? { ...u, x, y, direction: direction as Direction, isMoving }
+          ? {
+              ...u,
+              x,
+              y,
+              direction: direction as Direction, // number -> Direction 캐스팅
+              isMoving,
+            }
           : u,
       ),
     })),
 
-  // x,y 파라미터에 기본값(500,400) 등 임의로 지정
+  // x,y 파라미터에 기본값(500,400)
   addUser: (id, nickname, x = 500, y = 400) =>
     set((state) => {
       // 이미 존재하면 위치만 갱신
@@ -63,14 +68,13 @@ const useUsersStore = create<UsersStore>((set) => ({
         nickname,
         x,
         y,
-        characterType: "character1", // 기본값
+        characterType: "character1", // 기본 캐릭터
         direction: 0,
         isMoving: false,
       };
       return { users: [...state.users, newUser] };
     }),
 
-  // 유저 제거 (혹시 필요 시 사용)
   removeUser: (id) =>
     set((state) => ({
       users: state.users.filter((u) => u.id !== id),

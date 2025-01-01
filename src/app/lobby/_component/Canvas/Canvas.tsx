@@ -1,4 +1,4 @@
-// **수정 후 코드**: components/LobbyCanvas/LobbyCanvas.tsx
+// components/LobbyCanvas/LobbyCanvas.tsx
 "use client";
 
 import Image from "next/image";
@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 // ------------------ [NextAuth] ------------------
 import { useSession } from "next-auth/react";
 import { useEffect, useRef, useState } from "react";
+import { v4 as uuid } from "uuid"; // uuid 임포트 (로컬스토리지 생성용)
 
 import useLobbySocketEvents from "@/hooks/lobby/useLobbySocketEvents";
 import useLoadSprites, {
@@ -111,30 +112,47 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   // ------------------ 세션 정보 (NextAuth) ------------------
-  // status: "loading" | "authenticated" | "unauthenticated"
   const { data: session, status } = useSession();
 
-  // ★ 나의 userId (NextAuth에서 가져온 Google 계정 식별자)
-  const myUserId = session?.user?.id || "anonymous";
+  // (1) 로컬 스토리지에서 client_id 가져오기 (uuid)
+  const [localClientId, setLocalClientId] = useState<string>("anonymous");
+  useEffect(() => {
+    const stored = localStorage.getItem("client_id");
+    if (stored) {
+      setLocalClientId(stored);
+    } else {
+      const newId = uuid();
+      localStorage.setItem("client_id", newId);
+      setLocalClientId(newId);
+    }
+  }, []);
 
-  // (1) 소켓 연결 커스텀 훅 (roomId = "floor07" 가정)
-  // userId에 myUserId를 전달
+  // (2) 소켓 연결 커스텀 훅
   const { emitMovement } = useLobbySocketEvents({
     roomId: "floor07",
-    userId: myUserId,
+    userId: localClientId, // 로컬스토리지 uuid 사용
   });
 
-  // (2) 내가 스토어에 등록되어 있는지 확인, 없으면 addUser
-  // 세션이 authenticated 상태가 되면 등록
+  // (3) 내가 스토어에 등록되어 있는지 확인, 없으면 addUser
   const { addUser, users } = useUsersStore();
   useEffect(() => {
-    if (status === "authenticated" && session.user?.id) {
-      // 이미 존재하면 내부에서 무시됨
-      addUser(session.user.id, session.user.name || "noname");
-    }
-  }, [status, session, addUser]);
+    if (!localClientId) return;
 
-  // 상태: 캔버스 뷰포트 크기
+    // 세션이 로딩 중이면 대기
+    if (status === "loading") {
+      return;
+    }
+
+    // 세션 로딩이 끝났다면:
+    const nickname =
+      status === "authenticated" && session?.user?.name
+        ? session.user.name
+        : "Guest";
+
+    addUser(localClientId, nickname);
+  }, [localClientId, status, session, addUser]);
+
+  // 캔버스 뷰포트 크기
   const [canvasSize, setCanvasSize] = useState<{ w: number; h: number }>({
     w: MAP_CONSTANTS.CANVAS_WIDTH,
     h: MAP_CONSTANTS.CANVAS_HEIGHT,
@@ -228,12 +246,12 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     alert(`문제 #${dailyProblem.id}를 푸셨군요!`);
 
     const { users } = useUsersStore.getState();
-    const me = users.find((u) => u.id === myUserId);
+    const me = users.find((u) => u.id === localClientId);
     if (me) {
       setDailySolvedUsers((prev) => [
         ...prev,
         {
-          userId: myUserId,
+          userId: localClientId,
           nickname: me.nickname,
           solvedProblemId: dailyProblem.id,
           solvedDate: new Date().toISOString().split("T")[0],
@@ -252,7 +270,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
   const isAnyModalOpen =
     npc1ModalOpen || npc2ModalOpen || noticeModalOpen || meetingModalOpen;
 
-  // 키 입력 상태 (pressedKeys)
+  // 키 입력 상태
   const [pressedKeys, setPressedKeys] = useState<Record<string, boolean>>({});
 
   // 모달 열릴 때 이동키 초기화
@@ -265,7 +283,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
   // ★ 포탈/NPC 스페이스바 처리
   function handleSpacebarInteraction() {
     const { users } = useUsersStore.getState();
-    const me = users.find((u) => u.id === myUserId);
+    const me = users.find((u) => u.id === localClientId);
     if (!me) return;
 
     // 내 캐릭터 사각 영역
@@ -290,7 +308,6 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
 
         // "마이룸"
         if (portal.name === "마이룸") {
-          // 세션 status 확인
           if (status === "loading") {
             alert("세션 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.");
             return;
@@ -379,17 +396,16 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     // 모달/채팅 열림 시 이동X
     if (chatOpen || isAnyModalOpen) return;
 
-    // 스토어에서 나를 찾음
     const { users, updateUserPosition } = useUsersStore.getState();
-    const meIndex = users.findIndex((u) => u.id === myUserId);
-    if (meIndex < 0) return; // 아직 내 정보가 스토어에 없으면 이동 불가
+    const meIndex = users.findIndex((u) => u.id === localClientId);
+    if (meIndex < 0) return;
 
     const me = users[meIndex];
     let { x, y } = me;
     const newDir = getDirectionFromKeys(throttledPressedKeys);
 
     if (newDir === null) {
-      updateUserPosition(myUserId, x, y, me.direction, false);
+      updateUserPosition(localClientId, x, y, me.direction, false);
       return;
     }
 
@@ -415,12 +431,18 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     }
 
     if (moved) {
-      updateUserPosition(myUserId, x, y, newDir, true);
+      updateUserPosition(localClientId, x, y, newDir, true);
       emitMovement(x, y, newDir);
     } else {
-      updateUserPosition(myUserId, x, y, newDir, false);
+      updateUserPosition(localClientId, x, y, newDir, false);
     }
-  }, [throttledPressedKeys, isAnyModalOpen, chatOpen, emitMovement, myUserId]);
+  }, [
+    throttledPressedKeys,
+    isAnyModalOpen,
+    chatOpen,
+    emitMovement,
+    localClientId,
+  ]);
 
   // rAF로 캔버스 렌더
   const zoomFactor = 2;
@@ -442,6 +464,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     let lastTime = 0;
     let animationId = 0;
 
+    // 캐릭터 애니메이션 frame 관리용
     const userFrameMap: Record<
       string,
       { frame: number; lastFrameTime: number }
@@ -458,7 +481,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
 
         // 카메라 (내 캐릭터 기준으로 중앙에 보여주기)
         const { users } = useUsersStore.getState();
-        const me = users.find((u) => u.id === myUserId);
+        const me = users.find((u) => u.id === localClientId);
 
         let cameraX = 0;
         let cameraY = 0;
@@ -592,7 +615,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     return () => {
       cancelAnimationFrame(animationId);
     };
-  }, [backgroundImage, npcImages, spriteImages, canvasSize, myUserId]);
+  }, [backgroundImage, npcImages, spriteImages, canvasSize, localClientId]);
 
   return (
     <>

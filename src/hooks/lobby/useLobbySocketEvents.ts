@@ -1,4 +1,4 @@
-// **수정 후 코드**: hooks/useLobbySocketEvents.ts
+// hooks/useLobbySocketEvents.ts
 "use client";
 
 import { useCallback, useEffect } from "react";
@@ -8,7 +8,7 @@ import useUsersStore from "@/store/useUsersStore";
 
 type LobbySocketEventsProps = {
   roomId: string;
-  userId: string;
+  userId: string; // 이 값이 localStorage의 uuid
 };
 
 interface MovementInfo {
@@ -20,7 +20,7 @@ interface MovementInfo {
 }
 
 interface SCEnterRoomData {
-  user_name: string; // 서버에서 보내주는 user id (또는 닉네임)
+  user_name: string; // 서버에서 user id 또는 닉네임
   position: {
     x: number;
     y: number;
@@ -92,7 +92,6 @@ export default function useLobbySocketEvents({
           .getState()
           .users.find((u) => u.id === data.user_id);
         if (stillExists) {
-          // 위치 그대로, direction 그대로, isMoving만 false
           useUsersStore
             .getState()
             .updateUserPosition(
@@ -103,7 +102,7 @@ export default function useLobbySocketEvents({
               false,
             );
         }
-      }, 200); // 200ms 뒤에 갱신 없음 -> 멈춤 처리
+      }, 200); // 200ms 뒤에 갱신 없으면 멈춤 처리
     };
 
     mainSocket.on("SC_MOVEMENT_INFO", onMovement);
@@ -121,7 +120,6 @@ export default function useLobbySocketEvents({
 
     const onEnterRoom = (data: SCEnterRoomData) => {
       // ex) { user_name, position: {x, y}, img_url, ...}
-      // user_name을 id 로 사용 (또는 서버에서 user_id 라는 키로 내려주면 더 명확)
       addUser(data.user_name, data.user_name, data.position.x, data.position.y);
     };
     mainSocket.on("SC_ENTER_ROOM", onEnterRoom);
