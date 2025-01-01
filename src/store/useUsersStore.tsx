@@ -6,11 +6,10 @@ import { create } from "zustand";
 type Direction = 0 | 1 | 2 | 3;
 
 export interface User {
-  id: string; // 여기선 로컬스토리지 uuid (혹은 세션ID) 등 유니크 식별자
+  id: string; // 유일 식별자 (user_id)
   x: number;
   y: number;
-  characterType: string;
-  nickname: string;
+  nickname: string; // 화면에 표시할 이름 (user_name)
   direction: Direction; // 0=Down,1=Up,2=Right,3=Left
   isMoving?: boolean;
 }
@@ -45,15 +44,15 @@ const useUsersStore = create<UsersStore>((set) => ({
               ...u,
               x,
               y,
-              direction: direction as Direction, // number -> Direction 캐스팅
+              direction: direction as Direction,
               isMoving,
             }
           : u,
       ),
     })),
 
-  // x,y 파라미터에 기본값(500,400)
-  addUser: (id, nickname, x = 500, y = 400) =>
+  // x,y의 기본값: 500,400
+  addUser: (id, nickname, x = 500, y = 500) =>
     set((state) => {
       // 이미 존재하면 위치만 갱신
       const exists = state.users.find((u) => u.id === id);
@@ -68,7 +67,6 @@ const useUsersStore = create<UsersStore>((set) => ({
         nickname,
         x,
         y,
-        characterType: "character1", // 기본 캐릭터
         direction: 0,
         isMoving: false,
       };
