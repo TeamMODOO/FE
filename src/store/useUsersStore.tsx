@@ -1,20 +1,19 @@
-// store/useUsersStore.ts
+// **수정 후 코드**: store/useUsersStore.ts
 "use client";
 
 import { create } from "zustand";
 
+type Direction = 0 | 1 | 2 | 3;
+
 export interface User {
-  id: string;
-  nickname: string;
+  id: string; // 구글 로그인 시 세션의 user.id 를 그대로 사용
   x: number;
   y: number;
   characterType: string;
-  avatarUrl?: string;
+  nickname: string;
 
-  // 4방향(0=down,1=up,2=right,3=left)
-  direction: number;
-  // 움직이고 있는지 여부
-  isMoving: boolean;
+  direction: Direction; // 0=Down,1=Up,2=Right,3=Left
+  isMoving?: boolean;
 }
 
 interface UsersStore {
@@ -27,62 +26,12 @@ interface UsersStore {
     direction: number,
     isMoving: boolean,
   ) => void;
-  addUser: (
-    id: string,
-    nickname: string,
-    x: number,
-    y: number,
-    avatarUrl?: string,
-  ) => void;
+  addUser: (id: string, nickname: string, x?: number, y?: number) => void;
+  removeUser: (id: string) => void;
 }
 
-// 초기 값 (예시)
-const initialUsers: User[] = [
-  {
-    id: "1",
-    nickname: "정글러1",
-    x: 550,
-    y: 450,
-    characterType: "character2",
-    avatarUrl: "/character/character2.png",
-
-    direction: 0,
-    isMoving: false,
-  },
-  {
-    id: "2",
-    nickname: "정글러2",
-    x: 600,
-    y: 500,
-    characterType: "character1",
-    avatarUrl: "/character/character1.png",
-
-    direction: 0,
-    isMoving: false,
-  },
-  {
-    id: "3",
-    nickname: "정글러3",
-    x: 700,
-    y: 400,
-    characterType: "character1",
-    avatarUrl: "/character/character1.png",
-
-    direction: 0,
-    isMoving: false,
-  },
-  {
-    id: "4",
-    nickname: "정글러4",
-    x: 800,
-    y: 300,
-    characterType: "character2",
-    avatarUrl: "/character/character2.png",
-
-    direction: 0,
-    isMoving: false,
-  },
-];
+// 초기값 제거
+const initialUsers: User[] = [];
 
 const useUsersStore = create<UsersStore>((set) => ({
   users: initialUsers,
@@ -92,13 +41,16 @@ const useUsersStore = create<UsersStore>((set) => ({
   updateUserPosition: (userId, x, y, direction, isMoving) =>
     set((state) => ({
       users: state.users.map((u) =>
-        u.id === userId ? { ...u, x, y, direction, isMoving } : u,
+        u.id === userId
+          ? { ...u, x, y, direction: direction as Direction, isMoving }
+          : u,
       ),
     })),
 
-  addUser: (id, nickname, x, y, avatarUrl) =>
+  // x,y 파라미터에 기본값(500,400) 등 임의로 지정
+  addUser: (id, nickname, x = 500, y = 400) =>
     set((state) => {
-      // 이미 존재하면 위치만 갱신 or 무시
+      // 이미 존재하면 위치만 갱신
       const exists = state.users.find((u) => u.id === id);
       if (exists) {
         return {
@@ -112,12 +64,17 @@ const useUsersStore = create<UsersStore>((set) => ({
         x,
         y,
         characterType: "character1", // 기본값
-        avatarUrl,
         direction: 0,
         isMoving: false,
       };
       return { users: [...state.users, newUser] };
     }),
+
+  // 유저 제거 (혹시 필요 시 사용)
+  removeUser: (id) =>
+    set((state) => ({
+      users: state.users.filter((u) => u.id !== id),
+    })),
 }));
 
 export default useUsersStore;
