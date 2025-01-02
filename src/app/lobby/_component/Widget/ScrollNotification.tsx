@@ -18,21 +18,25 @@ export const ScrollNotification = ({
 
   return (
     <div className="absolute bottom-20 left-1/2 -translate-x-1/2">
-      <Button
-        variant={notification > 0 ? "default" : "outline"}
-        size="sm"
-        className="shadow-lg transition-all hover:scale-105 focus:ring-2 focus:ring-primary focus:ring-offset-2"
-        onClick={scrollDown}
-      >
-        {notification > 0 ? (
-          <>
-            <span className="mr-2">New messages</span>
-            <Badge variant="secondary">{notification}</Badge>
-          </>
-        ) : (
-          <ArrowDown className="size-4" />
-        )}
-      </Button>
+      {userScrolled && (
+        <Button
+          variant={notification > 0 ? "default" : "outline"}
+          size="sm"
+          className={`shadow-lg transition-all hover:scale-105 focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
+            notification === 0 ? "bg-black text-white hover:bg-gray-800" : ""
+          }`}
+          onClick={scrollDown}
+        >
+          {notification > 0 ? (
+            <>
+              <span className="mr-2">New messages</span>
+              <Badge variant="secondary">{notification}</Badge>
+            </>
+          ) : (
+            <ArrowDown className="size-4" />
+          )}
+        </Button>
+      )}
     </div>
   );
 };
