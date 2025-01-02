@@ -17,7 +17,7 @@ const useAudioSocketConnect = ({ roomId }: UseAudioSocketConnectType) => {
   );
 
   useEffect(() => {
-    const AUDIO_SERVER_URL = process.env.NEXT_WEB_RTC_SERVER_URL;
+    const AUDIO_SERVER_URL = process.env.NEXT_PUBLIC_WEB_RTC_URL;
 
     if (!roomId) return;
 

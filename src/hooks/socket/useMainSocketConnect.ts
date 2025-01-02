@@ -42,8 +42,10 @@ const useMainSocketConnect = () => {
     const newMainSocket = io(baseURL!, {
       path: "/sio/sockets",
       query: {
-        client_id: clientId, // 클라이언트 ID
-        user_name: userName, // 세션에서 가져온 닉네임(혹은 이름)
+        room_id: "room_id", // 방 ID
+        room_type: "room_type", // 방 타입
+        client_id: clientId, // 클라이언트 ID를 query로 전달
+        user_name: "user_name", // 사용자 이름
       },
     });
 
