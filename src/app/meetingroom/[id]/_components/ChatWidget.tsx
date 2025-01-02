@@ -12,23 +12,28 @@ import {
 import { Input } from "@/components/ui/input";
 import { useChatScroll } from "@/hooks/chat/useChatScroll";
 import { useChatSocket } from "@/hooks/chat/useChatSocket";
+import { formatTime } from "@/lib/utils/date";
 
 export default function ChatWidget({ roomId }: { roomId: string }) {
   const [isOpen, setIsOpen] = useState(false);
-  const toggleChat = () => setIsOpen(!isOpen);
+  const [notification, setNotification] = useState<number>(0);
 
   const { messageList, messageValue, setMessageValue, handleSendMessage } =
     useChatSocket({
-      roomType: "meeting_room",
-      roomId: "floor07", // 수정 필요
+      roomType: "floor",
+      roomId: "floor07",
+      setNotification,
     });
 
   const scrollRef = useRef<HTMLDivElement>(null);
-  const { userScrolled, notification, handleOnScroll, scrollDown } =
-    useChatScroll({
-      scrollRef: scrollRef as RefObject<HTMLDivElement>,
-      messageList,
-    });
+  const { userScrolled, handleOnScroll, scrollDown } = useChatScroll({
+    scrollRef: scrollRef as RefObject<HTMLDivElement>,
+    setNotification,
+    messageList,
+    isOpen,
+  });
+
+  const toggleChat = () => setIsOpen(!isOpen);
 
   const sendMessage = (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,8 +57,18 @@ export default function ChatWidget({ roomId }: { roomId: string }) {
           >
             <div className="mt-auto">
               {messageList.map((list, index) => (
-                <div key={index} className="mb-2 rounded-lg bg-secondary p-2">
-                  {list.user_name}: {list.message}{" "}
+                <div key={index} className="mb-2">
+                  <div className="rounded-lg bg-secondary p-3">
+                    <div className="flex flex-col gap-1">
+                      <div className="flex justify-between">
+                        <span className="font-medium">{list.user_name}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {formatTime(list.create_at)}
+                        </span>
+                      </div>
+                      <span className="text-sm">{list.message}</span>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
@@ -63,7 +78,7 @@ export default function ChatWidget({ roomId }: { roomId: string }) {
               <Input
                 value={messageValue}
                 onChange={(e) => setMessageValue(e.target.value)}
-                placeholder="Type a message..."
+                placeholder="send message"
               />
               <Button type="submit" size="icon">
                 <Send className="size-4" />
@@ -79,6 +94,11 @@ export default function ChatWidget({ roomId }: { roomId: string }) {
       )}
       <Button onClick={toggleChat} size="icon" className="size-12 rounded-full">
         <MessageCircle className="size-6" />
+        {!isOpen && notification > 0 && (
+          <div className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-destructive text-xs font-medium text-destructive-foreground">
+            {notification}
+          </div>
+        )}
       </Button>
     </div>
   );
