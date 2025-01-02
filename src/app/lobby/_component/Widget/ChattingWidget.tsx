@@ -1,7 +1,7 @@
 "use client";
 
 import { MessageCircle, Send, X } from "lucide-react";
-import { RefObject, useEffect, useRef } from "react";
+import { RefObject, useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -24,18 +24,22 @@ interface ChatWidgetProps {
 }
 
 export default function ChattingWidget({ isOpen, setIsOpen }: ChatWidgetProps) {
+  const [notification, setNotification] = useState<number>(0);
+
   const { messageList, messageValue, setMessageValue, handleSendMessage } =
     useChatSocket({
       roomType: "floor",
       roomId: "floor07",
+      setNotification,
     });
 
   const scrollRef = useRef<HTMLDivElement>(null);
-  const { userScrolled, notification, handleOnScroll, scrollDown } =
-    useChatScroll({
-      scrollRef: scrollRef as RefObject<HTMLDivElement>,
-      messageList,
-    });
+  const { userScrolled, handleOnScroll, scrollDown } = useChatScroll({
+    scrollRef: scrollRef as RefObject<HTMLDivElement>,
+    setNotification,
+    messageList,
+    isOpen,
+  });
 
   useEffect(() => {
     if (isOpen) {
@@ -113,6 +117,11 @@ export default function ChattingWidget({ isOpen, setIsOpen }: ChatWidgetProps) {
           className="fixed right-4 top-4 z-50 size-12 rounded-full"
         >
           <MessageCircle className="size-6" />
+          {notification > 0 && (
+            <div className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-destructive text-xs font-medium text-destructive-foreground">
+              {notification}
+            </div>
+          )}
         </Button>
       )}
     </>
