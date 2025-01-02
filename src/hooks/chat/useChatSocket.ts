@@ -1,6 +1,12 @@
 "use client";
 import { useSession } from "next-auth/react";
-import { useCallback, useEffect, useState } from "react";
+import {
+  Dispatch,
+  SetStateAction,
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
 
 import { ChattingResponse, ChattingType } from "@/model/chatting";
 import useMainSocketStore from "@/store/useMainSocketStore";
@@ -8,9 +14,14 @@ import useMainSocketStore from "@/store/useMainSocketStore";
 type ChatSocketType = {
   roomType: string;
   roomId: string;
+  setNotification: Dispatch<SetStateAction<number>>;
 };
 
-export const useChatSocket = ({ roomType, roomId }: ChatSocketType) => {
+export const useChatSocket = ({
+  roomType,
+  roomId,
+  setNotification,
+}: ChatSocketType) => {
   const mainSocket = useMainSocketStore((state) => state.socket);
   const [messageList, setMessageList] = useState<ChattingType[]>([]);
   const [messageValue, setMessageValue] = useState<string>("");
@@ -29,6 +40,7 @@ export const useChatSocket = ({ roomType, roomId }: ChatSocketType) => {
       create_at: new Date(),
     };
 
+    setNotification((prev) => prev + 1);
     setMessageList((prev) => [...prev, addMessageInfo]);
   }, []);
 
