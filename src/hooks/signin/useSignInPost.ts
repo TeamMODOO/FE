@@ -53,6 +53,9 @@ export function useSignInPost() {
         throw new Error("필수 로그인 정보가 없습니다.");
       }
 
+      // console.log(session.user);
+      // console.log(session.user.id);
+
       const requestBody = {
         email: session.user.email,
         name: session.user.name,
