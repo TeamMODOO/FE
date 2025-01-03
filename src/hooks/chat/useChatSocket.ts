@@ -11,17 +11,9 @@ import {
 import { ChattingResponse, ChattingType } from "@/model/chatting";
 import useMainSocketStore from "@/store/useMainSocketStore";
 
-type ChatSocketType = {
-  roomType: string;
-  roomId: string;
-  setNotification: Dispatch<SetStateAction<number>>;
-};
-
-export const useChatSocket = ({
-  roomType,
-  roomId,
-  setNotification,
-}: ChatSocketType) => {
+export const useChatSocket = (
+  setNotification: Dispatch<SetStateAction<number>>,
+) => {
   const mainSocket = useMainSocketStore((state) => state.socket);
   const [messageList, setMessageList] = useState<ChattingType[]>([]);
   const [messageValue, setMessageValue] = useState<string>("");
@@ -42,16 +34,7 @@ export const useChatSocket = ({
       return;
     }
 
-    // 1) 로컬 스토리지에 있는 uuid 가져오기
-    const clientId = localStorage.getItem("client_id") || "anonymous";
-
-    // (만약 로컬 스토리지에 없다면 fallback으로 "anonymous")
-
-    // 2) 메시지 정보
     const messageInfo = {
-      room_type: roomType,
-      room_id: roomId,
-      client_id: clientId,
       user_name: session && session.user ? session.user.name : "Guest",
       message: messageValue,
     };
@@ -62,6 +45,7 @@ export const useChatSocket = ({
 
   useEffect(() => {
     if (!mainSocket) return;
+
     mainSocket.on("SC_CHAT", addMessage);
   }, [mainSocket, addMessage]);
 
