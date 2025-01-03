@@ -16,9 +16,20 @@ import useLoadSprites from "@/hooks/performance/useLoadSprites";
 import useThrottle from "@/hooks/performance/useThrottle";
 // ------------------ Models & Types ------------------
 import { Funiture } from "@/model/Funiture";
-import { User } from "@/model/User";
-import { Direction } from "@/model/User";
+import { Direction, User } from "@/model/User";
 
+// ------------------ 상수/데이터 ------------------
+import {
+  CHAR_SCALE,
+  defaultBoard,
+  defaultPortfolio,
+  defaultResume,
+  defaultTechnologyStack,
+  defaultUsers,
+  interiorImages,
+  MAP_CONSTANTS,
+  techStackList,
+} from "../../_constant";
 // ------------------ Modals ------------------
 import BoardModal from "../BoardModal/BoardModal";
 import FurnitureInfoModal from "../FurnitureInfoModal/FurnitureInfoModal";
@@ -29,42 +40,10 @@ import ResumeModal from "../ResumeModal/ResumeModal";
 import TechStackModal from "../TechStackModal/TechStackModal";
 // ------------------ Style & Assets ------------------
 import Style from "./Canvas.style";
-import interiorImages from "./Interior";
 
-/** 기술스택 목록 예 */
-const techStackList = [
-  "Figma",
-  "React",
-  "TypeScript",
-  "Python",
-  "Slack",
-  "JavaScript",
-  "Next.js",
-  "서비스 기획",
-  "JIRA",
-  "Confluence",
-  "Git",
-  "Flutter",
-  "GitHub",
-  "React Native",
-  "Excel",
-  "ppt",
-  "HTML/CSS",
-  "Redux",
-  "인공지능(AI)",
-  "Photoshop",
-  "C++",
-  "Swift",
-  "SwiftUI",
-  "iOS",
-];
-
-// ------------------ 상수 ------------------
-const MAP_CONSTANTS = {
-  SPEED: 30, // 이동 속도
-};
-const CHAR_SCALE = 3;
-
+/**
+ * MyRoomCanvas 컴포넌트
+ */
 const MyRoomCanvas: React.FC = () => {
   // ------------------ 소켓 연결 ------------------
   const myUserId = "1";
@@ -94,136 +73,17 @@ const MyRoomCanvas: React.FC = () => {
   }, [canvasSize]);
 
   // ------------------ 사용자 목록 ------------------
-  const [users, setUsers] = useState<User[]>([
-    {
-      id: "1",
-      x: 500,
-      y: 500,
-      nickname: "정글러1",
-      characterType: "sprite1",
-      direction: 0,
-      isMoving: false,
-    },
-    {
-      id: "2",
-      x: 500,
-      y: 450,
-      nickname: "정글러2",
-      characterType: "sprite2",
-      direction: 0,
-      isMoving: false,
-    },
-  ]);
+  const [users, setUsers] = useState<User[]>(defaultUsers);
 
   // ------------------ 이력서/포트폴리오/기술스택 ------------------
-  const [resume, setResume] = useState<Funiture[]>([
-    {
-      id: "resume-1",
-      x: 100,
-      y: 100,
-      funitureType: "none",
-      funiturename: "이력서(PDF)",
-    },
-  ]);
-  const [portfolio, setPortfolio] = useState<Funiture[]>([
-    {
-      id: "portfolio-1",
-      x: 600,
-      y: 100,
-      funitureType: "none",
-      funiturename: "포트폴리오 링크1",
-    },
-    {
-      id: "portfolio-2",
-      x: 780,
-      y: 180,
-      funitureType: "none",
-      funiturename: "포트폴리오 링크2",
-    },
-    {
-      id: "portfolio-3",
-      x: 900,
-      y: 90,
-      funitureType: "none",
-      funiturename: "포트폴리오 링크3",
-    },
-  ]);
-  const [technologyStack, setTechnologyStack] = useState<Funiture[]>([
-    {
-      id: "technologyStack-1",
-      x: 230,
-      y: 470,
-      funitureType: "none",
-      funiturename: "기술스택1",
-    },
-    {
-      id: "technologyStack-2",
-      x: 370,
-      y: 550,
-      funitureType: "none",
-      funiturename: "기술스택2",
-    },
-    {
-      id: "technologyStack-3",
-      x: 600,
-      y: 300,
-      funitureType: "none",
-      funiturename: "기술스택3",
-    },
-    {
-      id: "technologyStack-4",
-      x: 650,
-      y: 550,
-      funitureType: "none",
-      funiturename: "기술스택4",
-    },
-    {
-      id: "technologyStack-5",
-      x: 1150,
-      y: 600,
-      funitureType: "none",
-      funiturename: "기술스택5",
-    },
-    {
-      id: "technologyStack-6",
-      x: 1000,
-      y: 450,
-      funitureType: "none",
-      funiturename: "기술스택6",
-    },
-    {
-      id: "technologyStack-7",
-      x: 1160,
-      y: 400,
-      funitureType: "none",
-      funiturename: "기술스택7",
-    },
-    {
-      id: "technologyStack-8",
-      x: 1250,
-      y: 200,
-      funitureType: "none",
-      funiturename: "기술스택8",
-    },
-    {
-      id: "technologyStack-9",
-      x: 750,
-      y: 400,
-      funitureType: "none",
-      funiturename: "기술스택9",
-    },
-  ]);
+  const [resume, setResume] = useState<Funiture[]>(defaultResume);
+  const [portfolio, setPortfolio] = useState<Funiture[]>(defaultPortfolio);
+  const [technologyStack, setTechnologyStack] = useState<Funiture[]>(
+    defaultTechnologyStack,
+  );
 
   // ------------------ 게시판(방명록) ------------------
-  const [board] = useState<Funiture[]>([
-    {
-      id: "board1",
-      x: 190,
-      y: 60,
-      funitureType: "board",
-      funiturename: "게시판",
-    },
-  ]);
+  const [board] = useState<Funiture[]>(defaultBoard);
   const [isBoardOpen, setIsBoardOpen] = useState(false);
 
   // 게시판 댓글
@@ -331,10 +191,7 @@ const MyRoomCanvas: React.FC = () => {
     myUserId,
     isAnyModalOpen,
     portal,
-
-    // (1) 방명록은 스페이스바로 열지 않으므로, boardOpenSetter는 전달 X
-    // 예) boardOpenSetter: setIsBoardOpen,
-    //   → 주석/삭제: (우리 요구사항: 방명록은 스페이스로 열지 않기)
+    // 방명록은 스페이스바로 열지 않음
   });
 
   // 통합 pressedKeys에 동기화
@@ -471,6 +328,7 @@ const MyRoomCanvas: React.FC = () => {
   useEffect(() => {
     if (!ownerProfile) return;
     // 이력서/포트폴리오/기술스택 업데이트 로직
+    // (예: 서버로부터 좌표나 정보 받아서 setResume, setPortfolio 등등)
   }, [ownerProfile]);
 
   return (
@@ -486,7 +344,7 @@ const MyRoomCanvas: React.FC = () => {
       {/* Canvas */}
       <canvas ref={canvasRef} className={Style.absoluteCanvasClass} />
 
-      {/* 가구 */}
+      {/* 가구 (이력서 / 포트폴리오 / 기술스택) */}
       {[...resume, ...portfolio, ...technologyStack].map((item) => (
         <div
           key={item.id}
@@ -505,13 +363,13 @@ const MyRoomCanvas: React.FC = () => {
         </div>
       ))}
 
-      {/* 게시판 */}
+      {/* 게시판(방명록) */}
       {board.map((item) => (
         <div
           key={item.id}
           className={Style.boardContainerClass}
           style={{ left: item.x, top: item.y }}
-          onClick={() => setIsBoardOpen(true)} // ← 게시판은 클릭으로만
+          onClick={() => setIsBoardOpen(true)} // 클릭으로만 열림
         >
           <NextImage
             src="/furniture/board.png"
@@ -549,7 +407,7 @@ const MyRoomCanvas: React.FC = () => {
         <div className={Style.furnitureTextClass}>{portal.name}</div>
       </div>
 
-      {/* 버튼 */}
+      {/* 하단 버튼들 (이력서/포폴/기술스택 추가) */}
       <div className={Style.bottomButtonsClass}>
         <Button
           onClick={handleOpenResumeModal}
@@ -571,7 +429,7 @@ const MyRoomCanvas: React.FC = () => {
         </Button>
       </div>
 
-      {/* 모달들 */}
+      {/* 모달: 이력서 */}
       <ResumeModal
         open={resumeModalOpen}
         onClose={setResumeModalOpen}
@@ -579,6 +437,8 @@ const MyRoomCanvas: React.FC = () => {
         setResumeFile={setResumeFile}
         onSave={handleSaveResume}
       />
+
+      {/* 모달: 포트폴리오 */}
       <PortfolioModal
         open={portfolioModalOpen}
         onClose={setPortfolioModalOpen}
@@ -586,6 +446,8 @@ const MyRoomCanvas: React.FC = () => {
         setPortfolioLink={setPortfolioLink}
         onSave={handleSavePortfolio}
       />
+
+      {/* 모달: 기술스택 */}
       <TechStackModal
         open={techStackModalOpen}
         onClose={setTechStackModalOpen}
@@ -594,11 +456,15 @@ const MyRoomCanvas: React.FC = () => {
         setSelectedTechList={setSelectedTechList}
         onSave={handleSaveTechStack}
       />
+
+      {/* 모달: 가구 정보 보기 */}
       <FurnitureInfoModal
         open={viewModalOpen}
         onClose={setViewModalOpen}
         furniture={selectedFurnitureData}
       />
+
+      {/* 모달: 게시판(방명록) */}
       <BoardModal
         open={isBoardOpen}
         onClose={setIsBoardOpen}
@@ -609,11 +475,15 @@ const MyRoomCanvas: React.FC = () => {
         setVisitorMessage={setVisitorMessage}
         handleAddComment={handleAddComment}
       />
+
+      {/* 모달: PDF 뷰어 */}
       <PdfViewerModal
         open={pdfModalOpen}
         onClose={setPdfModalOpen}
         pdfUrl={pdfUrl}
       />
+
+      {/* 모달: 포트폴리오 링크 뷰어 */}
       <PortfolioLinkViewModal
         open={portfolioLinkViewModalOpen}
         onClose={setPortfolioLinkViewModalOpen}
