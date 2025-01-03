@@ -1,4 +1,4 @@
-// src/hooks/signin/useSignIn.ts
+// src/hooks/signin/useSignInPost.ts
 "use client";
 
 import axios, { AxiosError, AxiosResponse } from "axios";
@@ -32,32 +32,38 @@ export function useSignInPost() {
   const [data, setData] = useState<LoginResponse | null>(null);
 
   useEffect(() => {
-    if (
-      status === "authenticated" &&
-      session?.user?.email &&
-      session.user.name &&
-      session.user.id &&
-      !hasAccessTokenCookie()
-    ) {
+    if (status === "authenticated" && !hasAccessTokenCookie()) {
       // 이미 로그인된 사용자가 있다면 서버로 로그인 요청을 보냄
-      signIn();
+      if (session?.user?.email && session.user.name && session.user.id) {
+        // console.log(session.user);
+        // console.log(hasAccessTokenCookie());
+        signIn();
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session, status]);
+  }, [status, session]);
 
   async function signIn() {
     try {
       setLoading(true);
       setError(null);
 
-      // 백엔드 명세에 따른 필드들
+      // 필수 데이터 확인
+      if (!session?.user?.email || !session?.user?.name || !session?.user?.id) {
+        throw new Error("필수 로그인 정보가 없습니다.");
+      }
+
       const requestBody = {
-        email: session?.user?.email,
-        name: session?.user?.name,
-        google_id: session?.user?.id,
-        google_image_url: session?.user?.image,
+        email: session.user.email,
+        name: session.user.name,
+        google_id: session.user.id,
+        google_image_url: session.user.image || null, // 선택적 필드
       };
+
       const baseUrl = process.env.NEXT_PUBLIC_API_SERVER_PATH;
+      if (!baseUrl) {
+        throw new Error("API 서버 주소가 설정되지 않았습니다.");
+      }
       const response: AxiosResponse<LoginResponse> = await axios.post(
         `${baseUrl}/users/login`,
         requestBody,
@@ -69,9 +75,11 @@ export function useSignInPost() {
         },
       );
 
+      // console.log(response.data);
       setData(response.data); // { message: "로그인 성공" }
       // console.log("로그인 성공");
     } catch (err: unknown) {
+      // console.error("로그인 요청 실패:", err);
       const axiosError = err as AxiosError<ErrorResponse>;
       setError(
         axiosError.response?.data?.detail ||
