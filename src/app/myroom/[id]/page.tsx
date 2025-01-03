@@ -2,7 +2,7 @@
 
 import useMainSocketConnect from "@/hooks/socket/useMainSocketConnect";
 
-import MyRoomCanvas from "./_component/Canvas/Canvas";
+import MyRoomCanvas from "./_component/Canvas/MyRoomCanvas";
 
 export default function Page() {
   useMainSocketConnect();
