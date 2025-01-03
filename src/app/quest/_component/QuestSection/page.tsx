@@ -245,7 +245,7 @@ export default function QuestSection() {
           <CodeMirror
             className={styles.textEditor}
             value={code}
-            height="80dvh"
+            height="100%"
             theme="dark"
             placeholder="// 문제를 풀어 용을 무찌르세요!"
             extensions={[
