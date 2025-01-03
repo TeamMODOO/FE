@@ -15,51 +15,20 @@ import { NpcInfo } from "@/model/Npc";
 import { PortalInfo } from "@/model/Portal";
 import { User } from "@/model/User";
 
+// (5) 분리된 상수/데이터 import
+import {
+  CHAR_SCALE,
+  initialNpcs,
+  initialPortals,
+  MAP_DEFAULT_HEIGHT,
+  MAP_DEFAULT_WIDTH,
+  QUEST_MAP_SPEED,
+} from "../../_constant";
 // (3) 모달들
 import { NpcModal } from "../Npc/NpcModal";
 import RankingModal from "../RankingModal/RankingModal";
 // (4) 스타일
 import Style from "./QuestMapCanvas.style";
-
-// (5) 상수
-const QUEST_MAP_SPEED = 20;
-const CHAR_SCALE = 2; // 2배
-const MAP_DEFAULT_WIDTH = 1400;
-const MAP_DEFAULT_HEIGHT = 700;
-
-// (6) 초기 NPC/포탈 데이터
-const initialNpcs: NpcInfo[] = [
-  {
-    x: 580,
-    y: 250,
-    width: 200,
-    height: 200,
-    name: "퀘스트NPC1",
-    image: "/character/npc4.webp",
-    modalTitle: "퀘스트 NPC #1",
-  },
-  {
-    x: 200,
-    y: 300,
-    width: 60,
-    height: 90,
-    name: "퀘스트NPC2",
-    image: "/character/character2.png",
-    modalTitle: "퀘스트 NPC #2",
-  },
-];
-const initialPortals: PortalInfo[] = [
-  {
-    x: 620,
-    y: 50,
-    width: 120,
-    height: 120,
-    name: "포탈1",
-    // DOM 으로 표시 or Canvas 내 표시 중 원하는대로
-    image: "/furniture/portal.gif",
-    route: "/lobby",
-  },
-];
 
 const QuestMapCanvas: React.FC = () => {
   const router = useRouter();
@@ -286,7 +255,7 @@ const QuestMapCanvas: React.FC = () => {
     ));
   };
 
-  // ------------------ (K) 모달들: 닫을 때도 잘 닫히도록 처리 ------------------
+  // ------------------ (K) 모달들 ------------------
   return (
     <>
       <div
