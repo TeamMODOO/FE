@@ -4,7 +4,7 @@ import { Socket } from "socket.io-client";
 import { Button } from "@/components/ui/button";
 
 interface HeaderProps {
-  socket: Socket;
+  audioSocket: Socket;
   roomId: string | null;
   isMuted: boolean;
   localStream: MediaStream | null;
@@ -14,7 +14,7 @@ interface HeaderProps {
 }
 
 export function Header({
-  socket,
+  audioSocket,
   roomId,
   isMuted,
   localStream,
@@ -28,7 +28,7 @@ export function Header({
         <p>
           My ID:
           <span className="font-mono">
-            {socket ? socket.id : "Not connected"}
+            {audioSocket ? audioSocket.id : "Not connected"}
           </span>
         </p>
         <p>
