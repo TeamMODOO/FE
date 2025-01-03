@@ -25,14 +25,7 @@ export const useChatSocket = ({
   const mainSocket = useMainSocketStore((state) => state.socket);
   const [messageList, setMessageList] = useState<ChattingType[]>([]);
   const [messageValue, setMessageValue] = useState<string>("");
-  const { data: session, status } = useSession();
-  // const [userName, setUserName] = useState<string>("Guest");
-  // useEffect(() => {
-  //   if (status === "loading") return;
-
-  //   if (status === "authenticated" && session && session?.user?.name)
-  //     setUserName(session.user.name);
-  // }, [status, session]);
+  const { data: session } = useSession();
 
   const addMessage = useCallback((newMessage: ChattingResponse) => {
     const addMessageInfo = {
