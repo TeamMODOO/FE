@@ -30,8 +30,10 @@ function Page() {
   useMainSocketConnect({ roomType: ROOM_TYPE, roomId: roomId });
   useAudioSocketConnect({ roomId: roomId });
 
-  const socket: Socket = useAudioSocketStore((state) => state.socket) as Socket;
-  const isConnected = useAudioSocketStore((state) => state.isConnected);
+  const audioSocket: Socket = useAudioSocketStore(
+    (state) => state.socket,
+  ) as Socket;
+  const isAudioConnected = useAudioSocketStore((state) => state.isConnected);
 
   const [device, setDevice] = useState<mediasoupClient.Device | null>(null);
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
@@ -57,39 +59,39 @@ function Page() {
     createDevice,
     createSendTransport,
     createRecvTransport,
-  } = useWebRTC(socket, isConnected, roomId);
+  } = useWebRTC(audioSocket, isAudioConnected, roomId);
 
   const {
     localVideoRef,
     getLocalAudioStreamAndTrack,
     startCamera,
     stopCamera,
-  } = useMediaDevices(socket, isConnected, roomId);
+  } = useMediaDevices(audioSocket, isAudioConnected, roomId);
 
-  const { consume } = useRoom(
-    socket,
-    isConnected,
+  const { consume } = useRoom({
+    audioSocket,
+    isAudioConnected,
     roomId,
     deviceRef,
     recvTransportRef,
     remoteStreams,
     setRemoteStreams,
     setPeerStates,
-  );
+  });
 
   usePeerEvents({
-    socket,
-    isConnected,
+    audioSocket,
+    isAudioConnected,
     setPeers,
     setPeerStates,
   });
 
   const joinRoom = async () => {
-    if (!socket || !isConnected || !roomId) return;
+    if (!audioSocket || !isAudioConnected || !roomId) return;
 
-    socket.emit(
+    audioSocket.emit(
       "join-room",
-      { roomId, peerId: socket.id },
+      { roomId, peerId: audioSocket.id },
       async (response: any) => {
         if (response.error) {
           throw new Error("Error joining room:", response.error);
@@ -118,7 +120,7 @@ function Page() {
         );
         setRecvTransport(newRecvTransport);
 
-        socket.on("new-producer", handleNewProducer);
+        audioSocket.on("new-producer", handleNewProducer);
 
         const audioTrack = await getLocalAudioStreamAndTrack();
         if (newSendTransport) {
@@ -129,7 +131,7 @@ function Page() {
           setAudioProducer(newAudioProducer);
         }
 
-        setPeers(peerIds.filter((id: string) => id !== socket.id));
+        setPeers(peerIds.filter((id: string) => id !== audioSocket.id));
 
         for (const producerInfo of existingProducers) {
           await consume(producerInfo);
@@ -141,9 +143,9 @@ function Page() {
   };
 
   const leaveRoom = () => {
-    if (!socket || !isConnected) return;
+    if (!audioSocket || !isAudioConnected) return;
 
-    socket.emit("leave-room", (response: any) => {
+    audioSocket.emit("leave-room", (response: any) => {
       if (response && response.error) {
         throw new Error("Error leaving room:", response.error);
       }
@@ -167,7 +169,7 @@ function Page() {
         setDevice(null);
       }
 
-      socket.off("new-producer", handleNewProducer);
+      audioSocket.off("new-producer", handleNewProducer);
       router.push("/lobby");
     });
   };
@@ -177,7 +179,7 @@ function Page() {
   };
 
   const toggleCamera = async () => {
-    if (!socket || !isConnected) return;
+    if (!audioSocket || !isAudioConnected) return;
 
     try {
       if (localStream) {
@@ -185,9 +187,9 @@ function Page() {
         setLocalStream(null);
         setVideoProducer(null);
 
-        socket.emit("user-state-changed", {
+        audioSocket.emit("user-state-changed", {
           roomId,
-          peerId: socket.id,
+          peerId: audioSocket.id,
           state: {
             type: "video",
             enabled: false,
@@ -215,9 +217,9 @@ function Page() {
     if (isMuted) {
       audioProducer.resume();
       setIsMuted(false);
-      socket.emit("user-state-changed", {
+      audioSocket.emit("user-state-changed", {
         roomId,
-        peerId: socket.id,
+        peerId: audioSocket.id,
         state: {
           type: "audio",
           enabled: true,
@@ -226,9 +228,9 @@ function Page() {
     } else {
       audioProducer.pause();
       setIsMuted(true);
-      socket.emit("user-state-changed", {
+      audioSocket.emit("user-state-changed", {
         roomId,
-        peerId: socket.id,
+        peerId: audioSocket.id,
         state: {
           type: "audio",
           enabled: false,
@@ -238,15 +240,15 @@ function Page() {
   };
 
   useEffect(() => {
-    if (socket && isConnected) {
+    if (audioSocket && isAudioConnected) {
       joinRoom();
     }
-  }, [socket, isConnected]);
+  }, [audioSocket, isAudioConnected]);
 
   return (
     <div className="flex h-screen flex-col">
       <Header
-        socket={socket}
+        audioSocket={audioSocket}
         roomId={roomId}
         isMuted={isMuted}
         localStream={localStream}
