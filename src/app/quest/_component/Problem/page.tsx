@@ -49,21 +49,21 @@ export default function Problem({
         className={styles.showProblem}
         style={{ display: isStart ? "flex" : "none" }}
       >
-        <section className={styles.problemSection}>
+        <div className={styles.problemSection}>
           <p className={styles.title}>{`${qNum}: ${qTitle}`}</p>
           {/* 문제 설명 */}
           <p>{qProblem}</p>
-        </section>
+        </div>
 
-        <section className={styles.inputSection}>
+        <div className={styles.inputSection}>
           <p className={styles.title}>입력</p>
           <p>{qInput}</p>
-        </section>
+        </div>
 
-        <section className={styles.outputSection}>
+        <div className={styles.outputSection}>
           <p className={styles.title}>출력</p>
           <p>{qOutput}</p>
-        </section>
+        </div>
       </div>
     </div>
   );
