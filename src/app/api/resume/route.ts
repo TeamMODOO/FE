@@ -2,7 +2,7 @@ import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { NextResponse } from "next/server";
 
 /**
- * [POST] /api/portfolio
+ * [POST] /api/resume
  *  - 파일: formData에 "file"로 전송
  *  - 본 예시에서는 PDF 업로드를 가정
  */
@@ -32,7 +32,7 @@ export async function POST(request: Request) {
 
     // 4) 업로드할 버킷, 키 설정
     const bucketName = "jgtower";
-    const key = `portfolio/${Date.now()}_${file.name}`;
+    const key = `resume/${Date.now()}_${file.name}`;
 
     // 5) PutObjectCommand로 업로드
     await s3Client.send(
