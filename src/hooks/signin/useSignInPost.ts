@@ -13,6 +13,16 @@ interface ErrorResponse {
   detail: string;
 }
 
+/**
+ * 현재 document.cookie에 'access_token' 쿠키가 있는지 확인
+ */
+function hasAccessTokenCookie(): boolean {
+  // 'access_token=...' 형태의 쿠키가 있는지 검사
+  return document.cookie
+    .split(";")
+    .some((item) => item.trim().startsWith("access_token="));
+}
+
 export function useSignInPost() {
   const { data: session, status } = useSession();
 
@@ -26,7 +36,8 @@ export function useSignInPost() {
       status === "authenticated" &&
       session?.user?.email &&
       session.user.name &&
-      session.user.id
+      session.user.id &&
+      !hasAccessTokenCookie()
     ) {
       // 이미 로그인된 사용자가 있다면 서버로 로그인 요청을 보냄
       signIn();
