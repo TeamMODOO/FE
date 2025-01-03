@@ -1,6 +1,6 @@
 "use client";
 
-import { MessageCircle, Send, X } from "lucide-react";
+import { MessageCircle, X } from "lucide-react";
 import { RefObject, useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -27,24 +27,20 @@ export default function ChattingWidget({ isOpen, setIsOpen }: ChatWidgetProps) {
   const [notification, setNotification] = useState<number>(0);
 
   const { messageList, messageValue, setMessageValue, handleSendMessage } =
-    useChatSocket({
-      roomType: "floor",
-      roomId: "floor07",
-      setNotification,
-    });
+    useChatSocket(setNotification);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const { userScrolled, handleOnScroll, scrollDown } = useChatScroll({
     scrollRef: scrollRef as RefObject<HTMLDivElement>,
-    setNotification,
     messageList,
     isOpen,
+    setNotification,
   });
 
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
+    if (isOpen) document.body.style.overflow = "hidden";
+    else {
+      if (!userScrolled) setNotification(0);
       document.body.style.overflow = "unset";
     }
     return () => {
@@ -85,7 +81,9 @@ export default function ChattingWidget({ isOpen, setIsOpen }: ChatWidgetProps) {
                           {formatTime(list.create_at)}
                         </span>
                       </div>
-                      <span className="text-sm">{list.message}</span>
+                      <span className="max-w-[326px] whitespace-pre-wrap break-all text-sm">
+                        {list.message}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -93,15 +91,11 @@ export default function ChattingWidget({ isOpen, setIsOpen }: ChatWidgetProps) {
             </div>
           </CardContent>
           <CardFooter>
-            <form onSubmit={sendMessage} className="flex w-full gap-2">
-              <ChatInput
-                messageValue={messageValue}
-                setMessageValue={setMessageValue}
-              />
-              <Button type="submit" size="icon">
-                <Send className="size-4" />
-              </Button>
-            </form>
+            <ChatInput
+              messageValue={messageValue}
+              setMessageValue={setMessageValue}
+              sendMessage={sendMessage}
+            />
           </CardFooter>
           <ScrollNotification
             userScrolled={userScrolled}
