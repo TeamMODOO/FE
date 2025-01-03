@@ -51,6 +51,14 @@ const customFontSizeTheme = EditorView.theme(
   { dark: true },
 );
 
+// 가져올 수 있는 문제 번호들
+const QUEST_NUMBERS = [8983, 11725, 14888, 2294, 2748];
+
+function seededRandom(seed: number): number {
+  const x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
+}
+
 export default function QuestSection() {
   const router = useRouter();
   /** 문제 풀이 시작 여부 */
@@ -84,27 +92,20 @@ export default function QuestSection() {
   /* Loading 상태 */
   const [isLoading, setIsLoading] = useState(false);
 
-  const { data, loading, error } = useQuestGet(8983);
+  // 오늘 날짜를 시드로 해서 난수 생성
+  const today = new Date();
+  const day = today.getDate();
+  const rand = seededRandom(day);
+  const index = Math.floor(rand * QUEST_NUMBERS.length);
+  const randomQuestNumber = QUEST_NUMBERS[index];
+
+  const { data, loading, error } = useQuestGet(randomQuestNumber);
 
   const qNum = data?.quest_number;
   const qTitle = data?.title;
   const qProblem = data?.content;
   const qInput = data?.input_example;
   const qOutput = data?.output_example;
-
-  // 문제 정보 (하드코딩 예시)
-  //   const qNum = "1920";
-  //   const qTitle = "수 찾기";
-  //   const qProblem = `N개의 정수 A[1], A[2], …, A[N]이 주어져 있을 때,
-  //   이 안에 X라는 정수가 존재하는지 알아내는 프로그램을 작성하시오.`;
-  //   const qInput = `첫째 줄에 자연수 N(1 ≤ N ≤ 100,000)이 주어진다.
-  // 다음 줄에는 N개의 정수 A[1], A[2], …, A[N]이 주어진다.
-  // 다음 줄에는 M(1 ≤ M ≤ 100,000)이 주어진다.
-  // 다음 줄에는 M개의 수들이 주어지는데,
-  // 이 수들이 A안에 존재하는지 알아내면 된다.
-  // 모든 정수의 범위는 -2^31 이상 2^31 미만이다.`;
-  //   const qOutput = `M개의 줄에 답을 출력한다.
-  // 존재하면 1을, 존재하지 않으면 0을 출력한다.`;
 
   /* 제출 이벤트 */
   const handleSubmit = async () => {
