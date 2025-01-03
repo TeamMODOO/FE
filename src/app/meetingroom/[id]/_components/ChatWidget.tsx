@@ -1,5 +1,5 @@
 import { MessageCircle, Send, X } from "lucide-react";
-import { RefObject, useRef, useState } from "react";
+import { RefObject, useEffect, useRef, useState } from "react";
 
 import { ScrollNotification } from "@/app/lobby/_component/Widget/ScrollNotification";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import {
   CardFooter,
   CardHeader,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { useChatScroll } from "@/hooks/chat/useChatScroll";
 import { useChatSocket } from "@/hooks/chat/useChatSocket";
 import { formatTime } from "@/lib/utils/date";
@@ -19,11 +19,7 @@ export default function ChatWidget({ roomId }: { roomId: string }) {
   const [notification, setNotification] = useState<number>(0);
 
   const { messageList, messageValue, setMessageValue, handleSendMessage } =
-    useChatSocket({
-      roomType: "floor",
-      roomId: "floor07",
-      setNotification,
-    });
+    useChatSocket(setNotification);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const { userScrolled, handleOnScroll, scrollDown } = useChatScroll({
@@ -32,6 +28,17 @@ export default function ChatWidget({ roomId }: { roomId: string }) {
     messageList,
     isOpen,
   });
+
+  useEffect(() => {
+    if (isOpen) document.body.style.overflow = "hidden";
+    else {
+      if (!userScrolled) setNotification(0);
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [isOpen]);
 
   const toggleChat = () => setIsOpen(!isOpen);
 
@@ -66,7 +73,9 @@ export default function ChatWidget({ roomId }: { roomId: string }) {
                           {formatTime(list.create_at)}
                         </span>
                       </div>
-                      <span className="text-sm">{list.message}</span>
+                      <span className="max-w-[326px] whitespace-pre-wrap break-all text-sm">
+                        {list.message}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -74,13 +83,17 @@ export default function ChatWidget({ roomId }: { roomId: string }) {
             </div>
           </CardContent>
           <CardFooter>
-            <form onSubmit={sendMessage} className="flex w-full gap-2">
-              <Input
+            <form
+              onSubmit={sendMessage}
+              className="flex w-[286px] justify-between gap-2"
+            >
+              <Textarea
                 value={messageValue}
-                onChange={(e) => setMessageValue(e.target.value)}
                 placeholder="send message"
+                onChange={(e) => setMessageValue(e.target.value)}
+                className="min-h-[40px] w-[225px] resize-none p-2"
               />
-              <Button type="submit" size="icon">
+              <Button type="submit" size="icon" className="size-[58px]">
                 <Send className="size-4" />
               </Button>
             </form>
