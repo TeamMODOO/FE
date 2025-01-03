@@ -15,13 +15,13 @@ import useLoadSprites, {
   LAYER_ORDER,
 } from "@/hooks/performance/useLoadSprites";
 import useThrottle from "@/hooks/performance/useThrottle";
+// 모델들
+import { NoticeItem } from "@/model/NoticeBoard";
+import { NpcInfo } from "@/model/Npc";
+import { PortalInfo } from "@/model/Portal";
 // Zustand 스토어
 import useUsersStore from "@/store/useUsersStore";
 
-// 모델들
-import { NoticeItem } from "../../_model/NoticeBoard";
-import { NpcInfo } from "../../_model/Npc";
-import { PortalInfo } from "../../_model/Portal";
 // 임의의 QnA 데이터
 import { QNA_LIST } from "../../data/qna";
 // 컴포넌트들
@@ -58,6 +58,7 @@ const portals: PortalInfo[] = [
     height: 50,
     route: "/myroom",
     name: "마이룸",
+    image: "/furniture/portal.gif",
   },
   {
     x: 450,
@@ -66,6 +67,7 @@ const portals: PortalInfo[] = [
     height: 50,
     route: "/meetingroom",
     name: "회의실",
+    image: "/furniture/portal.gif",
   },
 ];
 

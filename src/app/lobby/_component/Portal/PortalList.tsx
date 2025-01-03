@@ -2,7 +2,8 @@
 
 import NextImage from "next/image";
 
-import { PortalListProps } from "../../_model/Portal";
+import { PortalListProps } from "@/model/Portal";
+
 // 스타일 임포트
 import Style from "./PortalList.style";
 

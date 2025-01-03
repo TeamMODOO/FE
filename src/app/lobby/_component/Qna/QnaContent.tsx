@@ -2,7 +2,8 @@
 
 import React from "react";
 
-import { QnaProps } from "../../_model/Qma";
+import { QnaProps } from "@/model/Qna";
+
 import Style from "./QnaContent.style";
 
 const QnaContent: React.FC<QnaProps> = ({

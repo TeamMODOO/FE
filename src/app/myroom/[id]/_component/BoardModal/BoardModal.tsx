@@ -11,8 +11,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { BoardModalProps } from "@/model/Board";
 
-import { BoardModalProps } from "../../_model/Board";
 import Style from "./BoardModal.style";
 
 const BoardModal: React.FC<BoardModalProps> = ({

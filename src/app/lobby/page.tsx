@@ -5,7 +5,7 @@ import { useState } from "react";
 import { useSignInPost } from "@/hooks/signin/useSignInPost";
 import useMainSocketConnect from "@/hooks/socket/useMainSocketConnect";
 
-import LobbyCanvas from "./_component/Canvas/Canvas";
+import LobbyCanvas from "./_component/Canvas/LobbyCanvas";
 import ChatWidget from "./_component/Widget/ChattingWidget";
 import FriendInformation from "./_component/Widget/FriendInformation";
 
