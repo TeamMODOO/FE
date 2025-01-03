@@ -47,9 +47,9 @@ export function useSignInPost() {
         // API 명세에 따라 필요하다면 google_image_url도 포함
         // google_image_url: session?.user?.image,
       };
-
+      const baseUrl = process.env.NEXT_PUBLIC_API_SERVER_PATH;
       const response: AxiosResponse<LoginResponse> = await axios.post(
-        "https://api.jgtower.com/users/login",
+        `${baseUrl}/users/login`,
         requestBody,
         {
           withCredentials: true, // 쿠키 설정
