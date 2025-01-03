@@ -7,6 +7,20 @@
   flex-direction: column;
   padding: 10px;
   height: 100%;
+  overflow-x: auto;
+}
+
+.container::-webkit-scrollbar {
+  width: 3px;
+}
+
+.container::-webkit-scrollbar-track {
+  background: none;
+}
+
+.container::-webkit-scrollbar-thumb {
+  background: red;
+  border-radius: 5px;
 }
 
 .hideProblem {
@@ -36,6 +50,7 @@
   height: 100%;
   padding: 10px;
   flex-direction: column;
+  gap: 10px;
 }
 
 .title {
