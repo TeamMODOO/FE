@@ -30,6 +30,7 @@ export const useChatSocket = (
   }, []);
 
   const handleSendMessage = useCallback(() => {
+    addMessage({ message: messageValue, user_name: "게스트" });
     if (!mainSocket || !messageValue.trim()) {
       return;
     }
