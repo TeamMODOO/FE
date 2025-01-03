@@ -11,9 +11,9 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
 // 공지사항 모델
-import { NoticeBoardModalProps } from "../../_model/NoticeBoard";
+import { NoticeBoardModalProps } from "@/model/NoticeBoard";
+
 import Style from "./NoticeBoardModal.style";
 
 /**

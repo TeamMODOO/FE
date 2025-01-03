@@ -2,7 +2,8 @@
 
 import NextImage from "next/image";
 
-import { PortalProps } from "../../_model/Portal";
+import { PortalProps } from "@/model/Portal";
+
 import Style from "./Portal.style";
 
 function Portal({ x, y, width, height, name }: PortalProps) {
