@@ -10,16 +10,16 @@ import { ChattingType } from "@/model/chatting";
 
 interface UseScrollProps {
   scrollRef: RefObject<HTMLDivElement>;
-  setNotification: Dispatch<SetStateAction<number>>;
   messageList: ChattingType[];
   isOpen: boolean;
+  setNotification: Dispatch<SetStateAction<number>>;
 }
 
 export const useChatScroll = ({
   scrollRef,
-  setNotification,
   messageList,
   isOpen,
+  setNotification,
 }: UseScrollProps) => {
   const [userScrolled, setUserScrolled] = useState(false);
 
