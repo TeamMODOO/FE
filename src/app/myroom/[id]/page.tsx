@@ -4,7 +4,7 @@ import { useParams } from "next/navigation";
 
 import useMainSocketConnect from "@/hooks/socket/useMainSocketConnect";
 
-import MyRoomCanvas from "./_component/Canvas/Canvas";
+import MyRoomCanvas from "./_component/Canvas/MyRoomCanvas";
 
 const ROOM_TYPE = "my";
 
