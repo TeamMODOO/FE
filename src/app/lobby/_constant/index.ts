@@ -1,8 +1,68 @@
-export interface QA {
-  category: string; // Q&A의 카테고리
-  question: string; // 질문
-  answer: string; // 답변
-}
+import { NpcInfo } from "@/model/Npc";
+import { PortalInfo } from "@/model/Portal";
+import { QA } from "@/model/Qna";
+
+export const LOBBY_MAP_CONSTANTS = {
+  CANVAS_WIDTH: 1400,
+  CANVAS_HEIGHT: 800,
+  MAP_WIDTH: 1200,
+  MAP_HEIGHT: 700,
+
+  IMG_WIDTH: 32,
+  IMG_HEIGHT: 32,
+  SPEED: 10,
+};
+
+export const LOBBY_PORTALS: PortalInfo[] = [
+  {
+    x: 720,
+    y: 250,
+    width: 50,
+    height: 50,
+    route: "/myroom",
+    name: "마이룸",
+    image: "/furniture/portal.gif",
+  },
+  {
+    x: 450,
+    y: 250,
+    width: 50,
+    height: 50,
+    route: "/meetingroom",
+    name: "회의실",
+    image: "/furniture/portal.gif",
+  },
+];
+
+export const LOBBY_NPCS: NpcInfo[] = [
+  {
+    x: 500,
+    y: 400,
+    width: 20,
+    height: 35,
+    image: "/character/npc1.png",
+    modalTitle: "NPC1 대화",
+    name: "NPC1",
+  },
+  {
+    x: 730,
+    y: 380,
+    width: 20,
+    height: 35,
+    image: "/character/npc2.png",
+    modalTitle: "NPC2 대화",
+    name: "NPC2",
+  },
+  {
+    x: 560,
+    y: 110,
+    width: 100,
+    height: 50,
+    image: "/furniture/board.png",
+    modalTitle: "공지사항 NPC",
+    name: "공지사항",
+  },
+];
 
 export const QNA_LIST: QA[] = [
   {
