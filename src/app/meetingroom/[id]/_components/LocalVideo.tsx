@@ -17,7 +17,7 @@ export function LocalVideo({
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
-          Local Video
+          내 비디오
           <div className="flex gap-2">
             {isMuted && (
               <div className="rounded-full bg-red-500 p-1">
@@ -47,7 +47,7 @@ export function LocalVideo({
             <div className="flex h-[200px] w-full flex-col items-center justify-center rounded-lg bg-gray-900">
               <UserIcon className="mb-2 size-12 text-gray-400" />
               <span className="text-sm text-gray-400">
-                Camera is turned off
+                카메라가 꺼져 있습니다
               </span>
             </div>
           )}

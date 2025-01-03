@@ -16,7 +16,7 @@ export function RemoteMedia({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Remote Media ({peers.length})</CardTitle>
+        <CardTitle>상대 비디오 ({peers.length})</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-1 gap-4">
