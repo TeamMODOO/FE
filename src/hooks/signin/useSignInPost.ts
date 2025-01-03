@@ -26,7 +26,7 @@ export function useSignInPost() {
       status === "authenticated" &&
       session?.user?.email &&
       session.user.name &&
-      session.user.id // NextAuth에서 id를 어떤 필드명으로 주는지 확인 필요
+      session.user.id
     ) {
       // 이미 로그인된 사용자가 있다면 서버로 로그인 요청을 보냄
       signIn();
@@ -44,8 +44,7 @@ export function useSignInPost() {
         email: session?.user?.email,
         name: session?.user?.name,
         google_id: session?.user?.id,
-        // API 명세에 따라 필요하다면 google_image_url도 포함
-        // google_image_url: session?.user?.image,
+        google_image_url: session?.user?.image,
       };
       const baseUrl = process.env.NEXT_PUBLIC_API_SERVER_PATH;
       const response: AxiosResponse<LoginResponse> = await axios.post(
