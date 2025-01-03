@@ -1,27 +1,30 @@
-// components/LobbyCanvas/LobbyCanvas.tsx
 "use client";
 
-import Image from "next/image";
+import NextImage from "next/image";
 import { useRouter } from "next/navigation";
-// ------------------ [NextAuth] ------------------
 import { useSession } from "next-auth/react";
-import { useEffect, useRef, useState } from "react";
-import { v4 as uuid } from "uuid"; // uuid 임포트 (로컬스토리지 생성용)
+import React, { useEffect, useRef, useState } from "react";
+import { v4 as uuid } from "uuid";
 
+// 소켓 훅
 import useLobbySocketEvents from "@/hooks/lobby/useLobbySocketEvents";
+// 스프라이트/성능 훅
 import useLoadSprites, {
   FRAME_HEIGHT,
   FRAME_WIDTH,
   LAYER_ORDER,
 } from "@/hooks/performance/useLoadSprites";
 import useThrottle from "@/hooks/performance/useThrottle";
-// (3) Zustand (유저 스토어)
+// Zustand 스토어
 import useUsersStore from "@/store/useUsersStore";
 
+// 모델들
 import { NoticeItem } from "../../_model/NoticeBoard";
 import { NpcInfo } from "../../_model/Npc";
 import { PortalInfo } from "../../_model/Portal";
+// 임의의 QnA 데이터
 import { QNA_LIST } from "../../data/qna";
+// 컴포넌트들
 import DailyProblemContent from "../DailyProblem/DailyProblemContent";
 import { EnterMeetingRoom } from "../EnterMeetingRoom/EnterMeetingRoom";
 import NoticeBoardModal from "../NoticeBoardModal/NoticeBoardModal";
@@ -29,29 +32,24 @@ import NpcList from "../Npc/NpcList";
 import { NpcModal } from "../Npc/NpcModal";
 import PortalList from "../Portal/PortalList";
 import QnaContent from "../Qna/QnaContent";
+// 스타일
 import Style from "./Canvas.style";
 
-// ------------------ 맵 상수 ------------------
+// 맵 상수
 const MAP_CONSTANTS = {
   CANVAS_WIDTH: 1400,
   CANVAS_HEIGHT: 800,
-  IMG_WIDTH: 50,
-  IMG_HEIGHT: 150,
-  SPEED: 10,
   MAP_WIDTH: 1200,
   MAP_HEIGHT: 700,
+
+  IMG_WIDTH: 32,
+  IMG_HEIGHT: 32,
+  SPEED: 10,
 };
 
-type Direction = 0 | 1 | 2 | 3; // 0=Down,1=Up,2=Right,3=Left
+type Direction = 0 | 1 | 2 | 3; // Down=0,Up=1,Right=2,Left=3
 
-type SolvedUser = {
-  userId: string;
-  nickname: string;
-  solvedProblemId: number;
-  solvedDate: string;
-};
-
-/** 포탈 정보 */
+// 포탈 정보
 const portals: PortalInfo[] = [
   {
     x: 720,
@@ -71,7 +69,7 @@ const portals: PortalInfo[] = [
   },
 ];
 
-/** NPC 정보 */
+// NPC 정보
 const npcs: NpcInfo[] = [
   {
     x: 500,
@@ -89,7 +87,7 @@ const npcs: NpcInfo[] = [
     height: 35,
     image: "/character/npc2.png",
     modalTitle: "NPC2 대화",
-    name: "NPC2", // QnA
+    name: "NPC2",
   },
   {
     x: 560,
@@ -103,18 +101,17 @@ const npcs: NpcInfo[] = [
 ];
 
 interface LobbyCanvasProps {
-  // 채팅창 열림 여부
-  chatOpen: boolean;
+  chatOpen: boolean; // 채팅창 열림 여부
 }
 
 const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
   const router = useRouter();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  // ------------------ 세션 정보 (NextAuth) ------------------
+  // 세션
   const { data: session, status } = useSession();
 
-  // (1) 로컬 스토리지에서 client_id 가져오기 (uuid)
+  // (A) 로컬스토리지 client_id
   const [localClientId, setLocalClientId] = useState<string>("anonymous");
   useEffect(() => {
     const stored = localStorage.getItem("client_id");
@@ -127,24 +124,24 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     }
   }, []);
 
-  // (2) 소켓 연결 커스텀 훅
+  // (B) 소켓
   const { emitMovement } = useLobbySocketEvents({
     roomId: "floor07",
-    userId: localClientId, // 로컬스토리지 uuid 사용
+    userId: localClientId,
     userNickname: session?.user?.name || "Guest",
   });
 
-  // (3) 내가 스토어에 등록되어 있는지 확인, 없으면 addUser
-  const { addUser, users } = useUsersStore();
+  // (C) 유저 스토어
+  const addUser = useUsersStore((s) => s.addUser);
+  const updateUserPosition = useUsersStore((s) => s.updateUserPosition);
+  // → 주의: **users**를 의존성에 넣으면 무한 루프 발생 가능
+  //   대신 effect 내부에서 `useUsersStore.getState()`로 읽거나,
+  //   여기서는 필요 시 "getState()" 한 번만 사용
+
   useEffect(() => {
     if (!localClientId) return;
+    if (status === "loading") return;
 
-    // 세션이 로딩 중이면 대기
-    if (status === "loading") {
-      return;
-    }
-
-    // 세션 로딩이 끝났다면:
     const nickname =
       status === "authenticated" && session?.user?.name
         ? session.user.name
@@ -153,21 +150,23 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     addUser(localClientId, nickname);
   }, [localClientId, status, session, addUser]);
 
-  // 캔버스 뷰포트 크기
-  const [canvasSize, setCanvasSize] = useState<{ w: number; h: number }>({
+  // (D) 화면 사이즈 (동적)
+  const [canvasSize, setCanvasSize] = useState({
     w: MAP_CONSTANTS.CANVAS_WIDTH,
     h: MAP_CONSTANTS.CANVAS_HEIGHT,
   });
   useEffect(() => {
-    const w = window.innerWidth;
-    const h = window.innerHeight;
-    setCanvasSize({ w, h });
+    function handleResize() {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      setCanvasSize({ w, h });
+    }
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // 스프라이트 (캐릭터 레이어)
-  const spriteImages = useLoadSprites();
-
-  // 배경
+  // (E) 배경 이미지
   const [backgroundImage, setBackgroundImage] =
     useState<HTMLImageElement | null>(null);
   useEffect(() => {
@@ -176,10 +175,10 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     bg.onload = () => setBackgroundImage(bg);
   }, []);
 
-  // 포탈 GIF
+  // (F) 포탈 GIF
   const portalGifRef = useRef<HTMLImageElement | null>(null);
 
-  // NPC 이미지 로드
+  // (G) NPC 이미지
   const [npcImages, setNpcImages] = useState<Record<string, HTMLImageElement>>(
     {},
   );
@@ -188,17 +187,20 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     let loadedCount = 0;
     const uniquePaths = Array.from(new Set(npcs.map((npc) => npc.image)));
     uniquePaths.forEach((path) => {
-      const img = new window.Image();
+      const img = new Image();
       img.src = path;
       img.onload = () => {
         temp[path] = img;
         loadedCount++;
         if (loadedCount === uniquePaths.length) {
-          setNpcImages(temp);
+          setNpcImages({ ...temp });
         }
       };
     });
   }, []);
+
+  // 스프라이트(캐릭터)
+  const spriteImages = useLoadSprites();
 
   // 모달들
   const [npc1ModalOpen, setNpc1ModalOpen] = useState(false);
@@ -223,45 +225,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     setWriterMessage("");
   };
 
-  // 데일리문제 (NPC1)
-  const [dailyProblem, setDailyProblem] = useState<{
-    id: number;
-    title: string;
-    link: string;
-  } | null>(null);
-  const [isProblemSolved, setIsProblemSolved] = useState(false);
-  const [dailySolvedUsers, setDailySolvedUsers] = useState<SolvedUser[]>([]);
-
-  useEffect(() => {
-    setDailyProblem({
-      id: 1018,
-      title: "체스판 다시 칠하기",
-      link: "https://www.acmicpc.net/problem/1018",
-    });
-    setDailySolvedUsers([]);
-  }, []);
-
-  const handleSolveDailyProblem = () => {
-    if (!dailyProblem) return;
-    setIsProblemSolved(true);
-    alert(`문제 #${dailyProblem.id}를 푸셨군요!`);
-
-    const { users } = useUsersStore.getState();
-    const me = users.find((u) => u.id === localClientId);
-    if (me) {
-      setDailySolvedUsers((prev) => [
-        ...prev,
-        {
-          userId: localClientId,
-          nickname: me.nickname,
-          solvedProblemId: dailyProblem.id,
-          solvedDate: new Date().toISOString().split("T")[0],
-        },
-      ]);
-    }
-  };
-
-  // QnA (NPC2)
+  // NPC2 - QnA
   const [selectedQnaIndex, setSelectedQnaIndex] = useState<number | null>(null);
   const handleQnaClick = (index: number) => {
     setSelectedQnaIndex((prev) => (prev === index ? null : index));
@@ -271,60 +235,47 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
   const isAnyModalOpen =
     npc1ModalOpen || npc2ModalOpen || noticeModalOpen || meetingModalOpen;
 
-  // 키 입력 상태
+  // 키 입력
   const [pressedKeys, setPressedKeys] = useState<Record<string, boolean>>({});
-
-  // 모달 열릴 때 이동키 초기화
   useEffect(() => {
     if (isAnyModalOpen) {
       setPressedKeys({});
     }
   }, [isAnyModalOpen]);
 
-  // ★ 포탈/NPC 스페이스바 처리
+  // 스페이스바 (포탈/NPC)
   function handleSpacebarInteraction() {
-    const { users } = useUsersStore.getState();
-    const me = users.find((u) => u.id === localClientId);
+    const store = useUsersStore.getState();
+    const me = store.users.find((u) => u.id === localClientId);
     if (!me) return;
 
-    // 내 캐릭터 사각 영역
     const [cl, cr, ct, cb] = [me.x, me.x + 32, me.y, me.y + 32];
 
-    // 1) 포탈 충돌
-    for (const portal of portals) {
-      const [pl, pr, pt, pb] = [
-        portal.x,
-        portal.x + portal.width,
-        portal.y,
-        portal.y + portal.height,
-      ];
-      const overlap = cl < pr && cr > pl && ct < pb && cb > pt;
-
+    // 포탈
+    for (const p of portals) {
+      const [pl, pr, pt, pb] = [p.x, p.x + p.width, p.y, p.y + p.height];
+      const overlap = cr > pl && cl < pr && cb > pt && ct < pb;
       if (overlap) {
-        // "회의실"
-        if (portal.name === "회의실") {
+        if (p.name === "회의실") {
           setMeetingModalOpen(true);
           return;
         }
-
-        // "마이룸"
-        if (portal.name === "마이룸") {
+        if (p.name === "마이룸") {
           if (status === "loading") {
-            alert("세션 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.");
+            alert("세션 로딩중");
             return;
           }
-          if (status === "unauthenticated" || !session?.user?.id) {
-            alert("로그인이 필요합니다.");
+          if (!session?.user?.id) {
+            alert("로그인 필요");
             return;
           }
-          // 이동
           router.push(`/myroom/${session.user.id}`);
           return;
         }
       }
     }
 
-    // 2) NPC 충돌
+    // NPC
     for (let i = 0; i < npcs.length; i++) {
       const npc = npcs[i];
       const [nl, nr, nt, nb] = [
@@ -333,18 +284,17 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
         npc.y,
         npc.y + npc.height,
       ];
-      const overlap = cl < nr && cr > nl && ct < nb && cb > nt;
+      const overlap = cr > nl && cl < nr && cb > nt && ct < nb;
       if (overlap) {
-        // 모달 열기
-        if (i === 0) setNpc1ModalOpen(true); // NPC1
-        if (i === 1) setNpc2ModalOpen(true); // NPC2
-        if (i === 2) setNoticeModalOpen(true); // 공지사항
+        if (i === 0) setNpc1ModalOpen(true);
+        if (i === 1) setNpc2ModalOpen(true);
+        if (i === 2) setNoticeModalOpen(true);
         return;
       }
     }
   }
 
-  // 키 다운/업 등록
+  // 키 다운/업
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (chatOpen || isAnyModalOpen) return;
@@ -359,12 +309,10 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
       }
       setPressedKeys((prev) => ({ ...prev, [e.key]: true }));
     };
-
     const handleKeyUp = (e: KeyboardEvent) => {
       if (chatOpen || isAnyModalOpen) return;
       setPressedKeys((prev) => ({ ...prev, [e.key]: false }));
     };
-
     const handleBlur = () => {
       setPressedKeys({});
     };
@@ -378,12 +326,10 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
       window.removeEventListener("keyup", handleKeyUp);
       window.removeEventListener("blur", handleBlur);
     };
-  }, [chatOpen, isAnyModalOpen, status, session, router]);
+  }, [chatOpen, isAnyModalOpen, router, session, status]);
 
-  // 이동 로직
-  function getDirectionFromKeys(
-    keys: Record<string, boolean>,
-  ): Direction | null {
+  // 이동
+  function getDirection(keys: Record<string, boolean>): Direction | null {
     if (keys["w"] || keys["W"] || keys["ㅈ"] || keys["ArrowUp"]) return 1;
     if (keys["s"] || keys["S"] || keys["ㄴ"] || keys["ArrowDown"]) return 0;
     if (keys["d"] || keys["D"] || keys["ㅇ"] || keys["ArrowRight"]) return 2;
@@ -392,19 +338,15 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
   }
 
   const throttledPressedKeys = useThrottle(pressedKeys, 100);
-
   useEffect(() => {
-    // 모달/채팅 열림 시 이동X
     if (chatOpen || isAnyModalOpen) return;
 
-    const { users, updateUserPosition } = useUsersStore.getState();
-    const meIndex = users.findIndex((u) => u.id === localClientId);
-    if (meIndex < 0) return;
+    const store = useUsersStore.getState();
+    const me = store.users.find((u) => u.id === localClientId);
+    if (!me) return;
 
-    const me = users[meIndex];
     let { x, y } = me;
-    const newDir = getDirectionFromKeys(throttledPressedKeys);
-
+    const newDir = getDirection(throttledPressedKeys);
     if (newDir === null) {
       updateUserPosition(localClientId, x, y, me.direction, false);
       return;
@@ -439,13 +381,14 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     }
   }, [
     throttledPressedKeys,
-    isAnyModalOpen,
     chatOpen,
-    emitMovement,
+    isAnyModalOpen,
     localClientId,
+    updateUserPosition,
+    emitMovement,
   ]);
 
-  // rAF로 캔버스 렌더
+  // rAF
   const zoomFactor = 2;
   function clamp(value: number, min: number, max: number) {
     return Math.max(min, Math.min(max, value));
@@ -465,7 +408,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     let lastTime = 0;
     let animationId = 0;
 
-    // 캐릭터 애니메이션 frame 관리용
+    // 캐릭터 애니
     const userFrameMap: Record<
       string,
       { frame: number; lastFrameTime: number }
@@ -473,28 +416,43 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     const frameInterval = 200;
     const maxMovingFrame = 3;
 
-    const render = (time: number) => {
+    const renderLoop = (time: number) => {
       const delta = time - lastTime;
       if (delta >= frameDuration) {
         lastTime = time - (delta % frameDuration);
 
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // 카메라 (내 캐릭터 기준으로 중앙에 보여주기)
-        const { users } = useUsersStore.getState();
-        const me = users.find((u) => u.id === localClientId);
+        // 스토어에서 최신 users
+        const store = useUsersStore.getState();
+        const me = store.users.find((u) => u.id === localClientId);
 
+        // 카메라
         let cameraX = 0;
         let cameraY = 0;
         if (me) {
           const centerX = me.x + MAP_CONSTANTS.IMG_WIDTH / 2;
           const centerY = me.y + MAP_CONSTANTS.IMG_HEIGHT / 2;
+
           const viewWidth = canvas.width / zoomFactor;
           const viewHeight = canvas.height / zoomFactor;
-          cameraX = centerX - viewWidth / 2;
-          cameraY = centerY - viewHeight / 2;
-          cameraX = clamp(cameraX, 0, MAP_CONSTANTS.MAP_WIDTH - viewWidth);
-          cameraY = clamp(cameraY, 0, MAP_CONSTANTS.MAP_HEIGHT - viewHeight);
+
+          const maxCamX = MAP_CONSTANTS.MAP_WIDTH - viewWidth;
+          const maxCamY = MAP_CONSTANTS.MAP_HEIGHT - viewHeight;
+
+          if (maxCamX < 0) {
+            cameraX = -(maxCamX / 2);
+          } else {
+            cameraX = centerX - viewWidth / 2;
+            cameraX = clamp(cameraX, 0, maxCamX);
+          }
+
+          if (maxCamY < 0) {
+            cameraY = -(maxCamY / 2);
+          } else {
+            cameraY = centerY - viewHeight / 2;
+            cameraY = clamp(cameraY, 0, maxCamY);
+          }
         }
 
         ctx.save();
@@ -513,35 +471,31 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
         }
 
         // 포탈
-        portals.forEach((portal) => {
-          if (portalGifRef.current) {
-            ctx.drawImage(
-              portalGifRef.current,
-              portal.x,
-              portal.y,
-              portal.width,
-              portal.height,
-            );
-          } else {
-            ctx.fillStyle = "rgba(0,0,255,0.3)";
-            ctx.fillRect(portal.x, portal.y, portal.width, portal.height);
-          }
-          ctx.font = "bold 12px Arial";
-          ctx.fillStyle = "yellow";
-          ctx.textAlign = "center";
-          ctx.fillText(
-            portal.name,
-            portal.x + portal.width / 2,
-            portal.y + portal.height + 12,
-          );
-        });
+        if (portalGifRef.current && portalGifRef.current.complete) {
+          portals.forEach((p) => {
+            ctx.drawImage(portalGifRef.current!, p.x, p.y, p.width, p.height);
+            ctx.font = "bold 12px Arial";
+            ctx.fillStyle = "yellow";
+            ctx.textAlign = "center";
+            ctx.fillText(p.name, p.x + p.width / 2, p.y + p.height + 12);
+          });
+        } else {
+          portals.forEach((p) => {
+            ctx.fillStyle = "rgba(0,255,255,0.3)";
+            ctx.fillRect(p.x, p.y, p.width, p.height);
+            ctx.font = "bold 12px Arial";
+            ctx.fillStyle = "yellow";
+            ctx.textAlign = "center";
+            ctx.fillText(p.name, p.x + p.width / 2, p.y + p.height + 12);
+          });
+        }
 
         // NPC
         npcs.forEach((npc) => {
           const npcImg = npcImages[npc.image];
-          if (npcImg) {
+          if (npcImg && npcImg.complete) {
             ctx.drawImage(npcImg, npc.x, npc.y, npc.width, npc.height);
-            ctx.font = "bold 12px Arial";
+            ctx.font = "12px Arial";
             ctx.fillStyle = "yellow";
             ctx.textAlign = "center";
             ctx.fillText(
@@ -555,64 +509,78 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
           }
         });
 
-        // 캐릭터
+        // 캐릭터 스프라이트
         const now = performance.now();
-        if (Object.keys(spriteImages).length === LAYER_ORDER.length) {
-          users.forEach((user) => {
-            const { id, x, y, direction, isMoving, nickname } = user;
-            if (!userFrameMap[id]) {
-              userFrameMap[id] = { frame: 0, lastFrameTime: now };
-            }
-            const uf = userFrameMap[id];
+        const spriteKeys = Object.keys(spriteImages);
+        const loadedSpriteCount = spriteKeys.length;
 
-            if (isMoving) {
-              if (now - uf.lastFrameTime > frameInterval) {
-                uf.lastFrameTime = now;
-                uf.frame++;
-                if (uf.frame > maxMovingFrame) {
-                  uf.frame = 1;
-                }
-              }
-            } else {
-              uf.frame = 0;
+        store.users.forEach((user) => {
+          if (!userFrameMap[user.id]) {
+            userFrameMap[user.id] = { frame: 0, lastFrameTime: now };
+          }
+          const uf = userFrameMap[user.id];
+
+          if (user.isMoving) {
+            if (now - uf.lastFrameTime > frameInterval) {
+              uf.frame++;
+              if (uf.frame > maxMovingFrame) uf.frame = 1;
               uf.lastFrameTime = now;
             }
+          } else {
+            uf.frame = 0;
+            uf.lastFrameTime = now;
+          }
 
-            const sx = uf.frame * FRAME_WIDTH;
-            const sy = (direction ?? 0) * FRAME_HEIGHT;
+          const sx = uf.frame * FRAME_WIDTH;
+          const sy = (user.direction ?? 0) * FRAME_HEIGHT;
 
+          if (loadedSpriteCount === LAYER_ORDER.length) {
+            // 스프라이트 레이어 전부 로드됨
             ctx.save();
-            LAYER_ORDER.forEach((layer) => {
-              const img = spriteImages[layer];
-              if (!img) return;
+            LAYER_ORDER.forEach((layerName) => {
+              const layerImg = spriteImages[layerName];
+              if (!layerImg) return;
               ctx.drawImage(
-                img,
+                layerImg,
                 sx,
                 sy,
                 FRAME_WIDTH,
                 FRAME_HEIGHT,
-                x,
-                y,
+                user.x,
+                user.y,
                 FRAME_WIDTH,
                 FRAME_HEIGHT,
               );
             });
             ctx.restore();
+          } else {
+            // 로딩 중
+            ctx.fillStyle = "rgba(0,0,255,0.3)";
+            ctx.fillRect(
+              user.x,
+              user.y,
+              MAP_CONSTANTS.IMG_WIDTH,
+              MAP_CONSTANTS.IMG_HEIGHT,
+            );
+          }
 
-            // 닉네임
-            ctx.font = "bold 12px Arial";
-            ctx.fillStyle = "white";
-            ctx.textAlign = "center";
-            ctx.fillText(nickname, x + FRAME_WIDTH / 2, y + FRAME_HEIGHT + 12);
-          });
-        }
+          // 닉네임
+          ctx.font = "bold 12px Arial";
+          ctx.fillStyle = "white";
+          ctx.textAlign = "center";
+          ctx.fillText(
+            user.nickname,
+            user.x + MAP_CONSTANTS.IMG_WIDTH / 2,
+            user.y + MAP_CONSTANTS.IMG_HEIGHT + 12,
+          );
+        });
 
         ctx.restore();
       }
-      animationId = requestAnimationFrame(render);
+      animationId = requestAnimationFrame(renderLoop);
     };
 
-    animationId = requestAnimationFrame(render);
+    animationId = requestAnimationFrame(renderLoop);
     return () => {
       cancelAnimationFrame(animationId);
     };
@@ -620,8 +588,8 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
 
   return (
     <>
-      {/* 숨긴 포탈 GIF 로딩 */}
-      <Image
+      {/* 포탈 GIF 숨김 로딩 */}
+      <NextImage
         ref={portalGifRef as React.RefObject<HTMLImageElement>}
         src="/furniture/portal.gif"
         alt="portal"
@@ -630,7 +598,8 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
         style={{ display: "none" }}
         priority
       />
-      {/* NPC1 모달 (데일리문제) */}
+
+      {/* NPC1 모달 */}
       <NpcModal
         isOpen={npc1ModalOpen}
         onClose={() => setNpc1ModalOpen(false)}
@@ -638,7 +607,8 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
       >
         <DailyProblemContent />
       </NpcModal>
-      {/* NPC2 모달 (QnA) */}
+
+      {/* NPC2 모달 */}
       <NpcModal
         isOpen={npc2ModalOpen}
         onClose={() => setNpc2ModalOpen(false)}
@@ -650,6 +620,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
           handleQnaClick={handleQnaClick}
         />
       </NpcModal>
+
       {/* 공지사항 모달 */}
       <NoticeBoardModal
         open={noticeModalOpen}
@@ -661,25 +632,25 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
         setWriterMessage={setWriterMessage}
         handleAddNotice={handleAddNotice}
       />
+
       {/* 회의실 모달 */}
       <EnterMeetingRoom
         open={meetingModalOpen}
         onOpenChange={setMeetingModalOpen}
       />
-      {/* 고정된 사이즈로 캔버스 */}
+
+      {/* 동적 사이즈 캔버스 컨테이너 */}
       <div
         className={Style.canvasContainerClass}
         style={{
           width: `${canvasSize.w}px`,
           height: `${canvasSize.h}px`,
-          overflow: "auto",
+          overflow: "hidden",
         }}
       >
-        {/* (포탈 / NPC) 렌더는 Canvas 내에서 처리 → DOM 컴포넌트는 숨김 */}
         <PortalList portals={[]} />
         <NpcList npcs={[]} />
 
-        {/* Canvas */}
         <canvas ref={canvasRef} />
       </div>
     </>

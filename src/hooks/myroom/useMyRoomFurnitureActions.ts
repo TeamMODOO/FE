@@ -4,13 +4,6 @@ import { Dispatch, SetStateAction, useState } from "react";
 
 import { Funiture } from "@/model/Funiture";
 
-/**
- * 마이룸의 이력서/포트폴리오/기술스택 관련 모달 로직 등
- * - 열기/닫기
- * - 저장 로직
- * - "none" 가구 클릭 시 alert
- * - ...
- */
 interface MyRoomFurnitureActionsProps {
   resume: Funiture[];
   setResume: Dispatch<SetStateAction<Funiture[]>>;
