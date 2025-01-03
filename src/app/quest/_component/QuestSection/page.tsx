@@ -12,6 +12,7 @@ import { toast } from "react-hot-toast";
 
 import { Button } from "@/components/ui/button";
 import { useQuestGet } from "@/hooks/quest/useQuestGet";
+import { useQuestPost } from "@/hooks/quest/useQuestPost";
 
 import Problem from "../Problem/page";
 import Modal from "../ResultModal/ResultModal";
@@ -100,6 +101,7 @@ export default function QuestSection() {
   const randomQuestNumber = QUEST_NUMBERS[index];
 
   const { data, loading, error } = useQuestGet(randomQuestNumber);
+  const { submitQuestResult } = useQuestPost(randomQuestNumber);
 
   const qNum = data?.quest_number;
   const qTitle = data?.title;
@@ -231,6 +233,12 @@ export default function QuestSection() {
     ).padStart(2, "0")}`;
   }
 
+  const handleCompleteQuest = async () => {
+    await submitQuestResult(formatTimeSpent(timeSpent));
+    // 제출이 끝난 뒤 페이지 이동
+    router.push("/questmap");
+  };
+
   return (
     <div className={styles.container}>
       <div className={styles.questHeader}>
@@ -336,9 +344,13 @@ export default function QuestSection() {
                           이미 모범답안 수준입니다!
                         </p>
                       )}
-                      <Button onClick={() => router.push("/questmap")}>
+                      <Button onClick={handleCompleteQuest} disabled={loading}>
                         일일 챌린지 완료하기
                       </Button>
+
+                      {/* {loading && <p>제출 중...</p>}
+                      {error && <p style={{ color: "red" }}>{error}</p>}
+                      {data && <p style={{ color: "green" }}>{data.message}</p>} */}
                     </div>
                   ) : (
                     <div className={styles.incorrectDiv}>
