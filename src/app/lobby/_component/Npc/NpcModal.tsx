@@ -8,8 +8,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { NpcModalProps } from "@/model/NpcModal";
 
-import { NpcModalProps } from "../../_model/NpcModal";
 import Style from "./NpcModal.style";
 
 export const NpcModal: React.FC<NpcModalProps> = ({

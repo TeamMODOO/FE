@@ -12,39 +12,39 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-import { PortfolioModalProps } from "../../_model/Portfolio";
 import Style from "./PortfolioModal.style";
+
+/** 포트폴리오(링크) 모달 Props */
+interface PortfolioModalProps {
+  open: boolean;
+  onClose: (open: boolean) => void;
+  portfolioLink: string; // 새로 입력할 링크
+  setPortfolioLink: React.Dispatch<React.SetStateAction<string>>;
+  onSave: () => void;
+}
 
 const PortfolioModal: React.FC<PortfolioModalProps> = ({
   open,
   onClose,
-  portfolioFile,
-  setPortfolioFile,
+  portfolioLink,
+  setPortfolioLink,
   onSave,
 }) => {
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      setPortfolioFile(e.target.files[0]);
-    }
-  };
-
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className={Style.dialogContent}>
         <DialogHeader>
-          <DialogTitle>포트폴리오 만들기</DialogTitle>
+          <DialogTitle>포트폴리오 링크 추가</DialogTitle>
         </DialogHeader>
 
         <div className={Style.formContainer}>
-          <Label htmlFor="portfolioPdf">PDF 파일 업로드</Label>
+          <Label htmlFor="portfolioLink">링크(URL)</Label>
           <Input
-            id="portfolioPdf"
-            type="file"
-            accept=".pdf"
-            onChange={handleFileChange}
+            id="portfolioLink"
+            placeholder="예: https://github.com/my-portfolio ..."
+            value={portfolioLink}
+            onChange={(e) => setPortfolioLink(e.target.value)}
           />
-          {portfolioFile && <div>선택된 파일: {portfolioFile.name}</div>}
-
           <Button onClick={onSave}>저장하기</Button>
         </div>
       </DialogContent>

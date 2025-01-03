@@ -2,7 +2,8 @@
 
 import NextImage from "next/image";
 
-import { NpcListProps } from "../../_model/Npc";
+import { NpcListProps } from "@/model/Npc";
+
 import Style from "./NpcList.style";
 
 function NpcList({ npcs }: NpcListProps) {

@@ -5,6 +5,7 @@ export interface PortalInfo {
   height: number;
   route: string;
   name: string;
+  image: string;
 }
 
 export interface PortalProps {
