@@ -39,12 +39,10 @@ export async function POST(req: NextRequest) {
       You will receive a problem statement, input specification, output specification, and user code.
       Return a JSON with:
       - "isCorrect": boolean
-      - "betterSolution": string (if isCorrect is true, possibly a more optimal code or empty if none, 한국어로 작성)
+      - "betterSolution": string (if isCorrect is true, possibly a different solution code, 한국어로 작성)
       - "hint": string (if isCorrect is false, provide a helpful hint, 한국어로 작성)
 
-      If you find any more optimal or alternative solution, put that source code in "betterSolution" as a string.
-
-      The entire response MUST be valid JSON, with no additional text, no code fences, and no explanation outside of JSON. 
+      The entire response MUST be valid JSON, with no additional text, no code fences, and no explanation outside of JSON, even if there's no user's code. 
       No triple backticks, no phrases like "The user's code is correct.".
       Only respond with the JSON object itself.
     `;
@@ -66,8 +64,7 @@ Please analyze the user's code to determine if it solves the problem correctly.
 If correct, return { "isCorrect": true, "betterSolution": "..." }
 If no  better solution, say "이미 모범 답안 수준이에요!" as "betterSolutuion".
 If incorrect, return { "isCorrect": false, "betterSolution": "", "hint": "..." }
-If you find a more optimal or alternative solution, include its code in "betterSolution" as a string.
-Return valid JSON only, without any other text or formatting.
+Return valid JSON only, without any other text or formatting, even if there's no user's code.
 No code fences, no 'Here is the JSON' or explanation.
     `;
 
@@ -85,6 +82,7 @@ No code fences, no 'Here is the JSON' or explanation.
     const content =
       chatCompletion.choices?.[0]?.message?.content?.trim() || "{}";
 
+    // 디버깅:: chatGPT가 준 메시지 출력
     // console.log(content);
 
     // 5) JSON 파싱 시도
