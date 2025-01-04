@@ -5,6 +5,7 @@ import { Toaster } from "react-hot-toast";
 
 import { cn } from "@/lib/utils";
 import { AppProviders } from "@/provider";
+import { QueryProvider } from "@/provider/query-provider";
 import { SpoqaHanSansNeo } from "@/styles/font";
 
 export const metadata: Metadata = {
@@ -23,10 +24,12 @@ export default function RootLayout({
   return (
     <html lang="en" className={SpoqaHanSansNeo.variable}>
       <body className={cn("font-spoqa-han-sans-neo", "w-full", "h-dvh")}>
-        <AppProviders>
-          {children}
-          <Toaster position="top-center" reverseOrder={false} />
-        </AppProviders>
+        <QueryProvider>
+          <AppProviders>
+            {children}
+            <Toaster position="top-center" reverseOrder={false} />
+          </AppProviders>
+        </QueryProvider>
       </body>
     </html>
   );
