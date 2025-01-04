@@ -26,7 +26,7 @@ const BoardModal: React.FC<BoardModalProps> = ({
 }) => {
   // URI에서 방 주인의 Google ID param으로 추출
   const params = useParams();
-  const hostGoogleId = params.id as string;
+  const hostGoogleId = params.google_id as string;
 
   // 1) 비밀 여부 체크박스 상태
   const [isSecret, setIsSecret] = useState<boolean>(false);
