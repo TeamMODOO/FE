@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 // ------------------ 커스텀 훅 ------------------
 import { useMyRoomFurnitureActions } from "@/hooks/myroom/useMyRoomFurnitureActions";
 import { useMyRoomKeyboard } from "@/hooks/myroom/useMyRoomKeyboard";
-import { useMyRoomOwnerProfile } from "@/hooks/myroom/useMyRoomOwnerProfile";
 import { useMyRoomRenderer } from "@/hooks/myroom/useMyRoomRenderer";
 import useMyRoomSocketEvents from "@/hooks/myroom/useMyRoomSocketEvents";
 import useLoadSprites from "@/hooks/performance/useLoadSprites";
@@ -17,6 +16,8 @@ import useThrottle from "@/hooks/performance/useThrottle";
 // ------------------ Models & Types ------------------
 import { Funiture } from "@/model/Funiture";
 import { Direction, User } from "@/model/User";
+// (중요) 새로 만든 API 훅 import
+import { useMyRoomOwnerProfile } from "@/queries/myroom/useMyRoomOwnerProfile";
 
 // ------------------ 상수/데이터 ------------------
 import {
@@ -127,7 +128,7 @@ const MyRoomCanvas: React.FC = () => {
     technologyStack,
     setTechnologyStack,
   });
-  // 구조분해
+  // 구조 분해
   const {
     resumeModalOpen,
     setResumeModalOpen,
@@ -322,13 +323,23 @@ const MyRoomCanvas: React.FC = () => {
   };
 
   // ------------------ API(profile) ------------------
+  // (1) 파라미터 (예: /myroom/955419d1-3e76-444a-a647-b086ebe5478f)
   const params = useParams() as { google_id?: string };
-  const googleId = params.google_id || null;
+  const googleId = params.google_id || undefined;
+
+  // (2) 마이룸 주인 프로필 조회
+  //   - meta.callbacks의 onSuccess/onError는 훅 내부에 있음
   const { data: ownerProfile } = useMyRoomOwnerProfile(googleId);
+
+  // (3) 프로필 데이터 반영
   useEffect(() => {
+    // console.log("googleId : ", googleId);
     if (!ownerProfile) return;
-    // 이력서/포트폴리오/기술스택 업데이트 로직
-    // (예: 서버로부터 좌표나 정보 받아서 setResume, setPortfolio 등등)
+    // console.log(">> [MyRoomCanvas] ownerProfile 갱신:", ownerProfile);
+
+    // 원하는 경우, 여기에서 setResume / setPortfolio / setTechnologyStack 등을
+    // ownerProfile에서 받아온 URL 등에 맞춰 업데이트 가능
+    // (현재는 defaultXXX 그대로 사용 중)
   }, [ownerProfile]);
 
   return (
