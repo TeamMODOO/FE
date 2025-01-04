@@ -1,4 +1,3 @@
-// hooks/useLobbySocketEvents.ts
 "use client";
 
 import { useCallback, useEffect } from "react";
@@ -6,105 +5,111 @@ import { useCallback, useEffect } from "react";
 import useMainSocketStore from "@/store/useMainSocketStore";
 import useUsersStore from "@/store/useUsersStore";
 
-type LobbySocketEventsProps = {
-  roomId: string;
-  userId: string; // 로컬스토리지 UUID (유일 식별자)
-  userNickname: string;
-};
-
-/** CS_MOVEMENT_INFO / SC_MOVEMENT_INFO 구조 예시 */
-interface MovementInfo {
-  user_id: string; // 식별자 (uuid)
-  room_id: string; // 방 ID
+/**
+ * 클라이언트 → 서버로 보낼 이동 정보 (CS_MOVEMENT_INFO)
+ */
+interface MovementInfoToServer {
   position_x: number;
   position_y: number;
   direction: number; // 0=down,1=up,2=right,3=left
-
-  user_name: string; // 화면에 표시할 이름
 }
 
-/** SC_ENTER_ROOM 구조 예시 */
-interface SCEnterRoomData {
-  user_id: string;
+/**
+ * 서버 → 클라이언트로 받을 이동 정보 (SC_MOVEMENT_INFO)
+ */
+interface MovementInfoFromServer {
+  client_id: string;
   position_x: number;
   position_y: number;
   direction: number;
-  user_name: string; // 화면 표시용 이름
+  user_name: string;
 }
 
-// (추가) user별 isMoving false로 만들 타이머
+/** 새 유저 입장 (SC_ENTER_USER) */
+interface SCEnterUserData {
+  client_id: string;
+}
+
+/** 유저 퇴장 (SC_LEAVE_USER) */
+interface SCLeaveUserData {
+  client_id: string;
+}
+
+type LobbySocketEventsProps = {
+  userId: string; // 클라이언트에서 관리하는 고유 id (ex: 'Y1234...' or 'Nxxxx...')
+  userNickname: string; // 클라이언트에서 관리하는 닉네임 (세션 등에 담긴 사용자명)
+};
+
 const moveStopTimers: Record<string, NodeJS.Timeout> = {};
 
 export default function useLobbySocketEvents({
-  roomId,
   userId,
   userNickname,
 }: LobbySocketEventsProps) {
   const mainSocket = useMainSocketStore((state) => state.socket);
 
-  const { users, updateUserPosition, addUser } = useUsersStore();
+  const { users, updateUserPosition, addUser, removeUser } = useUsersStore();
 
-  // -----------------------------
-  // (1) 내 캐릭터 이동 emit
-  // -----------------------------
+  // --------------------------------------------------
+  // (1) 캐릭터 이동 (CS_MOVEMENT_INFO) emit
+  // --------------------------------------------------
   const emitMovement = useCallback(
     (x: number, y: number, direction: number) => {
       if (!mainSocket) return;
 
-      // 새 프로토콜에 user_name이 추가되었으나,
-      // 여기서는 간단히 임시값 "MyName" 으로 전송(예시)
-      // 실제로는 세션이나 스토어에 저장된 이름을 쓸 수도 있음.
-      const data: MovementInfo = {
-        user_id: userId,
-        room_id: roomId,
+      // 서버 프로토콜에 맞게  { position_x, position_y, direction } 만 보냄
+      const data: MovementInfoToServer = {
         position_x: x,
         position_y: y,
         direction,
-        user_name: userNickname,
       };
+
+      // "CS_MOVEMENT_INFO" 라는 이벤트명으로 전송
       mainSocket.emit("CS_MOVEMENT_INFO", data);
     },
-    [mainSocket, roomId, userId, userNickname],
+    [mainSocket],
   );
 
-  // -----------------------------
-  // (2) 다른 사용자 이동 수신 (SC_MOVEMENT_INFO)
-  // -----------------------------
+  // --------------------------------------------------
+  // (2) 다른 사용자 이동 정보 (SC_MOVEMENT_INFO) 수신
+  // --------------------------------------------------
   useEffect(() => {
     if (!mainSocket) return;
 
-    const onMovement = (data: MovementInfo) => {
-      // data = { user_id, room_id, position_x, position_y, direction, user_name }
-
-      // 1) 스토어에 유저가 없으면 새로 addUser
-      const movingUser = users.find((u) => u.id === data.user_id);
+    const onMovement = (data: MovementInfoFromServer) => {
+      // 1) 스토어에 해당 user가 없으면 새로 추가
+      const movingUser = users.find((u) => u.id === data.client_id);
       if (!movingUser) {
-        // nickname = data.user_name (화면 표시용)
-        addUser(data.user_id, data.user_name, data.position_x, data.position_y);
+        addUser(
+          data.client_id,
+          data.user_name,
+          data.position_x,
+          data.position_y,
+        );
       }
 
-      // 2) 위치/방향 갱신
+      // 2) 위치/방향 갱신 + isMoving = true
       updateUserPosition(
-        data.user_id,
+        data.client_id,
         data.position_x,
         data.position_y,
         data.direction,
-        true, // isMoving
+        true,
       );
 
       // 3) 일정 시간 뒤 움직임 없으면 isMoving=false
-      if (moveStopTimers[data.user_id]) {
-        clearTimeout(moveStopTimers[data.user_id]);
+      if (moveStopTimers[data.client_id]) {
+        clearTimeout(moveStopTimers[data.client_id]);
       }
-      moveStopTimers[data.user_id] = setTimeout(() => {
+      moveStopTimers[data.client_id] = setTimeout(() => {
         const stillExists = useUsersStore
           .getState()
-          .users.find((u) => u.id === data.user_id);
+          .users.find((u) => u.id === data.client_id);
         if (stillExists) {
           useUsersStore
             .getState()
             .updateUserPosition(
-              data.user_id,
+              data.client_id,
               data.position_x,
               data.position_y,
               data.direction,
@@ -121,34 +126,43 @@ export default function useLobbySocketEvents({
     };
   }, [mainSocket, users, updateUserPosition, addUser]);
 
-  // -----------------------------
-  // (3) 새 유저 입장 수신 (SC_ENTER_ROOM)
-  // -----------------------------
+  // --------------------------------------------------
+  // (3) 새 유저 입장 (SC_ENTER_USER)
+  // --------------------------------------------------
   useEffect(() => {
     if (!mainSocket) return;
 
-    const onEnterRoom = (data: SCEnterRoomData) => {
-      // data = { user_id, position_x, position_y, direction, user_name }
-
-      // nickname에 user_name
-      addUser(data.user_id, data.user_name, data.position_x, data.position_y);
-
-      // 필요하다면 방향 설정도 해줄 수 있음
-      updateUserPosition(
-        data.user_id,
-        data.position_x,
-        data.position_y,
-        data.direction,
-        false,
-      );
+    const onEnterUser = (data: SCEnterUserData) => {
+      const exists = users.find((u) => u.id === data.client_id);
+      if (!exists) {
+        // 임시로 "Guest" 사용
+        addUser(data.client_id, "Guest", 500, 500);
+      }
     };
 
-    mainSocket.on("SC_ENTER_ROOM", onEnterRoom);
+    mainSocket.on("SC_ENTER_USER", onEnterUser);
 
     return () => {
-      mainSocket.off("SC_ENTER_ROOM", onEnterRoom);
+      mainSocket.off("SC_ENTER_USER", onEnterUser);
     };
-  }, [mainSocket, addUser, updateUserPosition]);
+  }, [mainSocket, users, addUser]);
+
+  // --------------------------------------------------
+  // (4) 유저 퇴장 (SC_LEAVE_USER)
+  // --------------------------------------------------
+  useEffect(() => {
+    if (!mainSocket) return;
+
+    const onLeaveUser = (data: SCLeaveUserData) => {
+      removeUser(data.client_id);
+    };
+
+    mainSocket.on("SC_LEAVE_USER", onLeaveUser);
+
+    return () => {
+      mainSocket.off("SC_LEAVE_USER", onLeaveUser);
+    };
+  }, [mainSocket, removeUser]);
 
   return { emitMovement };
 }
