@@ -1,5 +1,5 @@
 import { MessageCircle, Send, X } from "lucide-react";
-import { RefObject, useEffect, useRef, useState } from "react";
+import React, { RefObject, useEffect, useRef, useState } from "react";
 
 import { ScrollNotification } from "@/app/lobby/_component/Widget/ScrollNotification";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,7 @@ import { useChatScroll } from "@/hooks/chat/useChatScroll";
 import { useChatSocket } from "@/hooks/chat/useChatSocket";
 import { formatTime } from "@/lib/utils/date";
 
-export default function ChatWidget({ roomId }: { roomId: string }) {
+export default function ChatWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [notification, setNotification] = useState<number>(0);
 
@@ -41,6 +41,15 @@ export default function ChatWidget({ roomId }: { roomId: string }) {
   }, [isOpen]);
 
   const toggleChat = () => setIsOpen(!isOpen);
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key !== "Enter") return;
+    if (e.shiftKey) return;
+    else {
+      e.preventDefault(); // 기본 줄바꿈 동작 방지
+      sendMessage(e);
+    }
+  };
 
   const sendMessage = (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,6 +99,7 @@ export default function ChatWidget({ roomId }: { roomId: string }) {
               <Textarea
                 value={messageValue}
                 placeholder="send message"
+                onKeyDown={handleKeyDown}
                 onChange={(e) => setMessageValue(e.target.value)}
                 className="min-h-[40px] w-[225px] resize-none p-2"
               />

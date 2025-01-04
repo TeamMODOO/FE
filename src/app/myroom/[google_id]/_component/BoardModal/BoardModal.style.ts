@@ -24,7 +24,14 @@ const Style = {
       flex
       flex-col
       gap-2
+      border
+      p-5
     `,
+  isSecret: `
+    flex
+    flex-row
+    gap-2
+  `,
   submitButton: `
       mt-2
     `,
