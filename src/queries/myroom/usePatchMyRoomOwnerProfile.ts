@@ -33,6 +33,12 @@ export function usePatchMyRoomOwnerProfile() {
     const { data } = await axios.patch<PatchMyRoomOwnerProfileResponse>(
       `${process.env.NEXT_PUBLIC_API_SERVER_PATH}/users/profile/${googleId}`,
       body,
+      {
+        withCredentials: true,
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
     );
     return data;
   }
