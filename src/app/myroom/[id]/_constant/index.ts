@@ -161,7 +161,7 @@ export const defaultBoard: Funiture[] = [
     x: 190,
     y: 60,
     funitureType: "board",
-    funiturename: "게시판",
+    funiturename: "방명록",
   },
 ];
 
