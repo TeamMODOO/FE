@@ -59,8 +59,8 @@ export const LOBBY_NPCS: NpcInfo[] = [
     width: 100,
     height: 50,
     image: "/furniture/board.png",
-    modalTitle: "공지사항 NPC",
-    name: "공지사항",
+    modalTitle: "게시판 NPC",
+    name: "게시판",
   },
 ];
 
