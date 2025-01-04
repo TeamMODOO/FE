@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { useQuestGet } from "@/hooks/quest/useQuestGet";
 import { useQuestPost } from "@/hooks/quest/useQuestPost";
 
+import { getRandomQuestNumber } from "../../utils/getRandomQuestNumber";
 import Problem from "../Problem/page";
 import Modal from "../ResultModal/ResultModal";
 import styles from "./QuestSection.module.css";
@@ -52,14 +53,6 @@ const customFontSizeTheme = EditorView.theme(
   { dark: true },
 );
 
-// 가져올 수 있는 문제 번호들
-const QUEST_NUMBERS = [8983, 11725, 14888, 2294, 2748];
-
-function seededRandom(seed: number): number {
-  const x = Math.sin(seed) * 10000;
-  return x - Math.floor(x);
-}
-
 export default function QuestSection() {
   const router = useRouter();
   /** 문제 풀이 시작 여부 */
@@ -93,12 +86,8 @@ export default function QuestSection() {
   /* Loading 상태 */
   const [isLoading, setIsLoading] = useState(false);
 
-  // 오늘 날짜를 시드로 해서 난수 생성
-  const today = new Date();
-  const day = today.getDate();
-  const rand = seededRandom(day);
-  const index = Math.floor(rand * QUEST_NUMBERS.length);
-  const randomQuestNumber = QUEST_NUMBERS[index];
+  // // 오늘 날짜를 시드로 해서 난수 생성
+  const randomQuestNumber = getRandomQuestNumber();
 
   const { data, loading, error } = useQuestGet(randomQuestNumber);
   const { submitQuestResult } = useQuestPost(randomQuestNumber);
