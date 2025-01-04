@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useGuestBookGet } from "@/hooks/myroom/useGuestBookGet";
 import { useGuestBookPost } from "@/hooks/myroom/useGuestBookPost";
 import { BoardModalProps } from "@/model/Board";
 
@@ -35,7 +36,15 @@ const BoardModal: React.FC<BoardModalProps> = ({
   const { postGuestBook, postLoading, postError, postData } =
     useGuestBookPost(hostGoogleId);
 
-  // 3) 작성하기 버튼 클릭 시 호출되는 함수
+  // 3) 방명록 목록 조회 훅
+  const {
+    guestBooks,
+    loading: getLoading,
+    error: getError,
+    fetchGuestBookList,
+  } = useGuestBookGet(hostGoogleId);
+
+  // 4) 작성하기 버튼 클릭 시 호출되는 함수
   const handleAddComment = async () => {
     // 방명록 작성 API 호출
     await postGuestBook(visitorMessage, isSecret);
@@ -53,13 +62,25 @@ const BoardModal: React.FC<BoardModalProps> = ({
 
         {/* 방명록 목록 */}
         <div className={Style.commentListContainer}>
-          {/* 기존 boardComments 부분 or guestBooks를 활용 가능 */}
-          {boardComments.map((comment) => (
-            <div key={comment.id} className={Style.singleCommentContainer}>
-              <div className={Style.commentName}>{comment.name}</div>
-              <div className={Style.commentMessage}>{comment.message}</div>
-            </div>
-          ))}
+          {/* 로딩 상태 표시 */}
+          {getLoading && <p>방명록을 불러오는 중입니다...</p>}
+          {/* 에러 메시지 표시 */}
+          {getError && <p style={{ color: "red" }}>{getError}</p>}
+          {/* 방명록 목록 표시 */}
+          {guestBooks &&
+            guestBooks.map((entry) => (
+              <div key={entry.id} className={Style.singleCommentContainer}>
+                <div className={Style.commentName}>
+                  {entry.author_name}
+                  {entry.is_secret && " (비밀)"}
+                </div>
+                <div className={Style.commentMessage}>
+                  {entry.is_secret
+                    ? "비밀 방명록입니다." // 실제로 방 주인만 보려면 서버 로직에서 처리
+                    : entry.content}
+                </div>
+              </div>
+            ))}
         </div>
 
         {/* 방명록 작성 폼 */}
