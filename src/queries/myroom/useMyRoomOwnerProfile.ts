@@ -3,7 +3,6 @@
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 
-// 서버 응답 데이터 구조 (예시)
 interface OwnerProfileResponse {
   bio: string | null; // 자기소개
   resume_url: string | null; // 이력서 URL
@@ -11,14 +10,13 @@ interface OwnerProfileResponse {
   tech_stack: string[] | null; // 기술 스택들
 }
 
-// 리턴 타입 (필요하다면 동일하게 사용)
 export type OwnerProfile = OwnerProfileResponse;
 
 export function useMyRoomOwnerProfile(googleId?: string) {
   // googleId가 없으면 쿼리를 비활성화
   const enabledFlag = !!googleId;
 
-  // queryFn: 실제 GET 호출
+  // queryFn: GET 호출
   async function fetchOwnerProfile(): Promise<OwnerProfile> {
     // console.log(">> [fetchOwnerProfile] 호출, googleId =", googleId);
 
@@ -36,7 +34,7 @@ export function useMyRoomOwnerProfile(googleId?: string) {
     queryFn: fetchOwnerProfile,
     enabled: enabledFlag, // googleId가 있어야만 fetch
     staleTime: 1000 * 60 * 5, // 5분 (예시)
-    // ------------------ 주목! meta.callbacks로 onSuccess / onError 전달 ------------------
+    // ------------------ meta.callbacks로 onSuccess / onError 전달 ------------------
     meta: {
       callbacks: {
         onSuccess: (data: OwnerProfile) => {

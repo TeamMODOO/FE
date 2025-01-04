@@ -16,8 +16,9 @@ import useThrottle from "@/hooks/performance/useThrottle";
 // ------------------ Models & Types ------------------
 import { Funiture } from "@/model/Funiture";
 import { Direction, User } from "@/model/User";
-// (중요) 새로 만든 API 훅 import
+// API 요청 훅
 import { useMyRoomOwnerProfile } from "@/queries/myroom/useMyRoomOwnerProfile";
+import { usePatchMyRoomOwnerProfile } from "@/queries/myroom/usePatchMyRoomOwnerProfile";
 
 // ------------------ 상수/데이터 ------------------
 import {
@@ -162,9 +163,7 @@ const MyRoomCanvas: React.FC = () => {
     handleOpenResumeModal,
     handleOpenPortfolioModal,
     handleOpenTechStackModal,
-    handleSaveResume,
-    handleSavePortfolio,
-    handleSaveTechStack,
+    // 기존: handleSaveResume, handleSavePortfolio, handleSaveTechStack  (→ 이제 수정)
     handleFurnitureClick,
   } = furnitureActions;
 
@@ -192,7 +191,6 @@ const MyRoomCanvas: React.FC = () => {
     myUserId,
     isAnyModalOpen,
     portal,
-    // 방명록은 스페이스바로 열지 않음
   });
 
   // 통합 pressedKeys에 동기화
@@ -238,28 +236,28 @@ const MyRoomCanvas: React.FC = () => {
         throttledPressedKeys["ㅈ"] ||
         throttledPressedKeys["ArrowUp"]
       ) {
-        newDir = 1 as Direction; // Up
+        newDir = 1; // Up
       } else if (
         throttledPressedKeys["s"] ||
         throttledPressedKeys["S"] ||
         throttledPressedKeys["ㄴ"] ||
         throttledPressedKeys["ArrowDown"]
       ) {
-        newDir = 0 as Direction; // Down
+        newDir = 0; // Down
       } else if (
         throttledPressedKeys["d"] ||
         throttledPressedKeys["D"] ||
         throttledPressedKeys["ㅇ"] ||
         throttledPressedKeys["ArrowRight"]
       ) {
-        newDir = 2 as Direction; // Right
+        newDir = 2; // Right
       } else if (
         throttledPressedKeys["a"] ||
         throttledPressedKeys["A"] ||
         throttledPressedKeys["ㅁ"] ||
         throttledPressedKeys["ArrowLeft"]
       ) {
-        newDir = 3 as Direction; // Left
+        newDir = 3; // Left
       }
 
       if (newDir === null) {
@@ -270,7 +268,6 @@ const MyRoomCanvas: React.FC = () => {
 
       // 2) x,y 이동
       let moved = false;
-      // (64×CHAR_SCALE → 64×3 = 192)
       const SPRITE_SIZE = 64 * CHAR_SCALE;
 
       if (newDir === 1 && y > 0) {
@@ -322,25 +319,121 @@ const MyRoomCanvas: React.FC = () => {
     setVisitorMessage("");
   };
 
-  // ------------------ API(profile) ------------------
-  // (1) 파라미터 (예: /myroom/955419d1-3e76-444a-a647-b086ebe5478f)
+  // 실제로 훅 사용
+  const { mutate: patchProfile } = usePatchMyRoomOwnerProfile();
+
+  // ------------------ 구글ID (마이룸 주인) ------------------
   const params = useParams() as { google_id?: string };
   const googleId = params.google_id || undefined;
 
-  // (2) 마이룸 주인 프로필 조회
-  //   - meta.callbacks의 onSuccess/onError는 훅 내부에 있음
+  // ------------------ 주인 프로필 GET (조회) ------------------
   const { data: ownerProfile } = useMyRoomOwnerProfile(googleId);
-
-  // (3) 프로필 데이터 반영
   useEffect(() => {
-    // console.log("googleId : ", googleId);
     if (!ownerProfile) return;
-    // console.log(">> [MyRoomCanvas] ownerProfile 갱신:", ownerProfile);
-
-    // 원하는 경우, 여기에서 setResume / setPortfolio / setTechnologyStack 등을
-    // ownerProfile에서 받아온 URL 등에 맞춰 업데이트 가능
-    // (현재는 defaultXXX 그대로 사용 중)
+    // 필요하다면 ownerProfile → setResume 등 반영
   }, [ownerProfile]);
+
+  // ------------------ API 저장 로직 ------------------
+  // 1) 이력서
+  const handleSaveResume = async () => {
+    if (!resumeFile) {
+      setResumeModalOpen(false);
+      return;
+    }
+    try {
+      // 1) S3 업로드 (예시)
+      const formData = new FormData();
+      formData.append("file", resumeFile);
+      const res = await fetch("/api/resume", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || "Upload failed");
+      const s3Url = data.url;
+
+      // 2) PATCH 호출
+      if (!googleId) {
+        alert("googleId가 없음, 수정 불가");
+        return;
+      }
+      patchProfile(
+        {
+          googleId,
+          resume_url: [s3Url], // 기존에 여러개일 수 있다면 합쳐서 보낼 수도
+        },
+        {
+          onSuccess: () => {
+            alert("이력서(PDF) 저장 완료");
+            setResumeModalOpen(false);
+            setResumeFile(null);
+          },
+          onError: (err: Error) => {
+            alert("프로필 수정 실패: " + err.message);
+          },
+        },
+      );
+    } catch (error: unknown) {
+      alert("파일 업로드 실패: " + error);
+    }
+  };
+
+  // 2) 포트폴리오
+  const handleSavePortfolio = () => {
+    if (!portfolioLink.trim()) {
+      setPortfolioModalOpen(false);
+      return;
+    }
+    // API PATCH
+    if (!googleId) {
+      alert("googleId가 없음, 수정 불가");
+      return;
+    }
+    patchProfile(
+      {
+        googleId,
+        portfolio_url: [portfolioLink], // 단일 링크 or 여러 링크
+      },
+      {
+        onSuccess: () => {
+          alert("포트폴리오(링크) 저장 완료");
+          setPortfolioModalOpen(false);
+          setPortfolioLink("");
+        },
+        onError: (err: Error) => {
+          alert("프로필 수정 실패: " + err.message);
+        },
+      },
+    );
+  };
+
+  // 3) 기술 스택
+  const handleSaveTechStack = () => {
+    if (selectedTechList.length === 0) {
+      setTechStackModalOpen(false);
+      return;
+    }
+    if (!googleId) {
+      alert("googleId가 없음, 수정 불가");
+      return;
+    }
+    patchProfile(
+      {
+        googleId,
+        tech_stack: [...selectedTechList], // 배열
+      },
+      {
+        onSuccess: () => {
+          alert("기술 스택 저장 완료");
+          setTechStackModalOpen(false);
+          setSelectedTechList([]);
+        },
+        onError: (err: Error) => {
+          alert("프로필 수정 실패: " + err.message);
+        },
+      },
+    );
+  };
 
   return (
     <div
@@ -355,7 +448,7 @@ const MyRoomCanvas: React.FC = () => {
       {/* Canvas */}
       <canvas ref={canvasRef} className={Style.absoluteCanvasClass} />
 
-      {/* 가구 (이력서 / 포트폴리오 / 기술스택) */}
+      {/* 이력서/포트폴리오/기술스택 표시 */}
       {[...resume, ...portfolio, ...technologyStack].map((item) => (
         <div
           key={item.id}
@@ -380,7 +473,7 @@ const MyRoomCanvas: React.FC = () => {
           key={item.id}
           className={Style.boardContainerClass}
           style={{ left: item.x, top: item.y }}
-          onClick={() => setIsBoardOpen(true)} // 클릭으로만 열림
+          onClick={() => setIsBoardOpen(true)} // 클릭으로 열기
         >
           <NextImage
             src="/furniture/board.png"
@@ -418,7 +511,7 @@ const MyRoomCanvas: React.FC = () => {
         <div className={Style.furnitureTextClass}>{portal.name}</div>
       </div>
 
-      {/* 하단 버튼들 (이력서/포폴/기술스택 추가) */}
+      {/* 하단 버튼들 */}
       <div className={Style.bottomButtonsClass}>
         <Button
           onClick={handleOpenResumeModal}
@@ -475,7 +568,7 @@ const MyRoomCanvas: React.FC = () => {
         furniture={selectedFurnitureData}
       />
 
-      {/* 모달: 게시판(방명록) */}
+      {/* 모달: 게시판 */}
       <BoardModal
         open={isBoardOpen}
         onClose={setIsBoardOpen}
@@ -494,7 +587,7 @@ const MyRoomCanvas: React.FC = () => {
         pdfUrl={pdfUrl}
       />
 
-      {/* 모달: 포트폴리오 링크 뷰어 */}
+      {/* 모달: 포트폴리오 링크 뷰 */}
       <PortfolioLinkViewModal
         open={portfolioLinkViewModalOpen}
         onClose={setPortfolioLinkViewModalOpen}
