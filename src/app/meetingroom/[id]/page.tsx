@@ -277,7 +277,7 @@ function Page() {
           </div>
         )}
       </div>
-      <ChatWidget roomId={roomId} />
+      <ChatWidget />
     </div>
   );
 }

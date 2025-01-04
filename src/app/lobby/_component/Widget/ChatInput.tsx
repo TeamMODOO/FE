@@ -15,6 +15,15 @@ export const ChatInput = ({
   setMessageValue,
   sendMessage,
 }: ChatInputType) => {
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key !== "Enter") return;
+    if (e.shiftKey) return;
+    else {
+      e.preventDefault(); // 기본 줄바꿈 동작 방지
+      sendMessage(e);
+    }
+  };
+
   return (
     <form
       onSubmit={sendMessage}
@@ -23,6 +32,7 @@ export const ChatInput = ({
       <Textarea
         value={messageValue}
         placeholder="send message"
+        onKeyDown={handleKeyDown}
         onChange={(e) => setMessageValue(e.target.value)}
         className="min-h-[40px] w-[270px] resize-none p-2"
       />
