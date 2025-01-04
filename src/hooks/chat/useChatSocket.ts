@@ -1,5 +1,4 @@
 "use client";
-import { useSession } from "next-auth/react";
 import {
   Dispatch,
   SetStateAction,
@@ -17,7 +16,6 @@ export const useChatSocket = (
   const mainSocket = useMainSocketStore((state) => state.socket);
   const [messageList, setMessageList] = useState<ChattingType[]>([]);
   const [messageValue, setMessageValue] = useState<string>("");
-  const { data: session } = useSession();
 
   const addMessage = useCallback((newMessage: ChattingResponse) => {
     const addMessageInfo = {
@@ -30,13 +28,9 @@ export const useChatSocket = (
   }, []);
 
   const handleSendMessage = useCallback(() => {
-    addMessage({ message: messageValue, user_name: "게스트" });
-    if (!mainSocket || !messageValue.trim()) {
-      return;
-    }
+    if (!mainSocket || !messageValue.trim()) return;
 
     const messageInfo = {
-      user_name: session && session.user ? session.user.name : "Guest",
       message: messageValue,
     };
 
