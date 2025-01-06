@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Socket } from "socket.io-client";
 
+import CanvasSection from "@/app/Canvas/_component/CanvasSection";
 import useAudioSocketConnect from "@/hooks/socket/useAudioSocketConnect";
 import useMainSocketConnect from "@/hooks/socket/useMainSocketConnect";
 import useAudioSocketStore from "@/store/useAudioSocketStore";
@@ -257,7 +258,7 @@ function Page() {
         onLeaveRoom={leaveRoom}
       />
 
-      <div className="relative">
+      <div className="relative z-10">
         {joined && (
           <div className="absolute right-2.5 top-2.5 flex w-64 flex-col overflow-y-auto">
             <div className="grid gap-4">
@@ -277,6 +278,7 @@ function Page() {
           </div>
         )}
       </div>
+      <CanvasSection />
       <ChatWidget />
     </div>
   );
