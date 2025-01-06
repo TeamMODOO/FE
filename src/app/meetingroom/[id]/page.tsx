@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
+import axios from "axios";
 import * as mediasoupClient from "mediasoup-client";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -245,6 +246,39 @@ function Page() {
       joinRoom();
     }
   }, [audioSocket, isAudioConnected]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const clientId = localStorage.getItem("client_id") ?? "";
+
+      const payload = {
+        room_id: roomId,
+        client_id: clientId,
+      };
+      await axios.post(
+        `${process.env.NEXT_PUBLIC_API_SERVER_PATH}/meetingroom/join`,
+        payload,
+      );
+    };
+    fetchData();
+
+    return () => {
+      const fetchData = async () => {
+        const clientId = localStorage.getItem("client_id") ?? "";
+
+        const payload = {
+          room_id: roomId,
+          client_id: clientId,
+        };
+
+        await axios.post(
+          `${process.env.NEXT_PUBLIC_API_SERVER_PATH}/meetingroom/leave`,
+          payload,
+        );
+      };
+      fetchData();
+    };
+  }, []);
 
   return (
     <div className="flex h-screen flex-col">
