@@ -646,18 +646,18 @@ const MyRoomCanvas: React.FC = () => {
         onClose={setViewModalOpen}
         furniture={selectedFurnitureData}
       />
-
-      {/* 모달: 방명록 */}
-      <BoardModal
-        open={isBoardOpen}
-        onClose={setIsBoardOpen}
-        boardComments={boardComments}
-        visitorName={visitorName}
-        visitorMessage={visitorMessage}
-        setVisitorName={setVisitorName}
-        setVisitorMessage={setVisitorMessage}
-        handleAddComment={handleAddComment}
-      />
+      {isBoardOpen && (
+        <BoardModal
+          open={isBoardOpen}
+          onClose={setIsBoardOpen}
+          boardComments={boardComments}
+          visitorName={visitorName}
+          visitorMessage={visitorMessage}
+          setVisitorName={setVisitorName}
+          setVisitorMessage={setVisitorMessage}
+          handleAddComment={handleAddComment}
+        />
+      )}
 
       {/* 모달: PDF */}
       <PdfViewerModal

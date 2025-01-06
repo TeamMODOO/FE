@@ -551,22 +551,26 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
       </NpcModal>
 
       {/* 공지사항 모달 */}
-      <NoticeBoardModal
-        open={noticeModalOpen}
-        onClose={setNoticeModalOpen}
-        noticeList={noticeList}
-        writerName={writerName}
-        writerMessage={writerMessage}
-        setWriterName={setWriterName}
-        setWriterMessage={setWriterMessage}
-        handleAddNotice={handleAddNotice}
-      />
+      {noticeModalOpen && (
+        <NoticeBoardModal
+          open={noticeModalOpen}
+          onClose={setNoticeModalOpen}
+          noticeList={noticeList}
+          writerName={writerName}
+          writerMessage={writerMessage}
+          setWriterName={setWriterName}
+          setWriterMessage={setWriterMessage}
+          handleAddNotice={handleAddNotice}
+        />
+      )}
 
       {/* 회의실 모달 */}
-      <EnterMeetingRoom
-        open={meetingModalOpen}
-        onOpenChange={setMeetingModalOpen}
-      />
+      {meetingModalOpen && (
+        <EnterMeetingRoom
+          open={meetingModalOpen}
+          onOpenChange={setMeetingModalOpen}
+        />
+      )}
 
       <div
         className={Style.canvasContainerClass}
