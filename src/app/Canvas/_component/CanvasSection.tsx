@@ -13,7 +13,7 @@ const CanvasSection = () => {
   // 캔버스 초기화
   const { canvasContainerRef, canvasRef, canvas } = useCanvasInit();
   // 캔버스 이벤트 설정
-  useCanvasEvents(canvas);
+  useCanvasEvents(canvas, canvasContainerRef);
   // 캔버스 데이터 소켓으로 전송
   useCanvasSocket(canvas, mainSocket);
 
