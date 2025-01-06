@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { redirect } from "next/navigation";
 
 import { signIn, signOut } from "@/auth";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,13 @@ export default function SignInPage() {
       callbackUrl: "/registeravatar",
     });
     return result;
+  }
+
+  // 게스트 로그인
+  async function handleGuestLogin() {
+    "use server";
+    // 이 부분에 게스트 세션 발급 내용 들어갈 예정
+    redirect("/lobby");
   }
 
   async function handleSignOut() {
@@ -55,7 +63,9 @@ export default function SignInPage() {
               />
             </Button>
           </form>
-          <form>
+
+          {/* 게스트 로그인 버튼 */}
+          <form action={handleGuestLogin}>
             <Button className={styles.guestLoginButton}>
               <Image
                 src="/button/guest_login_button.png"
@@ -66,7 +76,7 @@ export default function SignInPage() {
               <Image
                 className={styles.guestLoginButtonHover}
                 src="/button/guest_login_button_hover.png"
-                alt="guest 로그인"
+                alt="guest 로그인_호버"
                 width={350}
                 height={80}
               />
