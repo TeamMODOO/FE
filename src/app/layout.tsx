@@ -2,6 +2,7 @@ import "@/styles/globals.css";
 
 import type { Metadata } from "next";
 
+import { Toaster } from "@/components/ui/toaster";
 import { cn } from "@/lib/utils";
 import { AppProviders } from "@/provider";
 import { QueryProvider } from "@/provider/query-provider";
@@ -24,7 +25,10 @@ export default function RootLayout({
     <html lang="en" className={SpoqaHanSansNeo.variable}>
       <body className={cn("font-spoqa-han-sans-neo", "w-full", "h-dvh")}>
         <QueryProvider>
-          <AppProviders>{children}</AppProviders>
+          <AppProviders>
+            {children}
+            <Toaster />
+          </AppProviders>
         </QueryProvider>
       </body>
     </html>

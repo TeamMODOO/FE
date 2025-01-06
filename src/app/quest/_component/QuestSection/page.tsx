@@ -8,11 +8,12 @@ import CodeMirror from "@uiw/react-codemirror";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { toast } from "react-hot-toast";
 
 import { Button } from "@/components/ui/button";
+// import { toast } from "react-hot-toast";
 import { useQuestGet } from "@/hooks/quest/useQuestGet";
 import { useQuestPost } from "@/hooks/quest/useQuestPost";
+import { useToast } from "@/hooks/use-toast";
 
 import { getRandomQuestNumber } from "../../utils/getRandomQuestNumber";
 import Problem from "../Problem/page";
@@ -54,6 +55,7 @@ const customFontSizeTheme = EditorView.theme(
 );
 
 export default function QuestSection() {
+  const { toast } = useToast();
   const router = useRouter();
   /** 문제 풀이 시작 여부 */
   const [isStart, setIsStart] = useState(false);
@@ -170,15 +172,18 @@ export default function QuestSection() {
   useEffect(() => {
     // isStart인 상태에서 timeLeft가 0이 되면
     if (isStart && timeLeft === 0) {
-      toast.error(
-        `아쉽습니다. 시간 초과로 인해 일일 챌린지를 해결하지 못했습니다.
+      toast({
+        title: "시간 초과!",
+        description: `아쉽습니다. 시간 초과로 인해 일일 챌린지를 해결하지 못했습니다.
         (메인 화면으로 이동합니다...)`,
-      );
+        variant: "destructive",
+        duration: 3000,
+      });
       setTimeout(() => {
         router.push("/lobby");
       }, 5000);
     }
-  }, [timeLeft, isStart, router]);
+  }, [timeLeft, isStart, router, toast]);
 
   /** 시간 포맷 */
   const hours = Math.floor(timeLeft / 3600);
