@@ -11,33 +11,29 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import useCanvasStore from "@/store/useCanvasStore";
+import usePenColorStore, { PenColorTypes } from "@/store/usePenColor";
 
 import { COLOR_CODE } from "../_constant";
 
-type PenColorTypes =
-  | "red"
-  | "orange"
-  | "yellow"
-  | "lightGreen"
-  | "blue"
-  | "black";
-
 const ColorPanel = () => {
+  const [isOpen, setIsOpen] = useState(false);
+
   const canvas = useCanvasStore((state) => state.canvasInstance);
-  const [penColor, setPenColor] = useState<PenColorTypes>("black");
+  const penColor = usePenColorStore((state) => state.penColor);
+  const setPenColor = usePenColorStore((state) => state.setPenColor);
 
   useEffect(() => {
     if (!(canvas instanceof fabric.Canvas)) return;
-    canvas.freeDrawingBrush.color = COLOR_CODE[penColor];
+    canvas.freeDrawingBrush.color = COLOR_CODE[penColor as PenColorTypes];
   }, [penColor]);
 
   return (
-    <Popover>
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
         <Button variant="outline" className="size-10 p-0">
           <div
             className="size-6 rounded-full"
-            style={{ backgroundColor: COLOR_CODE[penColor] }}
+            style={{ backgroundColor: COLOR_CODE[penColor as PenColorTypes] }}
           />
         </Button>
       </PopoverTrigger>
@@ -48,7 +44,10 @@ const ColorPanel = () => {
               key={color}
               className="size-8 p-0"
               style={{ backgroundColor: code }}
-              onClick={() => setPenColor(color as PenColorTypes)}
+              onClick={() => {
+                setPenColor(color);
+                setIsOpen(false);
+              }}
             >
               {penColor === color && <Check className="text-white" size={16} />}
             </Button>
