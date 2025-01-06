@@ -9,7 +9,7 @@ import ChatWidget from "./_component/Widget/ChattingWidget";
 import FriendInformation from "./_component/Widget/FriendInformation";
 
 const ROOM_TYPE = "floor";
-const ROOM_ID = "7";
+const ROOM_ID = "floor7";
 
 export default function Page() {
   // 채팅창 열림 여부 (true면 열림, false면 닫힘)
