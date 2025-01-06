@@ -15,6 +15,7 @@ import useCanvasStore from "@/store/useCanvasStore";
 import useToolStore from "@/store/useToolStore";
 
 import ColorPanel from "./ColorPanel";
+import PenSizePanel from "./PenSizePanel";
 
 const Toolbar = () => {
   const activeTool = useToolStore((state) => state.activeTool);
@@ -190,8 +191,12 @@ const Toolbar = () => {
             <TooltipContent>Pen Tool</TooltipContent>
           </Tooltip>
 
-          {activeTool === "pen" && <ColorPanel />}
-
+          {activeTool === "pen" && (
+            <>
+              <ColorPanel />
+              <PenSizePanel />
+            </>
+          )}
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
