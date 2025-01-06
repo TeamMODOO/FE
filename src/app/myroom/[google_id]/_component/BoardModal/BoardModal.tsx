@@ -46,11 +46,18 @@ const BoardModal: React.FC<BoardModalProps> = ({
 
   // 4) 작성하기 버튼 클릭 시 호출되는 함수
   const handleAddComment = async () => {
-    // 방명록 작성 API 호출
-    await postGuestBook(visitorMessage, isSecret);
-    // 작성 후, 인풋 내용 비우기 등 추가 처리
-    setVisitorMessage("");
-    setIsSecret(false);
+    try {
+      // 방명록 작성 API 호출
+      await postGuestBook(visitorMessage, isSecret);
+      // 작성 후, 비우기 & 방명록 새로고침
+      setVisitorMessage("");
+      setIsSecret(false);
+
+      // 작성 완료 후 방명록 목록 다시 불러오기
+      await fetchGuestBookList();
+    } catch (err) {
+      // console.error("방명록 작성 중 에러:", err);
+    }
   };
 
   return (
@@ -66,7 +73,11 @@ const BoardModal: React.FC<BoardModalProps> = ({
           {getLoading && <p>방명록을 불러오는 중입니다...</p>}
           {/* 에러 메시지 표시 */}
           {getError && <p style={{ color: "red" }}>{getError}</p>}
+
           {/* 방명록 목록 표시 */}
+          {!getLoading && guestBooks && guestBooks.length === 0 && (
+            <p>아직 작성된 방명록이 없습니다.</p>
+          )}
           {guestBooks &&
             guestBooks.map((entry) => (
               <div key={entry.id} className={Style.singleCommentContainer}>
@@ -89,15 +100,14 @@ const BoardModal: React.FC<BoardModalProps> = ({
             방명록 남기기
           </Label>
 
-          <div className={Style.isSecret}>
-            {/* 체크박스: isSecret 상태와 연결 */}
+          {/* <div className={Style.isSecret}>
             <input
               type="checkbox"
               checked={isSecret}
               onChange={(e) => setIsSecret(e.target.checked)}
             />
             <span>방 주인에게만 보이기</span>
-          </div>
+          </div> */}
 
           {/* 메시지 입력 필드 */}
           <Input
