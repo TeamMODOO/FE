@@ -1,8 +1,8 @@
 "use client";
 
 import { fabric } from "fabric";
-import { Eraser, Hand, Mouse, Pencil } from "lucide-react";
-import { useEffect } from "react";
+import { Eraser, Hand, Mouse, Pencil, Redo, Undo } from "lucide-react";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -20,6 +20,10 @@ const Toolbar = () => {
   const activeTool = useToolStore((state) => state.activeTool);
   const setActiveTool = useToolStore((state) => state.setActiveTool);
   const canvas = useCanvasStore((state) => state.canvasInstance);
+
+  // 실행 취소를 위한 상태 관리
+  const [isLocked, setIsLocked] = useState(false);
+  const [history, setHistory] = useState<fabric.Object[]>([]);
 
   /**
    * @description 화이트 보드에 그려져 있는 요소들을 클릭을 통해 선택 가능한지 여부를 제어하기 위한 함수입니다.
@@ -39,6 +43,16 @@ const Toolbar = () => {
     canvas.isDrawingMode = false;
     canvas.selection = false;
     canvas.defaultCursor = "default";
+  };
+
+  /**
+   * @description 캔버스 변경사항을 추적하고 히스토리를 관리하는 함수입니다.
+   */
+  const saveHistory = () => {
+    if (!isLocked) {
+      setHistory([]);
+    }
+    setIsLocked(false);
   };
 
   const handleSelect = () => {
@@ -98,12 +112,35 @@ const Toolbar = () => {
         canvas.relativePan(delta);
       }
     };
+
     const handleMouseUp = () => {
       panning = false;
     };
     canvas.on("mouse:down", handleMouseDown);
     canvas.on("mouse:move", handleMouseMove);
     canvas.on("mouse:up", handleMouseUp);
+  };
+
+  // 데이터 보내야함
+  const handleUndoClick = () => {
+    if (canvas && canvas._objects.length > 0) {
+      const poppedObject = canvas._objects.pop();
+      if (poppedObject) {
+        setHistory((prev) => [...prev, poppedObject]);
+        canvas.renderAll();
+      }
+    }
+  };
+
+  const handleRedoClick = () => {
+    if (canvas && history) {
+      if (history.length > 0) {
+        setIsLocked(true);
+        canvas.add(history[history.length - 1]);
+        const newHistory = history.slice(0, -1);
+        setHistory(newHistory);
+      }
+    }
   };
 
   useEffect(() => {
@@ -133,6 +170,20 @@ const Toolbar = () => {
         break;
     }
   }, [activeTool]);
+
+  useEffect(() => {
+    if (canvas) {
+      canvas.on("object:added", saveHistory);
+      canvas.on("object:modified", saveHistory);
+      canvas.on("object:removed", saveHistory);
+
+      return () => {
+        canvas.off("object:added", saveHistory);
+        canvas.off("object:modified", saveHistory);
+        canvas.off("object:removed", saveHistory);
+      };
+    }
+  }, [canvas]);
 
   return (
     <TooltipProvider>
@@ -190,6 +241,34 @@ const Toolbar = () => {
               </Button>
             </TooltipTrigger>
             <TooltipContent>Hand Tool</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleUndoClick}
+                disabled={!canvas || canvas._objects.length === 0}
+              >
+                <Undo className="size-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Undo</TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleRedoClick}
+                disabled={!canvas || history.length === 0}
+              >
+                <Redo className="size-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>다시 실행</TooltipContent>
           </Tooltip>
         </div>
       </div>
