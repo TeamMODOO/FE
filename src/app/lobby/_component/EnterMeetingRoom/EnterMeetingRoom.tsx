@@ -1,6 +1,8 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import React, { useState } from "react";
+import { v4 as uuid } from "uuid";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -12,8 +14,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useMeetingRoom } from "@/queries/meetingroom/useMeetingRoom";
-import { useCreateMeetingRoom } from "@/queries/meetingroom/useMeetingRoomCreate";
+import {
+  CreateMeetingRoomPayload,
+  useCreateMeetingRoom,
+} from "@/queries/meetingroom/useMeetingRoomCreate";
 
 import { RoomCard } from "./Room";
 
@@ -27,13 +31,28 @@ export const EnterMeetingRoom: React.FC<EnterMeetingRoomProps> = ({
   onOpenChange,
 }) => {
   const [roomName, setRoomName] = useState("");
-  const { data, isLoading, isError } = useMeetingRoom();
-  const createMeetingRoom = useCreateMeetingRoom();
+  // 데이터 요청
+  // const { data, isLoading, isError } = useMeetingRoom();
+  const { mutate: createNotice } = useCreateMeetingRoom();
+
+  const router = useRouter();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    createMeetingRoom.mutate({
+
+    const clientId = localStorage.getItem("client_id") ?? "";
+    const roomId = uuid();
+    const payload: CreateMeetingRoomPayload = {
+      room_id: roomId,
       title: roomName,
+      client_id: clientId,
+    };
+
+    createNotice(payload, {
+      onSuccess: () => {
+        setRoomName("");
+        router.push(`/meetingroom/${roomId}`);
+      },
     });
   };
 
