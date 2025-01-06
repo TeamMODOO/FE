@@ -64,7 +64,7 @@ export const useCanvasEvents = (
     window.addEventListener("resize", handleResize);
 
     return () => {
-      canvas.dispose();
+      canvas.off("mouse:wheel");
       window.removeEventListener("keyup", handleDelete);
       window.removeEventListener("resize", handleResize);
     };
