@@ -3,20 +3,32 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 
-interface PatchMyRoomOwnerProfileParams {
+/**
+ * [질문에서 주신 최종 타입 정의]
+ * 이력서(resume_url)는 단일 string or null
+ * 포트폴리오(portfolio_url)는 string[] or null
+ * 기술 스택(tech_stack)은 string[] or null
+ */
+export interface PatchMyRoomOwnerProfileParams {
   googleId: string;
   bio?: string | null;
-  portfolio_url?: string[] | null; // 명세 상 포트폴리오는 여러 URL
-  resume_url?: string[] | null; // 명세 상 이력서는 여러 URL
+
+  /** 포트폴리오 - 여러 개 가능하므로 string[] | null */
+  portfolio_url?: string[] | null;
+
+  /** 이력서 - 단일 string or null */
+  resume_url?: string | null;
+
+  /** 기술 스택 - 여러 개 가능하므로 string[] | null */
   tech_stack?: string[] | null;
 }
 
+/** 서버 응답 프로필 구조 (resume_url, portfolio_url 등이 string | null) */
 interface PatchMyRoomOwnerProfileResponse {
-  // 서버에서 반환하는 업데이트된 사용자 프로필
   bio: string | null;
-  resume_url: string | null; // 혹은 string[] | null (명세에 따라)
-  portfolio_url: string | null; // 혹은 string[] | null
-  tech_stack: string | null; // 혹은 string[] | null
+  resume_url: string | null; // 서버에서는 string or null
+  portfolio_url: string | null; // 서버에서는 string or null
+  tech_stack: string | null; // 서버에서는 string or null
 }
 
 /**
@@ -50,18 +62,13 @@ export function usePatchMyRoomOwnerProfile() {
   >({
     mutationFn: patchOwnerProfile,
     onSuccess: (data, variables) => {
-      // 1) 캐시 invalidate or update
-      //    예: "myRoomOwnerProfile" 리페치
-      // v4 권장 사용 방식
+      // 1) 캐시 invalidate ("myRoomOwnerProfile" → GET 재호출)
       queryClient.invalidateQueries({
         queryKey: ["myRoomOwnerProfile", variables.googleId],
       });
-
-      // 2) 성공 시 로직
       // console.log("[usePatchMyRoomOwnerProfile] success:", data);
     },
     onError: (error) => {
-      // 실패 시 로직
       // console.log("[usePatchMyRoomOwnerProfile] error:", error);
     },
   });
