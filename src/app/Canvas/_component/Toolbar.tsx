@@ -1,7 +1,7 @@
 "use client";
 
 import { fabric } from "fabric";
-import { Eraser, Hand, Mouse, Pencil, Redo, Undo } from "lucide-react";
+import { Eraser, Hand, Pencil, Redo, Undo } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -53,14 +53,6 @@ const Toolbar = () => {
       setHistory([]);
     }
     setIsLocked(false);
-  };
-
-  const handleSelect = () => {
-    if (!(canvas instanceof fabric.Canvas)) return;
-
-    setIsObjectSelectable(true);
-    canvas.selection = true;
-    canvas.defaultCursor = "default";
   };
 
   const handlePen = () => {
@@ -153,10 +145,6 @@ const Toolbar = () => {
     resetCanvasOption();
 
     switch (activeTool) {
-      case "select":
-        handleSelect();
-        break;
-
       case "pen":
         handlePen();
         break;
@@ -189,19 +177,6 @@ const Toolbar = () => {
     <TooltipProvider>
       <div className="absolute left-2.5 top-2.5 w-[60px]">
         <div className="bg-grayscale-lightgray border-grayscale-lightgray flex w-auto flex-col items-center justify-center gap-2 rounded-xl border p-2 shadow-md">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant={activeTool === "select" ? "default" : "ghost"}
-                size="icon"
-                onClick={() => setActiveTool("select")}
-              >
-                <Mouse className="size-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Select Tool</TooltipContent>
-          </Tooltip>
-
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
