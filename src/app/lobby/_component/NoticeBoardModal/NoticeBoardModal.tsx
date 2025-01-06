@@ -109,7 +109,7 @@ export default function NoticeBoardModal({
         // err가 AxiosError인지 확인 후 처리 (예시)
         // const axiosError = err as AxiosError;
         // alert(axiosError?.response?.data?.detail || "게시글 작성 중 오류가 발생했습니다.");
-        console.error(err);
+        // console.error(err);
         alert("게시글 작성 중 오류가 발생했습니다.");
       },
     });
