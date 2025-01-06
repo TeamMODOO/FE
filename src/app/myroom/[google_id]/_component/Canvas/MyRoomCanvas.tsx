@@ -163,7 +163,6 @@ const MyRoomCanvas: React.FC = () => {
     handleOpenResumeModal,
     handleOpenPortfolioModal,
     handleOpenTechStackModal,
-    // 기존: handleSaveResume, handleSavePortfolio, handleSaveTechStack  (→ 이제 수정)
     handleFurnitureClick,
   } = furnitureActions;
 
@@ -319,7 +318,7 @@ const MyRoomCanvas: React.FC = () => {
     setVisitorMessage("");
   };
 
-  // 실제로 훅 사용
+  // ------------------ PATCH 훅 ------------------
   const { mutate: patchProfile } = usePatchMyRoomOwnerProfile();
 
   // ------------------ 구글ID (마이룸 주인) ------------------
@@ -328,9 +327,70 @@ const MyRoomCanvas: React.FC = () => {
 
   // ------------------ 주인 프로필 GET (조회) ------------------
   const { data: ownerProfile } = useMyRoomOwnerProfile(googleId);
+
+  /**
+   * [중요] GET으로 가져온 ownerProfile을 로컬 state에 반영.
+   *  예) ownerProfile = {
+   *    tech_stack: ["Python", "HTML/CSS"],
+   *    resume_url: ["https://...pdf"],
+   *    portfolio_url: ["https://..."],
+   *    bio: "자기소개 ...",
+   *    ...
+   *  }
+   */
   useEffect(() => {
     if (!ownerProfile) return;
-    // 필요하다면 ownerProfile → setResume 등 반영
+
+    const resumeUrl = ownerProfile.resume_url;
+
+    if (resumeUrl !== null && resumeUrl.length > 0) {
+      setResume((prev) =>
+        prev.map((item, idx) => {
+          if (idx === 0) {
+            return {
+              ...item,
+              funiturename: "이력서(PDF)",
+              customUrl: resumeUrl[0],
+            };
+          }
+          return item;
+        }),
+      );
+    }
+
+    const portfolio_url = ownerProfile.portfolio_url;
+
+    if (portfolio_url && portfolio_url.length > 0) {
+      setPortfolio((prev) =>
+        prev.map((item, idx) => {
+          if (idx === 0) {
+            return {
+              ...item,
+              funiturename: "포트폴리오",
+              customUrl: portfolio_url[0],
+            };
+          }
+          return item;
+        }),
+      );
+    }
+
+    const tech_stack = ownerProfile.tech_stack;
+
+    if (tech_stack && tech_stack.length > 0) {
+      setTechnologyStack((prev) =>
+        prev.map((item, idx) => {
+          if (idx === 0) {
+            return {
+              ...item,
+              funiturename: "기술 스택",
+              customTechStack: tech_stack,
+            };
+          }
+          return item;
+        }),
+      );
+    }
   }, [ownerProfile]);
 
   // ------------------ API 저장 로직 ------------------
@@ -360,13 +420,14 @@ const MyRoomCanvas: React.FC = () => {
       patchProfile(
         {
           googleId,
-          resume_url: [s3Url], // 기존에 여러개일 수 있다면 합쳐서 보낼 수도
+          resume_url: [s3Url], // 여러 개라면 배열로 보낼 수도
         },
         {
           onSuccess: () => {
             alert("이력서(PDF) 저장 완료");
             setResumeModalOpen(false);
             setResumeFile(null);
+            // ↑ invalidateQueries => GET => useEffect() => setResume
           },
           onError: (err: Error) => {
             alert("프로필 수정 실패: " + err.message);
@@ -392,13 +453,14 @@ const MyRoomCanvas: React.FC = () => {
     patchProfile(
       {
         googleId,
-        portfolio_url: [portfolioLink], // 단일 링크 or 여러 링크
+        portfolio_url: [portfolioLink], // 단일 or 여러 링크
       },
       {
         onSuccess: () => {
           alert("포트폴리오(링크) 저장 완료");
           setPortfolioModalOpen(false);
           setPortfolioLink("");
+          // ↑ invalidateQueries => GET => useEffect() => setPortfolio
         },
         onError: (err: Error) => {
           alert("프로필 수정 실패: " + err.message);
@@ -420,13 +482,14 @@ const MyRoomCanvas: React.FC = () => {
     patchProfile(
       {
         googleId,
-        tech_stack: [...selectedTechList], // 배열
+        tech_stack: [...selectedTechList],
       },
       {
         onSuccess: () => {
           alert("기술 스택 저장 완료");
           setTechStackModalOpen(false);
           setSelectedTechList([]);
+          // ↑ invalidateQueries => GET => useEffect() => setTechnologyStack
         },
         onError: (err: Error) => {
           alert("프로필 수정 실패: " + err.message);
