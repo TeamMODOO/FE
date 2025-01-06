@@ -14,3 +14,11 @@ export interface NoticeBoardModalProps {
   setWriterMessage: React.Dispatch<React.SetStateAction<string>>;
   handleAddNotice: () => void; // "글 작성" 버튼 클릭 시 로직
 }
+export interface NoticeData {
+  id: number;
+  title: string;
+  content: string;
+  author_name: string;
+  author_google_id: string;
+  created_at: string; // ISO datetime
+}
