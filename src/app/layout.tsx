@@ -1,7 +1,6 @@
 import "@/styles/globals.css";
 
 import type { Metadata } from "next";
-import { Toaster } from "react-hot-toast";
 
 import { cn } from "@/lib/utils";
 import { AppProviders } from "@/provider";
@@ -25,10 +24,7 @@ export default function RootLayout({
     <html lang="en" className={SpoqaHanSansNeo.variable}>
       <body className={cn("font-spoqa-han-sans-neo", "w-full", "h-dvh")}>
         <QueryProvider>
-          <AppProviders>
-            {children}
-            <Toaster position="top-center" reverseOrder={false} />
-          </AppProviders>
+          <AppProviders>{children}</AppProviders>
         </QueryProvider>
       </body>
     </html>
