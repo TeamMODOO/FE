@@ -52,7 +52,7 @@ export const useCanvasEvents = (canvas: fabric.Canvas | null) => {
     window.addEventListener("keyup", handleDelete);
 
     return () => {
-      canvas.dispose();
+      canvas.off("mouse:wheel");
       window.removeEventListener("keyup", handleDelete);
     };
   }, [canvas, handleZoom, handleDelete]);
