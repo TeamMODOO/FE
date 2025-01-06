@@ -1,3 +1,4 @@
+// src/app/signinloading/page.tsx
 "use client";
 
 import Image from "next/image";
@@ -9,8 +10,8 @@ import { useSignInPost } from "@/hooks/signin/useSignInPost";
 
 import styles from "./SignInLoading.module.css";
 
+/** access_token 쿠키 존재 여부 판별 */
 function hasAccessTokenCookie(): boolean {
-  // 'access_token=...' 형태의 쿠키가 있는지 검사
   return document.cookie
     .split(";")
     .some((item) => item.trim().startsWith("access_token="));
@@ -20,32 +21,41 @@ export default function SignInLoading() {
   const { data: session, status } = useSession();
   const { signIn, loading } = useSignInPost(); // custom hook
   const router = useRouter();
-  // api 요청을 한 번만 보내기 위한 flag
   const didSignInRef = useRef(false);
 
   useEffect(() => {
-    // 1) 구글 로그인 상태이면서, api 요청 전
-    if (status === "authenticated" && !didSignInRef.current) {
-      const hasToken = hasAccessTokenCookie();
+    // 1) 게스트 로그인인지 확인 (providerName === "credentials")
+    if (session?.providerName === "credentials") {
+      router.push("/lobby");
+      return;
+    }
 
-      if (hasToken) {
-        // 2) 구글 로그인 상태이면서, api 요청 전이고, access_token 쿠키가 존재
-        router.push("/lobby");
-      } else {
-        didSignInRef.current = true;
-        // 3) 구글 로그인 상태이면서, api 요청 전이고, access_token이 없으면 signIn() 호출
-        // -> 토큰 발급 후 로비로 이동
-        signIn()
-          .then(() => {
-            router.push("/lobby");
-          })
-          .catch((err) => {
-            // 에러 처리 로직을 여기에 추가해도 됨
-            // console.error("로그인 토큰 발급 실패:", err);
-          });
+    // 세션이 "authenticated" 상태이며, 아직 API 요청을 안 했다면
+    if (status === "authenticated" && !didSignInRef.current) {
+      // 2) 구글 로그인인 경우 (providerName === "google")
+      if (session?.providerName === "google") {
+        // 먼저 access_token 쿠키가 있는지 확인
+        const hasToken = hasAccessTokenCookie();
+        if (hasToken) {
+          // 이미 access_token이 있다면 바로 로비 이동
+          router.push("/lobby");
+        } else {
+          // console.log(session);
+          didSignInRef.current = true; // 중복 실행 방지
+          // 토큰이 없다면 직접 발급 받기
+          signIn()
+            .then(() => {
+              router.push("/lobby");
+            })
+            .catch((err) => {
+              // 에러 처리
+              // console.error("구글 로그인 토큰 발급 실패:", err);
+              // 필요시 에러 페이지로 이동
+            });
+        }
       }
     }
-  }, [status, router, signIn]);
+  }, [status, session, router, signIn]);
 
   return (
     <div className={styles.container}>
