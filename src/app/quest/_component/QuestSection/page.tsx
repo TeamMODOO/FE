@@ -11,7 +11,10 @@ import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 
 import { Button } from "@/components/ui/button";
+import { useQuestGet } from "@/hooks/quest/useQuestGet";
+import { useQuestPost } from "@/hooks/quest/useQuestPost";
 
+import { getRandomQuestNumber } from "../../utils/getRandomQuestNumber";
 import Problem from "../Problem/page";
 import Modal from "../ResultModal/ResultModal";
 import styles from "./QuestSection.module.css";
@@ -28,6 +31,23 @@ const customFontSizeTheme = EditorView.theme(
   {
     ".cm-content": {
       fontSize: "17px",
+    },
+
+    ".cm-scroller::-webkit-scrollbar": {
+      width: "3px",
+    },
+
+    ".cm-scroller::-webkit-scrollbar:horizontal": {
+      height: "3px",
+    },
+
+    ".cm-scroller::-webkit-scrollbar-track": {
+      background: "none",
+    },
+
+    ".cm-scroller::-webkit-scrollbar-thumb": {
+      background: "red",
+      borderRadius: "5px",
     },
   },
   { dark: true },
@@ -66,19 +86,17 @@ export default function QuestSection() {
   /* Loading 상태 */
   const [isLoading, setIsLoading] = useState(false);
 
-  // 문제 정보 (하드코딩 예시)
-  const qNum = "1920";
-  const qTitle = "수 찾기";
-  const qProblem = `N개의 정수 A[1], A[2], …, A[N]이 주어져 있을 때, 
-  이 안에 X라는 정수가 존재하는지 알아내는 프로그램을 작성하시오.`;
-  const qInput = `첫째 줄에 자연수 N(1 ≤ N ≤ 100,000)이 주어진다. 
-다음 줄에는 N개의 정수 A[1], A[2], …, A[N]이 주어진다. 
-다음 줄에는 M(1 ≤ M ≤ 100,000)이 주어진다. 
-다음 줄에는 M개의 수들이 주어지는데, 
-이 수들이 A안에 존재하는지 알아내면 된다. 
-모든 정수의 범위는 -2^31 이상 2^31 미만이다.`;
-  const qOutput = `M개의 줄에 답을 출력한다. 
-존재하면 1을, 존재하지 않으면 0을 출력한다.`;
+  // // 오늘 날짜를 시드로 해서 난수 생성
+  const randomQuestNumber = getRandomQuestNumber();
+
+  const { data, loading, error } = useQuestGet(randomQuestNumber);
+  const { submitQuestResult } = useQuestPost(randomQuestNumber);
+
+  const qNum = data?.quest_number;
+  const qTitle = data?.title;
+  const qProblem = data?.content;
+  const qInput = data?.input_example;
+  const qOutput = data?.output_example;
 
   /* 제출 이벤트 */
   const handleSubmit = async () => {
@@ -204,6 +222,12 @@ export default function QuestSection() {
     ).padStart(2, "0")}`;
   }
 
+  const handleCompleteQuest = async () => {
+    await submitQuestResult(formatTimeSpent(timeSpent));
+    // 제출이 끝난 뒤 페이지 이동
+    router.push("/questmap");
+  };
+
   return (
     <div className={styles.container}>
       <div className={styles.questHeader}>
@@ -221,12 +245,12 @@ export default function QuestSection() {
          */}
         <Problem
           isStart={isStart}
-          qNum={qNum}
-          qTitle={qTitle}
-          qProblem={qProblem}
-          qInput={qInput}
-          qOutput={qOutput}
-          onLockedClick={handleLockedClick}
+          qNum={String(qNum ?? "")}
+          qTitle={qTitle ?? ""}
+          qProblem={qProblem ?? ""}
+          qInput={qInput ?? ""}
+          qOutput={qOutput ?? ""}
+          onLockedClick={handleLockedClick ?? ""}
         />
 
         <section className={styles.submitForm}>
@@ -245,7 +269,7 @@ export default function QuestSection() {
           <CodeMirror
             className={styles.textEditor}
             value={code}
-            height="80dvh"
+            height="100%"
             theme="dark"
             placeholder="// 문제를 풀어 용을 무찌르세요!"
             extensions={[
@@ -309,9 +333,13 @@ export default function QuestSection() {
                           이미 모범답안 수준입니다!
                         </p>
                       )}
-                      <Button onClick={() => router.push("/questmap")}>
+                      <Button onClick={handleCompleteQuest} disabled={loading}>
                         일일 챌린지 완료하기
                       </Button>
+
+                      {/* {loading && <p>제출 중...</p>}
+                      {error && <p style={{ color: "red" }}>{error}</p>}
+                      {data && <p style={{ color: "green" }}>{data.message}</p>} */}
                     </div>
                   ) : (
                     <div className={styles.incorrectDiv}>

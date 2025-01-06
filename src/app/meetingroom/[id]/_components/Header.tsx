@@ -1,10 +1,10 @@
-import { Mic, MicOff, PhoneOff, Video } from "lucide-react";
+import { Mic, MicOff, PhoneOff, Video, VideoOff } from "lucide-react";
 import { Socket } from "socket.io-client";
 
 import { Button } from "@/components/ui/button";
 
 interface HeaderProps {
-  socket: Socket;
+  audioSocket: Socket;
   roomId: string | null;
   isMuted: boolean;
   localStream: MediaStream | null;
@@ -14,7 +14,7 @@ interface HeaderProps {
 }
 
 export function Header({
-  socket,
+  audioSocket,
   roomId,
   isMuted,
   localStream,
@@ -28,7 +28,7 @@ export function Header({
         <p>
           My ID:
           <span className="font-mono">
-            {socket ? socket.id : "Not connected"}
+            {audioSocket ? audioSocket.id : "Not connected"}
           </span>
         </p>
         <p>
@@ -45,18 +45,21 @@ export function Header({
           ) : (
             <Mic className="mr-2 size-4" />
           )}
-          {isMuted ? "Unmute" : "Mute"}
+          {isMuted ? "음소거 해제" : "음소거"}
         </Button>
         <Button
           variant={localStream ? "outline" : "default"}
           onClick={onCameraToggle}
         >
-          <Video className="mr-2 size-4" />
-          {localStream ? "Stop Camera" : "Start Camera"}
+          {localStream ? (
+            <Video className="mr-2 size-4" />
+          ) : (
+            <VideoOff className="mr-2 size-4" />
+          )}
+          {localStream ? "카메라 끄기" : "카메라 켜기"}
         </Button>
         <Button variant="destructive" onClick={onLeaveRoom}>
-          <PhoneOff className="mr-2 size-4" />
-          Leave Room
+          <PhoneOff className="mr-2 size-4" />방 나가기
         </Button>
       </div>
     </header>

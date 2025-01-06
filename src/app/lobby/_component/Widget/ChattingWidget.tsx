@@ -1,7 +1,7 @@
 "use client";
 
-import { MessageCircle, Send, X } from "lucide-react";
-import { RefObject, useEffect, useRef } from "react";
+import { MessageCircle, X } from "lucide-react";
+import { RefObject, useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -24,23 +24,23 @@ interface ChatWidgetProps {
 }
 
 export default function ChattingWidget({ isOpen, setIsOpen }: ChatWidgetProps) {
+  const [notification, setNotification] = useState<number>(0);
+
   const { messageList, messageValue, setMessageValue, handleSendMessage } =
-    useChatSocket({
-      roomType: "floor",
-      roomId: "floor07",
-    });
+    useChatSocket(setNotification);
 
   const scrollRef = useRef<HTMLDivElement>(null);
-  const { userScrolled, notification, handleOnScroll, scrollDown } =
-    useChatScroll({
-      scrollRef: scrollRef as RefObject<HTMLDivElement>,
-      messageList,
-    });
+  const { userScrolled, handleOnScroll, scrollDown } = useChatScroll({
+    scrollRef: scrollRef as RefObject<HTMLDivElement>,
+    messageList,
+    isOpen,
+    setNotification,
+  });
 
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
+    if (isOpen) document.body.style.overflow = "hidden";
+    else {
+      if (!userScrolled) setNotification(0);
       document.body.style.overflow = "unset";
     }
     return () => {
@@ -81,7 +81,9 @@ export default function ChattingWidget({ isOpen, setIsOpen }: ChatWidgetProps) {
                           {formatTime(list.create_at)}
                         </span>
                       </div>
-                      <span className="text-sm">{list.message}</span>
+                      <span className="max-w-[326px] whitespace-pre-wrap break-all text-sm">
+                        {list.message}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -89,15 +91,11 @@ export default function ChattingWidget({ isOpen, setIsOpen }: ChatWidgetProps) {
             </div>
           </CardContent>
           <CardFooter>
-            <form onSubmit={sendMessage} className="flex w-full gap-2">
-              <ChatInput
-                messageValue={messageValue}
-                setMessageValue={setMessageValue}
-              />
-              <Button type="submit" size="icon">
-                <Send className="size-4" />
-              </Button>
-            </form>
+            <ChatInput
+              messageValue={messageValue}
+              setMessageValue={setMessageValue}
+              sendMessage={sendMessage}
+            />
           </CardFooter>
           <ScrollNotification
             userScrolled={userScrolled}
@@ -113,6 +111,11 @@ export default function ChattingWidget({ isOpen, setIsOpen }: ChatWidgetProps) {
           className="fixed right-4 top-4 z-50 size-12 rounded-full"
         >
           <MessageCircle className="size-6" />
+          {notification > 0 && (
+            <div className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full bg-destructive text-xs font-medium text-destructive-foreground">
+              {notification}
+            </div>
+          )}
         </Button>
       )}
     </>

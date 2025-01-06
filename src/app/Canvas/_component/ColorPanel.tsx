@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/popover";
 import useCanvasStore from "@/store/useCanvasStore";
 
-import { COLOR_CODE } from "../constant/colorCode";
+import { COLOR_CODE } from "../_constant";
 
 type PenColorTypes =
   | "red"

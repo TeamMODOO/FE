@@ -5,14 +5,17 @@
   color: white;
   z-index: 3;
   border-radius: 10px;
-  margin: 20px;
+  margin-top: 20px;
+  margin-right: 20px;
   padding: 20px;
+  max-height: 95dvh;
+  display: flex;
+  flex-direction: column;
 }
 
 .questHeader {
   color: red;
   font-size: 30px;
-  height: 60px;
   display: flex;
 }
 
@@ -21,10 +24,13 @@
 }
 
 .questionBoard {
+  flex: 1;
   display: flex;
+  height: 90%;
 }
 
 .submitForm {
+  height: 100%;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -42,21 +48,13 @@
 }
 
 .textEditor {
+  max-width: 30dvw;
   z-index: 10;
-}
-
-.submitForm > textarea {
-  background-color: rgba(0, 0, 0, 0.5);
-  resize: none;
-  border: none;
-  border-radius: 10px;
-  margin: 10px;
-  min-height: 80dvh;
-}
-
-.submitForm > textarea:focus {
-  outline: 2px solid red;
-  outline-offset: 2px;
+  height: 100%;
+  min-height: 70dvh;
+  max-height: 80dvh;
+  margin-bottom: 10px;
+  overflow-x: auto;
 }
 
 .correctDiv {

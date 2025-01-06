@@ -34,7 +34,7 @@ export function PeerMedia({
       ) : (
         <div className="flex h-48 w-full flex-col items-center justify-center rounded-lg bg-gray-900">
           <UserIcon className="mb-2 size-12 text-gray-400" />
-          <span className="text-sm text-gray-400">Camera is turned off</span>
+          <span className="text-sm text-gray-400">카메라가 꺼져 있습니다</span>
         </div>
       )}
 

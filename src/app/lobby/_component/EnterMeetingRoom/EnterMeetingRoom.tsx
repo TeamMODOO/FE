@@ -12,8 +12,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useMeetingRoom } from "@/queries/lobby/useMeetingRoom";
-import { useCreateMeetingRoom } from "@/queries/lobby/useMeetingRoomCreate";
+import { useMeetingRoom } from "@/queries/meetingroom/useMeetingRoom";
+import { useCreateMeetingRoom } from "@/queries/meetingroom/useMeetingRoomCreate";
 
 import { RoomCard } from "./Room";
 

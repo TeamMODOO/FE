@@ -1,34 +1,43 @@
-import { RefObject, useEffect, useState } from "react";
+import {
+  Dispatch,
+  RefObject,
+  SetStateAction,
+  useEffect,
+  useState,
+} from "react";
 
 import { ChattingType } from "@/model/chatting";
 
 interface UseScrollProps {
   scrollRef: RefObject<HTMLDivElement>;
   messageList: ChattingType[];
+  isOpen: boolean;
+  setNotification: Dispatch<SetStateAction<number>>;
 }
 
-export const useChatScroll = ({ scrollRef, messageList }: UseScrollProps) => {
+export const useChatScroll = ({
+  scrollRef,
+  messageList,
+  isOpen,
+  setNotification,
+}: UseScrollProps) => {
   const [userScrolled, setUserScrolled] = useState(false);
-  const [notification, setNotification] = useState(0);
 
   useEffect(() => {
     if (scrollRef.current && !userScrolled) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [scrollRef, userScrolled, messageList]);
-
-  useEffect(() => {
-    if (userScrolled) {
-      setNotification((prev) => prev + 1);
-    }
-  }, [userScrolled, messageList]);
+  }, [scrollRef, userScrolled, messageList, isOpen]);
 
   const handleOnScroll = () => {
+    const CHAT_CARD_HEIGHT = 70;
     const scrollContainer = scrollRef.current;
     if (scrollContainer) {
       const isScroll =
         scrollContainer.scrollTop <
-        scrollContainer.scrollHeight - scrollContainer.clientHeight - 10;
+        scrollContainer.scrollHeight -
+          scrollContainer.clientHeight -
+          CHAT_CARD_HEIGHT;
 
       setUserScrolled(isScroll);
       if (!isScroll) setNotification(0);
@@ -37,6 +46,7 @@ export const useChatScroll = ({ scrollRef, messageList }: UseScrollProps) => {
 
   const scrollDown = () => {
     if (scrollRef.current) {
+      // 최적화 필요
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
       setUserScrolled(false);
       setNotification(0);
@@ -45,7 +55,6 @@ export const useChatScroll = ({ scrollRef, messageList }: UseScrollProps) => {
 
   return {
     userScrolled,
-    notification,
     handleOnScroll,
     scrollDown,
   };

@@ -16,14 +16,15 @@ const useAudioSocketConnect = ({ roomId }: UseAudioSocketConnectType) => {
     (state) => state.setIsConnected,
   );
 
-  const baseURL = ""; // env
-  const AUDIO_SERVER_URL = `${baseURL}/Audio`;
-
   useEffect(() => {
+    const AUDIO_SERVER_URL = process.env.NEXT_PUBLIC_WEB_RTC_URL;
+
     if (!roomId) return;
 
     const newAudioSocket = io(AUDIO_SERVER_URL, {
-      path: "/Audio/socket.io",
+      withCredentials: true,
+      transports: ["websocket"],
+      autoConnect: true,
     });
 
     newAudioSocket?.on("connect", () => {
