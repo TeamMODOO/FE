@@ -63,7 +63,6 @@ export default function SignInPage() {
               />
             </Button>
           </form>
-
           {/* 게스트 로그인 버튼 */}
           <form action={handleGuestLogin}>
             <Button className={styles.guestLoginButton}>
@@ -81,6 +80,9 @@ export default function SignInPage() {
                 height={80}
               />
             </Button>
+            <div className={styles.guestWarning}>
+              <p>* 게스트 로그인 시, 일부 기능이 제한 됩니다.</p>
+            </div>
           </form>
         </div>
       </div>

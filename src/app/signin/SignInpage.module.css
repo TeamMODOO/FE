@@ -83,6 +83,7 @@
   justify-content: center;
   align-items: center;
   gap: 3dvh;
+  /* overflow: hidden; */
 }
 
 @keyframes fadeOpacity {
@@ -114,6 +115,13 @@
   display: none;
   /* padding: 0; */
   /* border-radius: 50px; */
+}
+
+.guestWarning {
+  color: white;
+  animation: fadeOpacity 1.7s infinite;
+  text-align: center;
+  font-size: 0.8rem;
 }
 
 .guestLoginButton {
