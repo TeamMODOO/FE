@@ -8,6 +8,15 @@
   background-repeat: no-repeat;
   overflow: hidden;
   position: relative;
+  /* background-color: rgba(0, 0, 0, 0.5); */
+}
+
+.blackcover {
+  display: flex;
+  justify-content: center;
+  min-height: 100dvh;
+  overflow: hidden;
+  position: relative;
   background-color: rgba(0, 0, 0, 0.5);
 }
 
