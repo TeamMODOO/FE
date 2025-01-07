@@ -18,7 +18,7 @@ interface MovementInfoToServer {
  * 서버 → 클라이언트 (SC_MOVEMENT_INFO)
  * : 다른 사용자의 이동 패킷
  */
-interface MovementInfoFromServer {
+export interface MovementInfoFromServer {
   client_id: string;
   position_x: number;
   position_y: number;
