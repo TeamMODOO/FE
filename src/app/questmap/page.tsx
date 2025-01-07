@@ -2,7 +2,7 @@
 
 import useMainSocketConnect from "@/hooks/socket/useMainSocketConnect";
 
-import QuestMapCanvas from "./_component/QuestMapCanvas/QuestMapCanvas";
+import QuestMapCanvas from "./_components/QuestMapCanvas/QuestMapCanvas";
 
 const ROOM_TYPE = "quest";
 const ROOM_ID = "quest7";

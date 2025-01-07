@@ -2,7 +2,7 @@
 
 import { useParams } from "next/navigation";
 
-import MyRoomCanvas from "./_component/Canvas/MyRoomCanvas";
+import MyRoomCanvas from "./_components/Canvas/MyRoomCanvas";
 
 const ROOM_TYPE = "my";
 

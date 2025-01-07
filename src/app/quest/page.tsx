@@ -1,9 +1,11 @@
 "use client";
 
-import Image from "next/image";
 import { useEffect, useState } from "react";
 
-import QuestSection from "./_component/QuestSection/page";
+import Image from "next/image";
+
+import QuestSection from "./_components/QuestSection/page";
+
 import styles from "./Quest.module.css";
 
 export default function Quest() {

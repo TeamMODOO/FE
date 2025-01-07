@@ -1,25 +1,27 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
+import { useEffect, useState } from "react";
+
+import { useParams, useRouter } from "next/navigation";
+
 import axios from "axios";
 import * as mediasoupClient from "mediasoup-client";
-import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 import { Socket } from "socket.io-client";
 
-import CanvasSection from "@/app/Canvas/_component/CanvasSection";
 import useAudioSocketConnect from "@/hooks/socket/useAudioSocketConnect";
 import useMainSocketConnect from "@/hooks/socket/useMainSocketConnect";
 import useAudioSocketStore from "@/store/useAudioSocketStore";
 
-import ChatWidget from "./_components/ChatWidget";
+import CanvasSection from "./_components/canvas/CanvasSection";
+import ChatWidget from "./_components/chat/ChatWidget";
 import { Header } from "./_components/Header";
-import { LocalVideo } from "./_components/LocalVideo";
-import { RemoteMedia } from "./_components/RemoteMedia";
-import { useMediaDevices } from "./_hook/useMediaDevices";
-import { usePeerEvents } from "./_hook/usePeerSocketEvent";
-import { useRoom } from "./_hook/useRoom";
-import { useWebRTC } from "./_hook/useWebRTC";
+import { LocalVideo } from "./_components/video/LocalVideo";
+import { RemoteMedia } from "./_components/video/RemoteMedia";
+import { useMediaDevices } from "./_hook/webRTC/useMediaDevices";
+import { usePeerEvents } from "./_hook/webRTC/usePeerSocketEvent";
+import { useRoom } from "./_hook/webRTC/useRoom";
+import { useWebRTC } from "./_hook/webRTC/useWebRTC";
 import { RemoteStream } from "./_model/webRTC.type";
 
 const ROOM_TYPE = "meeting";

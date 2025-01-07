@@ -1,9 +1,11 @@
 // hooks/lobby/useLobbyKeyboard.ts
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
+
+import { useRouter } from "next/navigation";
+
+import { useSession } from "next-auth/react";
 
 import { NpcInfo } from "@/model/Npc";
 import { PortalInfo } from "@/model/Portal";

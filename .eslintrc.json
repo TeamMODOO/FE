@@ -6,8 +6,8 @@
     "plugin:@typescript-eslint/recommended",
     "plugin:jsx-a11y/recommended",
     "plugin:tailwindcss/recommended",
-    "prettier",
-    "plugin:storybook/recommended"
+    "plugin:storybook/recommended",
+    "prettier"
   ],
   "plugins": [
     "@typescript-eslint",
@@ -39,8 +39,27 @@
     "no-console": "error",
     "tailwindcss/no-custom-classname": "off",
     "@typescript-eslint/no-unused-vars": "off",
-    "simple-import-sort/imports": "error",
+    "simple-import-sort/imports": [
+      "error",
+      {
+        "groups": [
+          // Packages 그룹화
+          ["^react"], // React와 Next.js 관련 패키지를 최상단에
+          ["^next"], // React와 Next.js 관련 패키지를 최상단에
+          ["^next-auth"], // React와 Next.js 관련 패키지를 최상단에
+          ["^@?\\w"], // 그 외 외부 패키지
+          ["^@/"], // 내부 별칭 imports
+          ["^\\."], // 상대 경로 imports
+          ["^.+\\.s?css$"] // 스타일 imports
+        ]
+      }
+    ],
     "simple-import-sort/exports": "error",
+    "sort-imports": "off",
+    "import/order": "off",
+    "import/first": "off",
+    "import/newline-after-import": "off",
+    "import/no-duplicates": "off",
     "jsx-a11y/no-static-element-interactions": "off",
     "jsx-a11y/click-events-have-key-events": "off"
   },
