@@ -15,19 +15,19 @@ export const LOBBY_MAP_CONSTANTS = {
 
 export const LOBBY_PORTALS: PortalInfo[] = [
   {
-    x: 720,
-    y: 250,
-    width: 50,
-    height: 50,
+    x: 950,
+    y: 70,
+    width: 100,
+    height: 100,
     route: "/myroom",
     name: "마이룸",
     image: "/furniture/portal.gif",
   },
   {
-    x: 450,
-    y: 250,
-    width: 50,
-    height: 50,
+    x: 830,
+    y: 420,
+    width: 100,
+    height: 100,
     route: "/meetingroom",
     name: "회의실",
     image: "/furniture/portal.gif",
@@ -36,8 +36,8 @@ export const LOBBY_PORTALS: PortalInfo[] = [
 
 export const LOBBY_NPCS: NpcInfo[] = [
   {
-    x: 500,
-    y: 400,
+    x: 420,
+    y: 150,
     width: 20,
     height: 35,
     image: "/character/npc1.png",
@@ -45,8 +45,8 @@ export const LOBBY_NPCS: NpcInfo[] = [
     name: "정글의 수석코치",
   },
   {
-    x: 730,
-    y: 380,
+    x: 750,
+    y: 150,
     width: 20,
     height: 35,
     image: "/character/npc2.png",
@@ -55,7 +55,7 @@ export const LOBBY_NPCS: NpcInfo[] = [
   },
   {
     x: 560,
-    y: 110,
+    y: 0,
     width: 100,
     height: 50,
     image: "/furniture/board.png",
