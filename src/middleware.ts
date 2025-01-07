@@ -3,8 +3,12 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 
+import { auth } from "./auth";
+
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
+
+  const session = await auth();
 
   // 인증이 필요 없는 경로 목록
   const excludedPaths = ["/_next", "/api", "/favicon.ico", "/background"];
@@ -40,10 +44,10 @@ export async function middleware(req: NextRequest) {
   // 인증이 필요한 경로일 경우 토큰 확인
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
 
-  // if (!token) {
-  //   // 인증되지 않은 사용자라면 /signin으로 리디렉션
-  //   return NextResponse.redirect(new URL("/signin", req.url));
-  // }
+  if (!session) {
+    // 인증되지 않은 사용자라면 /signin으로 리디렉션
+    return NextResponse.redirect(new URL("/signin", req.url));
+  }
 
   // 모든 조건을 통과하면 요청을 계속 진행
   return NextResponse.next();
