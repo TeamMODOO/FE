@@ -9,7 +9,8 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 999; /* Ensure it's on top */
+  z-index: 9999; /* Ensure it's on top */
+  pointer-events: auto;
 }
 
 .modal {
