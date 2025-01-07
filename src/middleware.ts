@@ -40,15 +40,17 @@ export async function middleware(req: NextRequest) {
   // 인증이 필요한 경로일 경우 토큰 확인
   const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
 
-  if (!token) {
-    // 인증되지 않은 사용자라면 /signin으로 리디렉션
-    return NextResponse.redirect(new URL("/signin", req.url));
-  }
+  // if (!token) {
+  //   // 인증되지 않은 사용자라면 /signin으로 리디렉션
+  //   return NextResponse.redirect(new URL("/signin", req.url));
+  // }
 
   // 모든 조건을 통과하면 요청을 계속 진행
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/((?!_next|api|signin|favicon.ico|background|css|hooks).*)"],
+  matcher: [
+    "/((?!_next|api|signin|signinloading|favicon.ico|background|css|hooks).*)",
+  ],
 };
