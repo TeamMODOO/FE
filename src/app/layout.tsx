@@ -1,8 +1,8 @@
 import "@/styles/globals.css";
 
 import type { Metadata } from "next";
-import { Toaster } from "react-hot-toast";
 
+import { Toaster } from "@/components/ui/toaster";
 import { cn } from "@/lib/utils";
 import { AppProviders } from "@/provider";
 import { QueryProvider } from "@/provider/query-provider";
@@ -27,7 +27,7 @@ export default function RootLayout({
         <QueryProvider>
           <AppProviders>
             {children}
-            <Toaster position="top-center" reverseOrder={false} />
+            <Toaster />
           </AppProviders>
         </QueryProvider>
       </body>

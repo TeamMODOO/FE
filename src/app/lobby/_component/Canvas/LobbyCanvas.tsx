@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import React, { useEffect, useRef, useState } from "react";
 import { v4 as uuid } from "uuid";
 
+import NeedSignInModal from "@/components/modal/NeedSignIn/NeedSignInModal";
 import useLobbySocketEvents from "@/hooks/lobby/useLobbySocketEvents";
 import useLoadSprites, {
   FRAME_HEIGHT,
@@ -43,6 +44,9 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
 
   // 세션
   const { data: session, status } = useSession();
+
+  // (2) 모달 열림 여부 state
+  const [signInModalOpen, setSignInModalOpen] = useState(false);
 
   // (1) localStorage에서 client_id 가져오기
   const [localClientId, setLocalClientId] = useState("");
@@ -193,7 +197,8 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
             return;
           }
           if (!session?.user?.id) {
-            alert("로그인 필요");
+            // alert("로그인 필요");
+            setSignInModalOpen(true);
             return;
           }
           router.push(`/myroom/${session.user.id}`);
@@ -517,6 +522,15 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
 
   return (
     <>
+      {/* {로그인 필요한 동작 요청 시} */}
+      {signInModalOpen && (
+        <NeedSignInModal
+          onClose={() => {
+            setSignInModalOpen(false);
+          }}
+        />
+      )}
+
       {/* 숨긴 포탈 GIF 로드 */}
       <NextImage
         ref={portalGifRef as React.RefObject<HTMLImageElement>}
