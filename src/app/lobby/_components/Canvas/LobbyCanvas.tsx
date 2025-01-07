@@ -23,6 +23,7 @@ import useMainSocketStore from "@/store/useMainSocketStore";
 import useUsersStore from "@/store/useUsersStore";
 
 import {
+  LOBBY_COLLISION_ZONES,
   LOBBY_MAP_CONSTANTS,
   LOBBY_NPCS,
   LOBBY_PORTALS,
@@ -271,6 +272,19 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     };
   }, [chatOpen, isAnyModalOpen, router, session, status]);
 
+  // ------------------ Collision Detection Helper ------------------
+  function doRectsOverlap(
+    rect1: { x: number; y: number; width: number; height: number },
+    rect2: { x: number; y: number; width: number; height: number },
+  ): boolean {
+    return !(
+      rect1.x + rect1.width <= rect2.x ||
+      rect1.x >= rect2.x + rect2.width ||
+      rect1.y + rect1.height <= rect2.y ||
+      rect1.y >= rect2.y + rect2.height
+    );
+  }
+
   // ------------------ 이동 로직 ------------------
   function getDirection(keys: Record<string, boolean>): Direction | null {
     if (keys["w"] || keys["W"] || keys["ㅈ"] || keys["ArrowUp"]) return 1; // Up
@@ -297,23 +311,46 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     }
 
     let moved = false;
+    let newX = x;
+    let newY = y;
+
     if (newDir === 1 && y > 0) {
-      y -= LOBBY_MAP_CONSTANTS.SPEED;
-      moved = true;
+      newY -= LOBBY_MAP_CONSTANTS.SPEED;
     } else if (
       newDir === 0 &&
       y < LOBBY_MAP_CONSTANTS.MAP_HEIGHT - LOBBY_MAP_CONSTANTS.IMG_HEIGHT
     ) {
-      y += LOBBY_MAP_CONSTANTS.SPEED;
-      moved = true;
+      newY += LOBBY_MAP_CONSTANTS.SPEED;
     } else if (
       newDir === 2 &&
       x < LOBBY_MAP_CONSTANTS.MAP_WIDTH - LOBBY_MAP_CONSTANTS.IMG_WIDTH
     ) {
-      x += LOBBY_MAP_CONSTANTS.SPEED;
-      moved = true;
+      newX += LOBBY_MAP_CONSTANTS.SPEED;
     } else if (newDir === 3 && x > 0) {
-      x -= LOBBY_MAP_CONSTANTS.SPEED;
+      newX -= LOBBY_MAP_CONSTANTS.SPEED;
+    }
+
+    // Define the new bounding box after movement
+    const newBoundingBox = {
+      x: newX,
+      y: newY,
+      width: LOBBY_MAP_CONSTANTS.IMG_WIDTH,
+      height: LOBBY_MAP_CONSTANTS.IMG_HEIGHT,
+    };
+
+    // Check collision with each collision zone
+    let collision = false;
+    for (const zone of LOBBY_COLLISION_ZONES) {
+      if (doRectsOverlap(newBoundingBox, zone)) {
+        collision = true;
+        break;
+      }
+    }
+
+    if (!collision) {
+      // No collision, apply movement
+      x = newX;
+      y = newY;
       moved = true;
     }
 
@@ -321,6 +358,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
       updateUserPosition(localClientId, x, y, newDir, true);
       emitMovement(x, y, newDir);
     } else {
+      // If movement was blocked, still update direction without changing position
       updateUserPosition(localClientId, x, y, newDir, false);
     }
   }, [
@@ -446,6 +484,16 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
             ctx.fillRect(npc.x, npc.y, npc.width, npc.height);
           }
         });
+
+        // ------------------ Render Collision Zones for Debugging ------------------
+        LOBBY_COLLISION_ZONES.forEach((zone) => {
+          ctx.fillStyle = "rgba(255, 0, 0, 0.3)"; // Semi-transparent red
+          ctx.fillRect(zone.x, zone.y, zone.width, zone.height);
+          ctx.strokeStyle = "red";
+          ctx.lineWidth = 2;
+          ctx.strokeRect(zone.x, zone.y, zone.width, zone.height);
+        });
+        // ------------------------------------------------------------------------
 
         // 캐릭터(유저) 스프라이트
         const now = performance.now();

@@ -1,3 +1,4 @@
+import { CollisionZone } from "@/model/CollisionZone";
 import { NpcInfo } from "@/model/Npc";
 import { PortalInfo } from "@/model/Portal";
 import { QA } from "@/model/Qna";
@@ -61,6 +62,167 @@ export const LOBBY_NPCS: NpcInfo[] = [
     image: "/furniture/board.png",
     modalTitle: "게시판 NPC",
     name: "게시판",
+  },
+];
+
+export const LOBBY_COLLISION_ZONES: CollisionZone[] = [
+  // 맵 테두리
+  {
+    x: 0,
+    y: 0,
+    width: 1200,
+    height: 20,
+  },
+  {
+    x: 0,
+    y: 0,
+    width: 15,
+    height: 700,
+  },
+  {
+    x: 1185,
+    y: 0,
+    width: 15,
+    height: 700,
+  },
+  {
+    x: 0,
+    y: 685,
+    width: 500,
+    height: 15,
+  },
+
+  {
+    x: 500,
+    y: 695,
+    width: 200,
+    height: 5,
+  },
+
+  {
+    x: 700,
+    y: 685,
+    width: 500,
+    height: 15,
+  },
+
+  // 오락실
+  {
+    x: 0,
+    y: 208,
+    width: 320,
+    height: 15,
+  },
+  {
+    x: 315,
+    y: 0,
+    width: 5,
+    height: 80,
+  },
+  {
+    x: 315,
+    y: 172,
+    width: 5,
+    height: 40,
+  },
+
+  // 마이룸
+  {
+    x: 885,
+    y: 208,
+    width: 315,
+    height: 15,
+  },
+  {
+    x: 885,
+    y: 0,
+    width: 5,
+    height: 80,
+  },
+  {
+    x: 885,
+    y: 172,
+    width: 5,
+    height: 40,
+  },
+
+  // 퀘스트 - 위쪽
+  {
+    x: 190,
+    y: 370,
+    width: 250,
+    height: 15,
+  },
+  {
+    x: 185,
+    y: 370,
+    width: 10,
+    height: 50,
+  },
+  {
+    x: 430,
+    y: 370,
+    width: 10,
+    height: 50,
+  },
+  // 퀘스트 - 아래쪽
+  {
+    x: 190,
+    y: 570,
+    width: 250,
+    height: 15,
+  },
+  {
+    x: 185,
+    y: 530,
+    width: 10,
+    height: 50,
+  },
+  {
+    x: 430,
+    y: 530,
+    width: 10,
+    height: 50,
+  },
+
+  // 미팅룸 - 위쪽
+  {
+    x: 765,
+    y: 370,
+    width: 250,
+    height: 15,
+  },
+  {
+    x: 1005,
+    y: 370,
+    width: 10,
+    height: 50,
+  },
+  {
+    x: 765,
+    y: 370,
+    width: 10,
+    height: 50,
+  },
+
+  // 미팅룸 - 아래쪽
+  {
+    x: 765,
+    y: 545,
+    width: 250,
+    height: 15,
+  },
+  {
+    x: 1005,
+    y: 505,
+    width: 10,
+    height: 50,
+  },
+  {
+    x: 765,
+    y: 505,
+    width: 10,
+    height: 50,
   },
 ];
 
