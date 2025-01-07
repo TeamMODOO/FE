@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 
+import { useSession } from "next-auth/react";
+
+import NeedSignInModal from "@/components/modal/NeedSignIn/NeedSignInModal";
 import {
   Dialog,
   DialogContent,
@@ -50,6 +53,7 @@ export interface NoticeBoardModalProps {
  *  - 글 작성 (useCreateNoticeQuery)
  *  - 부모에서 관리하는 noticeList 등을 함께 전달받아 사용할 수도 있음
  */
+
 export default function NoticeBoardModal({
   open,
   onClose,
@@ -61,6 +65,8 @@ export default function NoticeBoardModal({
   setWriterMessage,
   handleAddNotice,
 }: NoticeBoardModalProps) {
+  const { data: session } = useSession();
+
   // 1) 목록 조회 쿼리 (서버 데이터)
   const {
     data: serverNoticesList, // ← 기존 noticesList → serverNoticesList 로 변경
@@ -115,6 +121,19 @@ export default function NoticeBoardModal({
     });
   };
 
+  const [signInModalOpen, setSignInModalOpen] = useState(false);
+
+  const handleClickWrite = () => {
+    // 로그인 정보가 없거나, guest 계정이면 → NeedSignInModal
+    if (!session?.user || session.user.role === "guest") {
+      setSignInModalOpen(true);
+    }
+    // 그 외 (게스트가 아니면) 바로 작성 모드
+    else {
+      setIsWriting(true);
+    }
+  };
+
   // (B) 화면 모드별 렌더링
   function renderContent() {
     // 상세 보기 모드
@@ -151,19 +170,40 @@ export default function NoticeBoardModal({
         error={listError}
         noticesList={serverNoticesList}
         onSelectNotice={(id) => setSelectedNoticeId(id)}
-        onClickWrite={() => setIsWriting(true)}
+        onClickWrite={handleClickWrite}
       />
     );
   }
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="w-full max-w-lg">
-        <DialogHeader>
-          <DialogTitle>공지사항</DialogTitle>
-        </DialogHeader>
-        {renderContent()}
-      </DialogContent>
-    </Dialog>
+    <>
+      <Dialog open={open} onOpenChange={onClose}>
+        <DialogContent
+          className="w-full max-w-lg"
+          style={{
+            pointerEvents: signInModalOpen ? "none" : "auto",
+          }}
+          onPointerDownOutside={(event) => {
+            if (signInModalOpen) {
+              event.preventDefault();
+            }
+          }}
+        >
+          <DialogHeader>
+            <DialogTitle>공지사항</DialogTitle>
+          </DialogHeader>
+          {renderContent()}
+        </DialogContent>
+      </Dialog>
+
+      {/* 비회원 상태로 글 작성 버튼 입력 시 모달 출력 */}
+      {signInModalOpen && (
+        <NeedSignInModal
+          onClose={() => {
+            setSignInModalOpen(false);
+          }}
+        />
+      )}
+    </>
   );
 }
