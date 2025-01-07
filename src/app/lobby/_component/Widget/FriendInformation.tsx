@@ -1,22 +1,67 @@
 "use client";
 
 import { Users, X } from "lucide-react";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { MovementInfoFromServer } from "@/hooks/lobby/useLobbySocketEvents";
+import { UserType, useUserListQuery } from "@/queries/lobby/useUserQuery";
+import useMainSocketStore from "@/store/useMainSocketStore";
 
 import FriendDoor from "./FriendDoor";
 
-export const friends = Array.from({ length: 30 }, (_, index) => ({
-  id: `friend-${index}`,
-  name: `친구 ${index + 1}`,
-  status: index % 2 === 0 ? "참여" : "비참여",
-  avatar: `/profile/profile${((index + 1) % 3) + 1}.png`,
-}));
+interface ExtendedUser extends UserType {
+  status: string;
+}
 
-export const FriendInformation: React.FC = () => {
+export const FriendInformation = () => {
   const [isOpen, setIsOpen] = useState(false);
+
+  const mainSocket = useMainSocketStore((state) => state.socket);
+  // 현재 접속 중인 유저들의 google_id 목록
+  const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
+  const { data: users } = useUserListQuery(isOpen);
+
+  const sortedUsers: ExtendedUser[] =
+    users
+      ?.map((user) => ({
+        ...user,
+        status: onlineUsers.includes(user.google_id)
+          ? ("online" as const)
+          : ("offline" as const),
+      }))
+      .sort((a, b) => {
+        // 온라인 유저를 먼저 정렬
+        if (a.status === "online" && b.status === "offline") return -1;
+        if (a.status === "offline" && b.status === "online") return 1;
+        // 같은 상태인 경우 이름순으로 정렬
+        return a.name.localeCompare(b.name);
+      }) ?? [];
+
+  useEffect(() => {
+    if (!mainSocket) return;
+
+    const handleUserConnect = (data: MovementInfoFromServer) => {
+      const { user_name } = data;
+      setOnlineUsers((prev) => [...prev, user_name]);
+    };
+
+    // 유저 접속 종료 이벤트
+    const handleUserDisconnect = (clientId: string) => {
+      setOnlineUsers((prev) => prev.filter((id) => id !== clientId));
+    };
+
+    // 이벤트 리스너 등록
+    mainSocket.on("SC_MOVEMENT_INFO", handleUserConnect);
+    mainSocket.on("user_disconnect", handleUserDisconnect);
+
+    // 컴포넌트 언마운트 시 이벤트 리스너 제거
+    return () => {
+      mainSocket.off("user_coSC_MOVEMENT_INFOnnect", handleUserConnect);
+      mainSocket.off("user_disconnect", handleUserDisconnect);
+    };
+  }, [mainSocket]);
 
   useEffect(() => {
     if (isOpen) {
@@ -43,8 +88,15 @@ export const FriendInformation: React.FC = () => {
           </CardHeader>
           <CardContent className="grow overflow-auto">
             <div className="grid grid-cols-3 gap-2">
-              {friends.map((friend) => (
-                <FriendDoor key={friend.id} friend={friend} />
+              {sortedUsers.map((user) => (
+                <FriendDoor
+                  key={user.google_id}
+                  friend={{
+                    id: user.google_id,
+                    name: user.name,
+                    status: user.status,
+                  }}
+                />
               ))}
             </div>
           </CardContent>
