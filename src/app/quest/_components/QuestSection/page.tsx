@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
+import { useSession } from "next-auth/react";
+
 import { cpp } from "@codemirror/lang-cpp";
 import { java } from "@codemirror/lang-java";
 import { python } from "@codemirror/lang-python";
@@ -59,6 +61,7 @@ const customFontSizeTheme = EditorView.theme(
 
 export default function QuestSection() {
   const { toast } = useToast();
+  const { data: session } = useSession();
   const router = useRouter();
   /** 문제 풀이 시작 여부 */
   const [isStart, setIsStart] = useState(false);
@@ -91,7 +94,7 @@ export default function QuestSection() {
   /* Loading 상태 */
   const [isLoading, setIsLoading] = useState(false);
 
-  // // 오늘 날짜를 시드로 해서 난수 생성
+  // 오늘 날짜를 시드로 해서 난수 생성
   const randomQuestNumber = getRandomQuestNumber();
 
   const { data, loading, error } = useQuestGet(randomQuestNumber);
@@ -231,7 +234,10 @@ export default function QuestSection() {
   }
 
   const handleCompleteQuest = async () => {
-    await submitQuestResult(formatTimeSpent(timeSpent));
+    // guest 로그인이 아닌 경우에만 제출
+    if (session?.user.role !== "guest") {
+      await submitQuestResult(formatTimeSpent(timeSpent));
+    }
     // 제출이 끝난 뒤 페이지 이동
     router.push("/questmap");
   };
@@ -344,6 +350,12 @@ export default function QuestSection() {
                       <Button onClick={handleCompleteQuest} disabled={loading}>
                         일일 챌린지 완료하기
                       </Button>
+                      {session?.user?.role === "guest" && (
+                        <p className={styles.guestWarning}>
+                          현재 게스트 로그인 상태입니다! 랭킹에 기록되지
+                          않습니다.
+                        </p>
+                      )}
 
                       {/* {loading && <p>제출 중...</p>}
                       {error && <p style={{ color: "red" }}>{error}</p>}
