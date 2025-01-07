@@ -18,9 +18,9 @@ interface ExtendedUser extends UserType {
 
 export const FriendInformation = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
 
   const mainSocket = useMainSocketStore((state) => state.socket);
-  // 현재 접속 중인 유저들의 google_id 목록
   const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
   const { data: users } = useUserListQuery(isOpen);
 
@@ -33,10 +33,8 @@ export const FriendInformation = () => {
           : ("offline" as const),
       }))
       .sort((a, b) => {
-        // 온라인 유저를 먼저 정렬
         if (a.status === "online" && b.status === "offline") return -1;
         if (a.status === "offline" && b.status === "online") return 1;
-        // 같은 상태인 경우 이름순으로 정렬
         return a.name.localeCompare(b.name);
       }) ?? [];
 
@@ -48,18 +46,15 @@ export const FriendInformation = () => {
       setOnlineUsers((prev) => [...prev, user_name]);
     };
 
-    // 유저 접속 종료 이벤트
     const handleUserDisconnect = (clientId: string) => {
       setOnlineUsers((prev) => prev.filter((id) => id !== clientId));
     };
 
-    // 이벤트 리스너 등록
     mainSocket.on("SC_MOVEMENT_INFO", handleUserConnect);
     mainSocket.on("user_disconnect", handleUserDisconnect);
 
-    // 컴포넌트 언마운트 시 이벤트 리스너 제거
     return () => {
-      mainSocket.off("user_coSC_MOVEMENT_INFOnnect", handleUserConnect);
+      mainSocket.off("SC_MOVEMENT_INFO", handleUserConnect);
       mainSocket.off("user_disconnect", handleUserDisconnect);
     };
   }, [mainSocket]);
@@ -67,8 +62,13 @@ export const FriendInformation = () => {
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
+      setIsAnimating(true);
     } else {
-      document.body.style.overflow = "unset";
+      setIsAnimating(false);
+      const timer = setTimeout(() => {
+        document.body.style.overflow = "unset";
+      }, 200);
+      return () => clearTimeout(timer);
     }
     return () => {
       document.body.style.overflow = "unset";
@@ -79,29 +79,43 @@ export const FriendInformation = () => {
 
   return (
     <>
-      {isOpen && (
-        <Card className="fixed inset-0 z-[60] flex flex-col md:bottom-auto md:left-auto md:right-4 md:top-4 md:h-[calc(100vh-2rem)] md:w-96">
-          <CardHeader className="pt-safe-top flex flex-row items-center justify-between md:pt-0">
-            <h3 className="font-semibold">친구 목록</h3>
-            <Button variant="ghost" size="icon" onClick={toggleWidget}>
-              <X className="size-4" />
-            </Button>
-          </CardHeader>
-          <CardContent className="grow overflow-auto">
-            <div className="grid grid-cols-3 gap-2">
-              {sortedUsers.map((user) => (
-                <FriendDoor
-                  key={user.google_id}
-                  friend={{
-                    id: user.google_id,
-                    name: user.name,
-                    status: user.status,
-                  }}
-                />
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+      {(isOpen || isAnimating) && (
+        <div className="fixed inset-0 z-[60] flex items-start justify-end p-4">
+          <div
+            className={`
+              w-full transition-all duration-200
+              ease-out md:w-96
+              ${
+                isAnimating
+                  ? "scale-100 opacity-100"
+                  : "pointer-events-none scale-95 opacity-0"
+              }
+            `}
+          >
+            <Card className="flex h-[calc(100vh-2rem)] flex-col">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <h3 className="font-semibold">친구 목록</h3>
+                <Button variant="ghost" size="icon" onClick={toggleWidget}>
+                  <X className="size-4" />
+                </Button>
+              </CardHeader>
+              <CardContent className="grow overflow-auto">
+                <div className="grid grid-cols-3 gap-2">
+                  {sortedUsers.map((user) => (
+                    <FriendDoor
+                      key={user.google_id}
+                      friend={{
+                        id: user.google_id,
+                        name: user.name,
+                        status: user.status,
+                      }}
+                    />
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       )}
       {!isOpen && (
         <Button
