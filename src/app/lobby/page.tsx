@@ -2,17 +2,16 @@
 
 import { useState } from "react";
 
+import { ChatWidget } from "@/components/chat/ChatWidget";
 import useMainSocketConnect from "@/hooks/socket/useMainSocketConnect";
 
 import LobbyCanvas from "./_components/Canvas/LobbyCanvas";
-import ChatWidget from "./_components/Widget/ChattingWidget";
 import FriendInformation from "./_components/Widget/FriendInformation";
 
 const ROOM_TYPE = "floor";
 const ROOM_ID = "floor7";
 
 export default function Page() {
-  // 채팅창 열림 여부 (true면 열림, false면 닫힘)
   const [chatOpen, setChatOpen] = useState(false);
   // useSignInPost();
   useMainSocketConnect({ roomType: ROOM_TYPE, roomId: ROOM_ID });
@@ -21,7 +20,7 @@ export default function Page() {
     <>
       {/* chatOpen 넘기기 */}
       <LobbyCanvas chatOpen={chatOpen} />
-      <ChatWidget isOpen={chatOpen} setIsOpen={setChatOpen} />
+      <ChatWidget isOpen={chatOpen} setIsOpen={setChatOpen} position="right" />
       <FriendInformation />
     </>
   );

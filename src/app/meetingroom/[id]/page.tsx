@@ -9,12 +9,12 @@ import axios from "axios";
 import * as mediasoupClient from "mediasoup-client";
 import { Socket } from "socket.io-client";
 
+import { ChatWidget } from "@/components/chat/ChatWidget";
 import useAudioSocketConnect from "@/hooks/socket/useAudioSocketConnect";
 import useMainSocketConnect from "@/hooks/socket/useMainSocketConnect";
 import useAudioSocketStore from "@/store/useAudioSocketStore";
 
 import CanvasSection from "./_components/canvas/CanvasSection";
-import ChatWidget from "./_components/chat/ChatWidget";
 import { Header } from "./_components/Header";
 import { LocalVideo } from "./_components/video/LocalVideo";
 import { RemoteMedia } from "./_components/video/RemoteMedia";
@@ -282,6 +282,8 @@ function Page() {
     };
   }, []);
 
+  const [chatOpen, setChatOpen] = useState(false);
+
   return (
     <div className="flex h-screen flex-col">
       <Header
@@ -315,7 +317,7 @@ function Page() {
         )}
       </div>
       <CanvasSection />
-      <ChatWidget />
+      <ChatWidget isOpen={chatOpen} setIsOpen={setChatOpen} position="left" />
     </div>
   );
 }
