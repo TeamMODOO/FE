@@ -50,8 +50,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    // 모든 경로에 미들웨어 적용
-    "/:path*",
-  ],
+  matcher: ["/((?!_next|api|favicon.ico|background|css|hooks).*)"],
 };

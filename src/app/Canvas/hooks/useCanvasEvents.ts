@@ -1,10 +1,13 @@
 import { fabric } from "fabric";
-import { useCallback, useEffect } from "react";
+import { RefObject, useCallback, useEffect } from "react";
 
 const MAX_ZOOM = 20;
 const MIN_ZOOM = 0.01;
 
-export const useCanvasEvents = (canvas: fabric.Canvas | null) => {
+export const useCanvasEvents = (
+  canvas: fabric.Canvas | null,
+  canvasContainerRef: RefObject<HTMLDivElement | null>,
+) => {
   const handleZoom = useCallback(
     (fabricCanvas: fabric.Canvas, event: WheelEvent) => {
       const delta = event.deltaY;
@@ -45,15 +48,25 @@ export const useCanvasEvents = (canvas: fabric.Canvas | null) => {
     [canvas],
   );
 
+  const handleResize = useCallback(() => {
+    if (!canvas || !canvasContainerRef.current) return;
+    canvas.setDimensions({
+      width: canvasContainerRef.current.offsetWidth,
+      height: canvasContainerRef.current.offsetHeight,
+    });
+  }, [canvas, canvasContainerRef]);
+
   useEffect(() => {
     if (!canvas) return;
 
     canvas.on("mouse:wheel", (opt) => handleZoom(canvas, opt.e));
     window.addEventListener("keyup", handleDelete);
+    window.addEventListener("resize", handleResize);
 
     return () => {
-      canvas.dispose();
+      canvas.off("mouse:wheel");
       window.removeEventListener("keyup", handleDelete);
+      window.removeEventListener("resize", handleResize);
     };
-  }, [canvas, handleZoom, handleDelete]);
+  }, [canvas, handleZoom, handleDelete, handleResize]);
 };

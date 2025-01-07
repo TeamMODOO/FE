@@ -1,39 +1,32 @@
 "use client";
 
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 
-// 미팅룸 타입 정의
-interface MeetingRoom {
-  id: string;
-  title: string;
-}
+import { CreateMeetingRoomPayload } from "@/model/MeetingRoom";
 
-// 미팅룸 생성 시 필요한 입력 타입
-interface CreateMeetingRoomInput {
-  title: string;
-}
-
-// 미팅룸 생성 훅
 export function useCreateMeetingRoom() {
-  async function createMeetingRoom(
-    input: CreateMeetingRoomInput,
-  ): Promise<MeetingRoom> {
-    const { data } = await axios.post<MeetingRoom>("/meeting-rooms", input);
-    return data;
-  }
+  const queryClient = useQueryClient();
 
-  return useMutation<MeetingRoom, Error, CreateMeetingRoomInput>({
-    mutationFn: (input) => createMeetingRoom(input),
-    meta: {
-      callbacks: {
-        onSuccess: (data: MeetingRoom) => {
-          // console.log("미팅룸 생성 성공:", data);
-        },
-        onError: (error: Error) => {
-          // console.log("미팅룸 생성 실패:", error);
+  async function createMeetingRoom(
+    payload: CreateMeetingRoomPayload,
+  ): Promise<void> {
+    await axios.post(
+      `${process.env.NEXT_PUBLIC_API_SERVER_PATH}/meetingroom/create`,
+      payload,
+      {
+        withCredentials: true,
+        headers: {
+          "Content-Type": "application/json",
         },
       },
+    );
+  }
+
+  return useMutation<void, Error, CreateMeetingRoomPayload>({
+    mutationFn: async (payload) => await createMeetingRoom(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["meetingroom"] });
     },
   });
 }

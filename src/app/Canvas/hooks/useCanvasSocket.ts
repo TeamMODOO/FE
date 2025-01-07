@@ -22,8 +22,8 @@ export const useCanvasSocket = (
       const compressedObjects = Pako.gzip(JSON.stringify(newObjects));
       lastCanvasStateRef.current = currentCanvasState;
 
-      mainSocket.emit("edit", {
-        content: compressedObjects,
+      mainSocket.emit("CS_PICTURE_INFO", {
+        picture: compressedObjects,
       });
     }
   }, [canvas, mainSocket]);
@@ -45,5 +45,60 @@ export const useCanvasSocket = (
         cancelAnimationFrame(animationFrameIdRef.current);
       }
     };
-  }, [canvas, mainSocket, saveCanvasData]);
+  }, [canvas, saveCanvasData]);
+
+  const loadCanvasData = (data: { picture: Uint8Array }) => {
+    if (!canvas) return;
+    if (!data || !data.picture) return;
+    const isCanvasDataChanged = data.picture.byteLength !== 0;
+
+    if (!isCanvasDataChanged) return;
+    const receiveObjects = JSON.parse(
+      Pako.inflate(data.picture, { to: "string" }),
+    );
+    const currentObjects = canvas.getObjects();
+
+    // 객체를 식별하기 위한 고유 키 생성 함수
+    const findUniqueObjects = (a: fabric.Object[], b: fabric.Object[]) => {
+      const aSet = new Set(a.map((item) => JSON.stringify(item)));
+      const bSet = new Set(b.map((item) => JSON.stringify(item)));
+
+      const uniqueInA = a.filter((obj) => !bSet.has(JSON.stringify(obj)));
+      const uniqueInB = b.filter((obj) => !aSet.has(JSON.stringify(obj)));
+
+      return [uniqueInA, uniqueInB];
+    };
+
+    const [deletedObjects, newObjects] = findUniqueObjects(
+      currentObjects,
+      receiveObjects,
+    );
+
+    const deleteObject = () => {
+      for (let i = 0; i < deletedObjects.length; i++) {
+        canvas.remove(deletedObjects[i]);
+      }
+    };
+    const addObject = () => {
+      fabric.util.enlivenObjects(
+        newObjects,
+        (objs: fabric.Object[]) => {
+          objs.forEach((item) => {
+            canvas.add(item);
+          });
+        },
+        "",
+      );
+    };
+    deleteObject();
+    addObject();
+
+    canvas.renderAll();
+  };
+
+  useEffect(() => {
+    if (!canvas || !mainSocket) return;
+
+    mainSocket.on(`SC_PICTURE_INFO`, ({ data }) => loadCanvasData(data));
+  }, [canvas, saveCanvasData]);
 };

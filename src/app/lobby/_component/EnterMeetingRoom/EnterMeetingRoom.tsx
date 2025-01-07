@@ -1,6 +1,9 @@
 "use client";
 
+import { RefreshCw } from "lucide-react";
+import { useRouter } from "next/navigation";
 import React, { useState } from "react";
+import { v4 as uuid } from "uuid";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -12,6 +15,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CreateMeetingRoomPayload } from "@/model/MeetingRoom";
 import { useMeetingRoom } from "@/queries/meetingroom/useMeetingRoom";
 import { useCreateMeetingRoom } from "@/queries/meetingroom/useMeetingRoomCreate";
 
@@ -27,14 +31,33 @@ export const EnterMeetingRoom: React.FC<EnterMeetingRoomProps> = ({
   onOpenChange,
 }) => {
   const [roomName, setRoomName] = useState("");
-  const { data, isLoading, isError } = useMeetingRoom();
-  const createMeetingRoom = useCreateMeetingRoom();
+  // 데이터 요청
+  const { data, isLoading, isError, refetch } = useMeetingRoom();
+  const { mutate: createNotice } = useCreateMeetingRoom();
+
+  const router = useRouter();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    createMeetingRoom.mutate({
+
+    const clientId = localStorage.getItem("client_id") ?? "";
+    const roomId = uuid();
+    const payload: CreateMeetingRoomPayload = {
+      room_id: roomId,
       title: roomName,
+      client_id: clientId,
+    };
+
+    createNotice(payload, {
+      onSuccess: () => {
+        setRoomName("");
+        router.push(`/meetingroom/${roomId}`);
+      },
     });
+  };
+
+  const handleRefresh = () => {
+    refetch();
   };
 
   return (
@@ -52,11 +75,19 @@ export const EnterMeetingRoom: React.FC<EnterMeetingRoomProps> = ({
 
           {/* 방 참여하기 탭 */}
           <TabsContent value="participate" className="flex-1 overflow-hidden">
+            <div className="mb-2 flex justify-end">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleRefresh}
+                disabled={isLoading}
+              >
+                <RefreshCw className="size-4" />
+              </Button>
+            </div>
             <div className="h-full overflow-y-auto pr-4">
-              <div className="mt-4 grid h-[310px] grid-cols-2 gap-4 overflow-y-auto pb-4">
-                {[...Array(6)].map((_, i) => (
-                  <RoomCard key={i} id={String(i)} />
-                ))}
+              <div className="mt-4 grid h-[270px] grid-cols-2 gap-4 overflow-y-auto pb-4">
+                {data?.map((item, i) => <RoomCard key={i} item={item} />)}
               </div>
             </div>
           </TabsContent>

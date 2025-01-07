@@ -1,7 +1,7 @@
 "use client";
 
 import { fabric } from "fabric";
-import { Eraser, Hand, Mouse, Pencil, Redo, Undo } from "lucide-react";
+import { Eraser, Hand, Pencil, Redo, Undo } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,7 @@ import useCanvasStore from "@/store/useCanvasStore";
 import useToolStore from "@/store/useToolStore";
 
 import ColorPanel from "./ColorPanel";
+import PenSizePanel from "./PenSizePanel";
 
 const Toolbar = () => {
   const activeTool = useToolStore((state) => state.activeTool);
@@ -53,14 +54,6 @@ const Toolbar = () => {
       setHistory([]);
     }
     setIsLocked(false);
-  };
-
-  const handleSelect = () => {
-    if (!(canvas instanceof fabric.Canvas)) return;
-
-    setIsObjectSelectable(true);
-    canvas.selection = true;
-    canvas.defaultCursor = "default";
   };
 
   const handlePen = () => {
@@ -153,10 +146,6 @@ const Toolbar = () => {
     resetCanvasOption();
 
     switch (activeTool) {
-      case "select":
-        handleSelect();
-        break;
-
       case "pen":
         handlePen();
         break;
@@ -192,19 +181,6 @@ const Toolbar = () => {
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                variant={activeTool === "select" ? "default" : "ghost"}
-                size="icon"
-                onClick={() => setActiveTool("select")}
-              >
-                <Mouse className="size-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Select Tool</TooltipContent>
-          </Tooltip>
-
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
                 variant={activeTool === "pen" ? "default" : "ghost"}
                 size="icon"
                 onClick={() => setActiveTool("pen")}
@@ -215,8 +191,12 @@ const Toolbar = () => {
             <TooltipContent>Pen Tool</TooltipContent>
           </Tooltip>
 
-          {activeTool === "pen" && <ColorPanel />}
-
+          {activeTool === "pen" && (
+            <>
+              <ColorPanel />
+              <PenSizePanel />
+            </>
+          )}
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
