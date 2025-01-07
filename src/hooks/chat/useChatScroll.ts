@@ -9,7 +9,7 @@ import {
 import { ChattingType } from "@/model/chatting";
 
 interface UseScrollProps {
-  scrollRef: RefObject<HTMLDivElement>;
+  scrollRef: RefObject<HTMLDivElement | null>;
   messageList: ChattingType[];
   isOpen: boolean;
   setNotification: Dispatch<SetStateAction<number>>;
@@ -30,7 +30,7 @@ export const useChatScroll = ({
   }, [scrollRef, userScrolled, messageList, isOpen]);
 
   const handleOnScroll = () => {
-    const CHAT_CARD_HEIGHT = 70;
+    const CHAT_CARD_HEIGHT = 72;
     const scrollContainer = scrollRef.current;
     if (scrollContainer) {
       const isScroll =

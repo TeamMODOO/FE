@@ -17,7 +17,7 @@ export const ScrollNotification = ({
   if (!userScrolled) return null;
 
   return (
-    <div className="absolute bottom-20 left-1/2 -translate-x-1/2">
+    <div className="absolute bottom-24 left-1/2 -translate-x-1/2">
       {userScrolled && (
         <Button
           variant={notification > 0 ? "default" : "outline"}
