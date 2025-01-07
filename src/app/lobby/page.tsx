@@ -4,9 +4,9 @@ import { useState } from "react";
 
 import useMainSocketConnect from "@/hooks/socket/useMainSocketConnect";
 
-import LobbyCanvas from "./_component/Canvas/LobbyCanvas";
-import ChatWidget from "./_component/Widget/ChattingWidget";
-import FriendInformation from "./_component/Widget/FriendInformation";
+import LobbyCanvas from "./_components/Canvas/LobbyCanvas";
+import ChatWidget from "./_components/Widget/ChattingWidget";
+import FriendInformation from "./_components/Widget/FriendInformation";
 
 const ROOM_TYPE = "floor";
 const ROOM_ID = "floor7";

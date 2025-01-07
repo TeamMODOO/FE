@@ -1,9 +1,9 @@
-import "@/styles/globals.css";
-
 import type { Metadata } from "next";
 
 import { cn } from "@/lib/utils";
 import { SpoqaHanSansNeo } from "@/styles/font";
+
+import "@/styles/globals.css";
 
 export const metadata: Metadata = {
   title: "Create Next App",

@@ -1,5 +1,3 @@
-import "@/styles/globals.css";
-
 import type { Metadata } from "next";
 
 import { Toaster } from "@/components/ui/toaster";
@@ -7,6 +5,8 @@ import { cn } from "@/lib/utils";
 import { AppProviders } from "@/provider";
 import { QueryProvider } from "@/provider/query-provider";
 import { SpoqaHanSansNeo } from "@/styles/font";
+
+import "@/styles/globals.css";
 
 export const metadata: Metadata = {
   title: "정글타워",

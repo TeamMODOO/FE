@@ -2,6 +2,7 @@
 "use client";
 
 import Image from "next/image";
+
 import { signIn } from "next-auth/react"; // 클라이언트 사이드 signIn import
 
 import { Button } from "@/components/ui/button";

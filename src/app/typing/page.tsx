@@ -3,7 +3,8 @@
 import { ChangeEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
 
 // import Swal from "sweetalert2";
-import TypingCompleteModal from "./_component/TypingCompleteModal/TypingCompleteModal";
+import TypingCompleteModal from "./_components/TypingCompleteModal/TypingCompleteModal";
+
 import styles from "./typing.module.css";
 
 /** GitHub 코드 검색 결과의 item 타입 정의 */

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+
 import { OpenAI } from "openai";
 
 /** ChatGPT가 반환할 JSON 구조 정의 */
