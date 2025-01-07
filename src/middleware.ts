@@ -18,10 +18,10 @@ export async function middleware(req: NextRequest) {
   }
 
   // 루트 경로('/')에 접근 시 처리
-  if (pathname === "/") {
-    // '/signin' 으로 리다이렉트
-    return NextResponse.redirect(new URL("/signin", req.url));
-  }
+  // if (pathname === "/") {
+  //   // '/signin' 으로 리다이렉트
+  //   return NextResponse.redirect(new URL("/signin", req.url));
+  // }
 
   // /signin 경로에 접근하려는 경우 추가 로직 수행
   if (pathname.startsWith("/signin")) {
@@ -50,5 +50,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next|api|favicon.ico|background|css|hooks).*)"],
+  matcher: ["/((?!_next|api|signin|favicon.ico|background|css|hooks).*)"],
 };
