@@ -24,35 +24,27 @@ export default function SignInLoading() {
   const didSignInRef = useRef(false);
 
   useEffect(() => {
-    // 1) 게스트 로그인인지 확인 (providerName === "credentials")
-    if (session?.providerName === "credentials") {
-      router.push("/lobby");
-      return;
-    }
+    // status가 "authenticated" 아니면 대기
+    if (status !== "authenticated") return;
 
-    // 세션이 "authenticated" 상태이며, 아직 API 요청을 안 했다면
-    if (status === "authenticated" && !didSignInRef.current) {
-      // 2) 구글 로그인인 경우 (providerName === "google")
-      if (session?.providerName === "google") {
-        // 먼저 access_token 쿠키가 있는지 확인
-        const hasToken = hasAccessTokenCookie();
-        if (hasToken) {
-          // 이미 access_token이 있다면 바로 로비 이동
+    // 이미 한 번 로직을 실행했다면 대기
+    if (didSignInRef.current) return;
+
+    // 이제 session.providerName 확인
+    if (session?.providerName === "credentials") {
+      // 게스트 로그인 → 바로 /lobby
+      didSignInRef.current = true;
+      router.push("/lobby");
+    } else if (session?.providerName === "google") {
+      // 구글 로그인
+      const hasToken = hasAccessTokenCookie();
+      if (hasToken) {
+        router.push("/lobby");
+      } else {
+        didSignInRef.current = true;
+        signIn().then(() => {
           router.push("/lobby");
-        } else {
-          // console.log(session);
-          didSignInRef.current = true; // 중복 실행 방지
-          // 토큰이 없다면 직접 발급 받기
-          signIn()
-            .then(() => {
-              router.push("/lobby");
-            })
-            .catch((err) => {
-              // 에러 처리
-              // console.error("구글 로그인 토큰 발급 실패:", err);
-              // 필요시 에러 페이지로 이동
-            });
-        }
+        });
       }
     }
   }, [status, session, router, signIn]);
