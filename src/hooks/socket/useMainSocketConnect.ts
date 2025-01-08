@@ -22,8 +22,11 @@ const useMainSocketConnect = ({
   roomId,
 }: UseMainSocketConnectType) => {
   const mainSocketRef = useRef<Socket | null>(null);
+  const connectionTriggerRef = useRef<boolean>(false);
 
   // 소켓 Store
+  const mainSocket = useMainSocketStore((state) => state.socket);
+  const isMainConnected = useMainSocketStore((state) => state.isConnected);
   const setMainSocket = useMainSocketStore((state) => state.setSocket);
   const setIsConnected = useMainSocketStore((state) => state.setIsConnected);
 
@@ -31,16 +34,19 @@ const useMainSocketConnect = ({
   const { data: session, status } = useSession();
 
   useEffect(() => {
-    // (1) 세션 로딩 중이면 소켓 연결 X
+    if (connectionTriggerRef.current) return;
+
+    // 세션 로딩 중이면 소켓 연결 X
     // (중요) 배포시 세션이 천천히 로드되면, user_name이 null/undefined가 될 수 있음
     if (status === "loading") return;
-
     // 이미 소켓 연결이 되어 있다면 재연결하지 않도록 방어
-    if (mainSocketRef.current) {
-      return;
-    }
+    if (mainSocketRef.current || mainSocket || isMainConnected) return;
+    // console.log(connectionTriggerRef.current);
 
-    // (2) 세션에서 user_name 가져오기 (없으면 "Guest")
+    connectionTriggerRef.current = true;
+    // console.log(connectionTriggerRef.current);
+
+    // 세션에서 user_name 가져오기 (없으면 "Guest")
     const userName = session?.user?.name || "Guest";
 
     // (3) 소켓 접속 로직 (client_id 생성/조회)
@@ -54,9 +60,13 @@ const useMainSocketConnect = ({
 
     // 서버 URL
     const baseURL = process.env.NEXT_PUBLIC_BASE_URL;
+
     // (4) io 연결 - 여기서 query로 user_name, client_id를 넘김
     const newMainSocket = io(baseURL!, {
       path: "/sio/sockets",
+      withCredentials: true,
+      transports: ["websocket"],
+      autoConnect: true,
       query: {
         client_id: clientId, // 클라이언트 ID
         user_name: userName, // 세션에서 가져온 닉네임(혹은 이름)
@@ -77,13 +87,15 @@ const useMainSocketConnect = ({
       setIsConnected(false);
     });
 
-    newMainSocket.on("connect_error", () => {});
+    newMainSocket.on("connect_error", () => {
+      connectionTriggerRef.current = false;
+      if (mainSocketRef.current) {
+        mainSocketRef.current = null;
+      }
+    });
 
     // (6) unmount 시 해제
     return () => {
-      setMainSocket(null);
-      setIsConnected(false);
-
       if (mainSocketRef.current) {
         mainSocketRef.current.off("connect");
         mainSocketRef.current.off("connect_error");
@@ -91,8 +103,13 @@ const useMainSocketConnect = ({
         mainSocketRef.current.disconnect();
         mainSocketRef.current = null;
       }
+
+      setMainSocket(null);
+      setIsConnected(false);
+      // 클린업 시 연결 시도 상태 초기화
+      connectionTriggerRef.current = false;
     };
-  }, [status, session, setMainSocket, setIsConnected, roomType, roomId]);
+  }, [status]);
 
   // 커스텀 훅이므로 return 없음
 };
