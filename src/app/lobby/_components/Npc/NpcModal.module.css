@@ -8,7 +8,7 @@
   transform: translateX(-50%);
   width: 90%;
   max-width: 1200px;
-  min-height: 20dvh;
+  min-height: 40dvh;
   margin: 0 auto;
   z-index: 9999;
   display: flex;
@@ -87,6 +87,7 @@
   font-size: 1.3rem;
   line-height: 1.4;
   color: #fff;
+  min-height: 30dvh;
 }
 
 @keyframes fadeIn {

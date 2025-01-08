@@ -8,9 +8,9 @@
 }
 
 .fadeInDelayed {
-  animation: fadeInDelayed 0.1s ease-out 2.6s forwards;
+  animation: fadeInDelayed 0.1s ease-out 2.8s forwards;
 }
 
 .fadeInShortDelayed {
-  animation: fadeInDelayed 0.1s ease-out 1s forwards;
+  animation: fadeInDelayed 0.1s ease-out 0.4s forwards;
 }
