@@ -1,3 +1,4 @@
+// src/app/lobby/_components/Qna/QnaContent.tsx
 "use client";
 
 import React, { useState } from "react";
@@ -9,7 +10,6 @@ import styles from "./QnaContent.module.css";
 import animationStyles from "@/components/modalAnimation/ModalAnimation.module.css";
 
 const QnaContent: React.FC<QnaProps> = ({ qnaList }) => {
-  const [resetKey, setResetKey] = useState(0);
   const [text] = useTypewriter({
     words: ["게임 개발자가 되고 싶다면, 나에게로..."],
     loop: 1,
@@ -17,24 +17,38 @@ const QnaContent: React.FC<QnaProps> = ({ qnaList }) => {
     deleteSpeed: 0,
   });
 
-  // -1이면 “초기 상태”로, 질문/답변 목록과 안내 문구를 보여줌
-  //  0 이상이면 “특정 질문”을 선택한 상태 -> 해당 질문/답변만 표시
+  // 선택된 질문의 인덱스 (-1은 초기 상태)
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
+  // 선택된 질문의 현재 답변 인덱스
+  const [currentAnswerIndex, setCurrentAnswerIndex] = useState<number>(0);
 
   // 질문 클릭 시
   const handleQuestionClick = (index: number) => {
     setSelectedIndex(index);
+    setCurrentAnswerIndex(0); // 새로운 질문 선택 시 답변 인덱스 초기화
   };
 
   // [이전] 버튼 클릭 시
   const handleGoBack = () => {
     setSelectedIndex(-1);
-    setResetKey((prev) => prev + 1);
+    setCurrentAnswerIndex(0);
   };
 
-  // ----------------------------
-  // 1) 초기 상태 (질문 목록 + 안내문)
-  // ----------------------------
+  // [다음] 버튼 클릭 시
+  const handleNext = () => {
+    const selectedQna = qnaList[selectedIndex];
+    if (currentAnswerIndex < selectedQna.answers.length - 1) {
+      setCurrentAnswerIndex(currentAnswerIndex + 1);
+    }
+  };
+
+  // [처음으로] 버튼 클릭 시
+  const handleReset = () => {
+    setSelectedIndex(-1);
+    setCurrentAnswerIndex(0);
+  };
+
+  // 초기 상태 (질문 목록 + 안내문)
   if (selectedIndex === -1) {
     return (
       <div>
@@ -61,10 +75,10 @@ const QnaContent: React.FC<QnaProps> = ({ qnaList }) => {
     );
   }
 
-  // ------------------------------------------
-  // 2) 특정 질문 선택 시 (단일 질문/답변 + [이전] 버튼)
-  // ------------------------------------------
-  const selectedQna = qnaList[selectedIndex]; // 선택된 질문/답변
+  // 특정 질문 선택 시
+  const selectedQna = qnaList[selectedIndex];
+  const currentAnswer = selectedQna.answers[currentAnswerIndex];
+  const isLastAnswer = currentAnswerIndex === selectedQna.answers.length - 1;
 
   return (
     <div>
@@ -72,19 +86,32 @@ const QnaContent: React.FC<QnaProps> = ({ qnaList }) => {
         <h2 className="mb-5 text-xl font-bold text-[rgb(15,190,135)]">
           Q. {selectedQna.question}
         </h2>
-        {/* <p className="mt-2 whitespace-pre-line">A. {selectedQna.answer}</p> */}
-        <div className={styles.answerOutput}>
+        <div className={styles.answerOutput} style={{ whiteSpace: "pre-line" }}>
           <Typewriter
-            key={selectedQna.answer} // <-- key를 질문/답변 등으로 부여
-            words={[`A. ${selectedQna.answer}`]}
+            key={`${selectedQna.question}-${currentAnswerIndex}`} // 유니크한 키 설정
+            words={[`A. ${currentAnswer}`]}
             loop={1}
             typeSpeed={10}
             deleteSpeed={0}
           />
         </div>
       </div>
-      <div className="flex flex-row-reverse">
-        {/* [이전] 버튼 */}
+      <div className="mt-4 flex flex-row-reverse gap-4">
+        {!isLastAnswer ? (
+          <button
+            onClick={handleNext}
+            className="rounded bg-gray-200 px-3 py-1 text-black"
+          >
+            다음
+          </button>
+        ) : (
+          <button
+            onClick={handleReset}
+            className="rounded bg-gray-200 px-3 py-1 text-black"
+          >
+            처음으로
+          </button>
+        )}
         <button
           onClick={handleGoBack}
           className="rounded bg-gray-200 px-3 py-1 text-black"
