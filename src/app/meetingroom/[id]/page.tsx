@@ -25,7 +25,7 @@ import { useMediaDevices } from "./_hook/webRTC/useMediaDevices";
 import { usePeerEvents } from "./_hook/webRTC/usePeerSocketEvent";
 import { useRoom } from "./_hook/webRTC/useRoom";
 import { useWebRTC } from "./_hook/webRTC/useWebRTC";
-import { RemoteStream } from "./_model/webRTC.type";
+import { PeersType, RemoteStream } from "./_model/webRTC.type";
 
 const ROOM_TYPE = "meeting";
 
@@ -54,7 +54,7 @@ function Page() {
     useState<mediasoupClient.types.Producer | null>(null);
   const [audioProducer, setAudioProducer] =
     useState<mediasoupClient.types.Producer | null>(null);
-  const [peers, setPeers] = useState<string[]>([]);
+  const [peers, setPeers] = useState<PeersType[]>([]);
   const [peerStates, setPeerStates] = useState<
     Record<string, { audio: boolean; video: boolean }>
   >({});
@@ -101,7 +101,11 @@ function Page() {
 
     audioSocket.emit(
       "join-room",
-      { roomId, peerId: audioSocket.id },
+      {
+        roomId,
+        peerId: audioSocket.id,
+        userName: session?.user.name ?? "GuestUser",
+      },
       async (response: any) => {
         if (response.error) {
           throw new Error("Error joining room:", response.error);
@@ -111,7 +115,7 @@ function Page() {
           sendTransportOptions,
           recvTransportOptions,
           rtpCapabilities,
-          peerIds,
+          peers,
           existingProducers,
         } = response;
 
@@ -141,7 +145,7 @@ function Page() {
           setAudioProducer(newAudioProducer);
         }
 
-        setPeers(peerIds.filter((id: string) => id !== audioSocket.id));
+        setPeers(peers);
 
         for (const producerInfo of existingProducers) {
           await consume(producerInfo);
@@ -258,8 +262,6 @@ function Page() {
   return (
     <div className="flex h-screen flex-col">
       <Header
-        audioSocket={audioSocket}
-        roomId={roomId}
         isMuted={isMuted}
         localStream={localStream}
         onMuteToggle={toggleMicrophone}

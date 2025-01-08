@@ -2,12 +2,12 @@ import { useEffect } from "react";
 
 import { Socket } from "socket.io-client";
 
-import { PeerState } from "../../_model/webRTC.type";
+import { PeerState, PeersType } from "../../_model/webRTC.type";
 
 interface UsePeerEventsProps {
   audioSocket: Socket | null;
   isAudioConnected: boolean;
-  setPeers: React.Dispatch<React.SetStateAction<string[]>>;
+  setPeers: React.Dispatch<React.SetStateAction<PeersType[]>>;
   setPeerStates: React.Dispatch<
     React.SetStateAction<Record<string, PeerState>>
   >;
@@ -26,11 +26,16 @@ export const usePeerEvents = ({
     const handleNewPeer = ({
       peerId,
       state,
+      userName,
     }: {
       peerId: string;
       state: PeerState;
+      userName: string;
     }) => {
-      setPeers((prevPeers) => [...prevPeers, peerId]);
+      setPeers((prevPeers) => [
+        ...prevPeers,
+        { id: peerId, userName: userName },
+      ]);
       setPeerStates((prevPeers) => ({
         ...prevPeers,
         [peerId]: { ...state },
@@ -56,7 +61,7 @@ export const usePeerEvents = ({
 
     // 피어 퇴장 이벤트 핸들러
     const handlePeerLeft = ({ peerId }: { peerId: string }) => {
-      setPeers((prevPeers) => prevPeers.filter((id) => id !== peerId));
+      setPeers((prevPeers) => prevPeers.filter((data) => data.id !== peerId));
       setPeerStates((prev) => {
         const newStates = { ...prev };
         delete newStates[peerId];

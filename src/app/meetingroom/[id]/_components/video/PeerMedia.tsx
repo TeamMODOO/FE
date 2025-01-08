@@ -6,6 +6,7 @@ import { MediaStateIndicators } from "./MediaStateIndicators";
 
 export function PeerMedia({
   peerId,
+  peerName,
   peerStates,
   remoteStreams,
   setMediaRef,
@@ -48,7 +49,7 @@ export function PeerMedia({
       <MediaStateIndicators
         isAudioEnabled={isAudioEnabled}
         isVideoEnabled={isVideoEnabled}
-        userName={peerId}
+        userName={peerName}
       />
     </div>
   );
