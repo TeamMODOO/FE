@@ -7,7 +7,6 @@ import { useParams, useRouter } from "next/navigation";
 
 import { useSession } from "next-auth/react";
 
-import axios from "axios";
 import * as mediasoupClient from "mediasoup-client";
 import { Socket } from "socket.io-client";
 
@@ -144,8 +143,10 @@ function Page() {
           newAudioProducer.pause();
           setAudioProducer(newAudioProducer);
         }
-
-        setPeers(peers);
+        const filterPeer = peers.filter(
+          (list: PeersType) => list.id !== audioSocket.id,
+        );
+        setPeers(filterPeer);
 
         for (const producerInfo of existingProducers) {
           await consume(producerInfo);
