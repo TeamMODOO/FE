@@ -23,10 +23,7 @@ const DailyProblemContent: React.FC = () => {
 
   return (
     <div>
-      <p className="pointer-events-none my-4 whitespace-pre-line">
-        {/* <Typewriter text={content} speed={30} /> */}
-        {content}
-      </p>
+      <p className="pointer-events-none my-4 whitespace-pre-line">{content}</p>
 
       {/* 버튼을 세로로 배치 (flex-col) */}
       <div className={`flex flex-col gap-2 opacity-0 ${styles.fadeInDelayed}`}>
