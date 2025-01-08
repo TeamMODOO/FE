@@ -12,17 +12,19 @@ type UseAudioSocketConnectType = {
 
 const useAudioSocketConnect = ({ roomId }: UseAudioSocketConnectType) => {
   const audioSocketRef = useRef<Socket | null>(null);
+  const audioSocket = useAudioSocketStore((state) => state.socket);
+  const isAudioConnected = useAudioSocketStore((state) => state.isConnected);
   const setAudioSocket = useAudioSocketStore((state) => state.setSocket);
   const setAudioSocketIsConnected = useAudioSocketStore(
     (state) => state.setIsConnected,
   );
 
   useEffect(() => {
-    const AUDIO_SERVER_URL = process.env.NEXT_PUBLIC_WEB_RTC_URL;
-
     if (!roomId) return;
+    if (audioSocket || isAudioConnected) return;
 
-    const newAudioSocket = io(AUDIO_SERVER_URL, {
+    const AUDIO_SERVER_URL = process.env.NEXT_PUBLIC_WEB_RTC_URL;
+    const newAudioSocket = io("localhost:8080", {
       withCredentials: true,
       transports: ["websocket"],
       autoConnect: true,
