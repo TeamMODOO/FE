@@ -4,8 +4,6 @@ import { Socket } from "socket.io-client";
 import { Button } from "@/components/ui/button";
 
 interface HeaderProps {
-  audioSocket: Socket;
-  roomId: string | null;
   isMuted: boolean;
   localStream: MediaStream | null;
   onMuteToggle: () => void;
@@ -14,8 +12,6 @@ interface HeaderProps {
 }
 
 export function Header({
-  audioSocket,
-  roomId,
   isMuted,
   localStream,
   onMuteToggle,
@@ -24,17 +20,7 @@ export function Header({
 }: HeaderProps) {
   return (
     <header className="flex w-full items-center justify-between bg-gray-100 p-4">
-      <div className="flex items-center gap-4 text-sm text-muted-foreground">
-        <p>
-          My ID:
-          <span className="font-mono">
-            {audioSocket ? audioSocket.id : "Not connected"}
-          </span>
-        </p>
-        <p>
-          Room: <span className="font-mono">{roomId ? roomId : "-"}</span>
-        </p>
-      </div>
+      <div className="flex items-center gap-4 text-sm text-muted-foreground"></div>
       <div className="flex flex-wrap gap-4">
         <Button
           variant={isMuted ? "default" : "outline"}
