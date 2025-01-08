@@ -549,7 +549,8 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
       <NpcModal
         isOpen={npc1ModalOpen}
         onClose={() => setNpc1ModalOpen(false)}
-        title="NPC1 대화"
+        imgSrc="/npc_event/npc1.png"
+        title="정글의 수석 코치"
       >
         <DailyProblemContent />
       </NpcModal>
@@ -558,7 +559,8 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
       <NpcModal
         isOpen={npc2ModalOpen}
         onClose={() => setNpc2ModalOpen(false)}
-        title="NPC2 대화"
+        imgSrc=""
+        title="정글의 게임 전문 코치"
       >
         <QnaContent
           qnaList={QNA_LIST}
