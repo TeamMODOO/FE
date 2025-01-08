@@ -18,13 +18,14 @@ export interface RemoteStream {
 }
 
 export interface RemoteMediaProps {
-  peers: string[];
+  peers: PeersType[];
   peerStates: Record<string, PeerState>;
   remoteStreams: RemoteStream[];
 }
 
 export interface PeerMediaProps {
   peerId: string;
+  peerName: string;
   peerStates: Record<string, PeerState>;
   remoteStreams: RemoteStream[];
   setMediaRef: (
@@ -37,5 +38,10 @@ export interface PeerMediaProps {
 export interface MediaStateIndicatorsProps {
   isAudioEnabled: boolean;
   isVideoEnabled: boolean;
+  userName: string;
+}
+
+export interface PeersType {
+  id: string;
   userName: string;
 }

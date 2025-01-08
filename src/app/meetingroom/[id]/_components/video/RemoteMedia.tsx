@@ -21,10 +21,11 @@ export function RemoteMedia({
       <CardContent className="p-2">
         <div className="max-h-full">
           <div className="grid grid-cols-1 gap-4">
-            {peers.map((peerId) => (
+            {peers.map((data) => (
               <PeerMedia
-                key={peerId}
-                peerId={peerId}
+                key={data.id}
+                peerId={data.id}
+                peerName={data.userName}
                 peerStates={peerStates}
                 remoteStreams={remoteStreams}
                 setMediaRef={setMediaRef}
