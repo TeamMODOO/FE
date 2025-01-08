@@ -389,23 +389,45 @@ const MyRoomCanvas: React.FC = () => {
   }, [ownerProfile]);
 
   // (B) 클릭 시
-  const handleFurnitureClickCustom = (item: Funiture) => {
-    if (item.funitureType === "none") {
-      alert("아직 등록되지 않은 항목입니다.");
-      return;
-    }
+  const handleFurnitureClickCustom = async (item: Funiture) => {
+    // 모달로 변경
+    if (item.funitureType === "none")
+      return alert("아직 등록되지 않은 항목입니다.");
     if (item.funitureType.startsWith("resume/")) {
-      const pdf = item.data?.resumeLink;
-      if (!pdf) {
-        alert("PDF 링크가 없습니다.");
-        return;
-      }
-      setPdfUrl(pdf);
-      setPdfModalOpen(true);
-      return;
+      const pdfUrl = item.data?.resumeLink;
+      if (!pdfUrl) return alert("PDF 링크가 없습니다.");
+
+      const urlParts = pdfUrl.split(".com/");
+      const key = urlParts[1];
+
+      const response = await fetch(
+        `/api/resume?key=${encodeURIComponent(key)}`,
+      );
+
+      // PDF 데이터를 Blob으로 변환
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+
+      setPdfUrl(url);
+      setSelectedFurnitureData(item);
+      setViewModalOpen(true);
     }
-    setSelectedFurnitureData(item);
-    setViewModalOpen(true);
+  };
+
+  // 프론트엔드에서 PDF 다운로드 예시
+  const downloadPdf = async (key: string) => {
+    const response = await fetch(`/api/resume?key=${encodeURIComponent(key)}`);
+
+    if (!response.ok) {
+      throw new Error("PDF 다운로드 실패");
+    }
+
+    // PDF 데이터를 blob으로 받아서 처리
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+
+    // PDF 뷰어에서 열기 또는 다운로드
+    window.open(url);
   };
 
   // (C) PATCH 로직
