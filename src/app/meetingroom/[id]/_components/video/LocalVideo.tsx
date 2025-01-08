@@ -6,33 +6,18 @@ interface LocalVideoProps {
   localVideoRef: React.RefObject<HTMLVideoElement | null>;
   isMuted: boolean;
   hasVideo: boolean;
+  userName: string;
 }
 
 export function LocalVideo({
   localVideoRef,
   isMuted,
   hasVideo,
+  userName,
 }: LocalVideoProps) {
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          내 비디오
-          <div className="flex gap-2">
-            {isMuted && (
-              <div className="rounded-full bg-red-500 p-1">
-                <MicOffIcon className="size-4 text-white" />
-              </div>
-            )}
-            {!hasVideo && (
-              <div className="rounded-full bg-red-500 p-1">
-                <VideoOffIcon className="size-4 text-white" />
-              </div>
-            )}
-          </div>
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
+      <CardContent className="p-0">
         <div className="relative">
           <video
             ref={localVideoRef}
@@ -51,6 +36,21 @@ export function LocalVideo({
               </span>
             </div>
           )}
+          <div className="absolute right-2 top-2 flex gap-2">
+            {isMuted && (
+              <div className="rounded-full bg-red-500 p-1">
+                <MicOffIcon className="size-4 text-white" />
+              </div>
+            )}
+            {!hasVideo && (
+              <div className="rounded-full bg-red-500 p-1">
+                <VideoOffIcon className="size-4 text-white" />
+              </div>
+            )}
+          </div>
+          <div className="absolute bottom-2 right-2 flex gap-2">
+            <div className="rounded-full bg-white p-1">{userName}</div>
+          </div>
         </div>
       </CardContent>
     </Card>
