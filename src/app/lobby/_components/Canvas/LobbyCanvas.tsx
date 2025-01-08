@@ -559,7 +559,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
       <NpcModal
         isOpen={npc2ModalOpen}
         onClose={() => setNpc2ModalOpen(false)}
-        imgSrc=""
+        imgSrc="/npc_event/npc2.png"
         title="정글의 게임 전문 코치"
       >
         <QnaContent
