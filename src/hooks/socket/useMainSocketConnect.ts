@@ -22,7 +22,6 @@ const useMainSocketConnect = ({
   roomId,
 }: UseMainSocketConnectType) => {
   const mainSocketRef = useRef<Socket | null>(null);
-  const connectionTriggerRef = useRef<boolean>(false);
 
   // 소켓 Store
   const mainSocket = useMainSocketStore((state) => state.socket);
@@ -34,17 +33,11 @@ const useMainSocketConnect = ({
   const { data: session, status } = useSession();
 
   useEffect(() => {
-    if (connectionTriggerRef.current) return;
-
     // 세션 로딩 중이면 소켓 연결 X
     // (중요) 배포시 세션이 천천히 로드되면, user_name이 null/undefined가 될 수 있음
     if (status === "loading") return;
     // 이미 소켓 연결이 되어 있다면 재연결하지 않도록 방어
     if (mainSocketRef.current || mainSocket || isMainConnected) return;
-    // console.log(connectionTriggerRef.current);
-
-    connectionTriggerRef.current = true;
-    // console.log(connectionTriggerRef.current);
 
     // 세션에서 user_name 가져오기 (없으면 "Guest")
     const userName = session?.user?.name || "Guest";
@@ -88,7 +81,6 @@ const useMainSocketConnect = ({
     });
 
     newMainSocket.on("connect_error", () => {
-      connectionTriggerRef.current = false;
       if (mainSocketRef.current) {
         mainSocketRef.current = null;
       }
@@ -106,8 +98,6 @@ const useMainSocketConnect = ({
 
       setMainSocket(null);
       setIsConnected(false);
-      // 클린업 시 연결 시도 상태 초기화
-      connectionTriggerRef.current = false;
     };
   }, [status]);
 
