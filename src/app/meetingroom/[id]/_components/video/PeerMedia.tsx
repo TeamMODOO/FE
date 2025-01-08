@@ -48,6 +48,7 @@ export function PeerMedia({
       <MediaStateIndicators
         isAudioEnabled={isAudioEnabled}
         isVideoEnabled={isVideoEnabled}
+        userName={peerId}
       />
     </div>
   );

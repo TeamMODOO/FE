@@ -14,21 +14,23 @@ export function RemoteMedia({
   if (peers.length === 0) return null;
 
   return (
-    <Card>
+    <Card className="max-h-[calc(100vh-100px)] overflow-auto border-none bg-gray-200">
       <CardHeader>
-        <CardTitle>상대 비디오 ({peers.length})</CardTitle>
+        <CardTitle>상대 비디오</CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-1 gap-4">
-          {peers.map((peerId) => (
-            <PeerMedia
-              key={peerId}
-              peerId={peerId}
-              peerStates={peerStates}
-              remoteStreams={remoteStreams}
-              setMediaRef={setMediaRef}
-            />
-          ))}
+      <CardContent className="p-2">
+        <div className="max-h-full">
+          <div className="grid grid-cols-1 gap-4">
+            {peers.map((peerId) => (
+              <PeerMedia
+                key={peerId}
+                peerId={peerId}
+                peerStates={peerStates}
+                remoteStreams={remoteStreams}
+                setMediaRef={setMediaRef}
+              />
+            ))}
+          </div>
         </div>
       </CardContent>
     </Card>

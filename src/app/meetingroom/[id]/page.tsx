@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 
 import { useParams, useRouter } from "next/navigation";
 
+import { useSession } from "next-auth/react";
+
 import axios from "axios";
 import * as mediasoupClient from "mediasoup-client";
 import { Socket } from "socket.io-client";
@@ -24,7 +26,6 @@ import { usePeerEvents } from "./_hook/webRTC/usePeerSocketEvent";
 import { useRoom } from "./_hook/webRTC/useRoom";
 import { useWebRTC } from "./_hook/webRTC/useWebRTC";
 import { RemoteStream } from "./_model/webRTC.type";
-import { useSession } from "next-auth/react";
 
 const ROOM_TYPE = "meeting";
 
