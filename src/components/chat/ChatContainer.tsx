@@ -23,9 +23,9 @@ export function ChatContainer({
       card: "flex h-[calc(100vh-2rem)] flex-col",
     },
     left: {
-      wrapper: "fixed bottom-4 left-4",
+      wrapper: "fixed bottom-2.5 left-2.5",
       dimensions: "w-full",
-      card: "relative mb-4 flex h-96 w-80 flex-col",
+      card: "relative flex h-96 w-80 flex-col",
     },
   }[position];
 
