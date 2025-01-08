@@ -24,6 +24,7 @@ import { usePeerEvents } from "./_hook/webRTC/usePeerSocketEvent";
 import { useRoom } from "./_hook/webRTC/useRoom";
 import { useWebRTC } from "./_hook/webRTC/useWebRTC";
 import { RemoteStream } from "./_model/webRTC.type";
+import { useSession } from "next-auth/react";
 
 const ROOM_TYPE = "meeting";
 
@@ -39,6 +40,7 @@ function Page() {
     (state) => state.socket,
   ) as Socket;
   const isAudioConnected = useAudioSocketStore((state) => state.isConnected);
+  const { data: session } = useSession();
 
   const [device, setDevice] = useState<mediasoupClient.Device | null>(null);
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
@@ -266,14 +268,8 @@ function Page() {
 
       <div className="relative z-10">
         {joined && (
-          <div className="absolute right-2.5 top-2.5 flex w-64 flex-col overflow-y-auto">
+          <div className="absolute right-0 top-0 flex w-64 flex-col overflow-y-auto">
             <div className="grid gap-4">
-              <LocalVideo
-                localVideoRef={localVideoRef}
-                isMuted={isMuted}
-                hasVideo={!!localStream}
-                userName="name"
-              />
               {peers.length > 0 && (
                 <RemoteMedia
                   peers={peers}
@@ -286,6 +282,14 @@ function Page() {
         )}
       </div>
       <CanvasSection />
+      <div className="fixed bottom-2.5 left-2.5 flex w-64 flex-col overflow-y-auto">
+        <LocalVideo
+          localVideoRef={localVideoRef}
+          isMuted={isMuted}
+          hasVideo={!!localStream}
+          userName={session?.user.name ?? ""}
+        />
+      </div>
       <ChatWidget isOpen={chatOpen} setIsOpen={setChatOpen} position="left" />
     </div>
   );
