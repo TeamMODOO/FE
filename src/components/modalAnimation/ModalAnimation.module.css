@@ -1,0 +1,16 @@
+@keyframes fadeInDelayed {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.fadeInDelayed {
+  animation: fadeInDelayed 0.1s ease-out 2.6s forwards;
+}
+
+.fadeInShortDelayed {
+  animation: fadeInDelayed 0.1s ease-out 1s forwards;
+}

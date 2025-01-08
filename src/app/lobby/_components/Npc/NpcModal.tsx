@@ -33,6 +33,10 @@ export const NpcModal: React.FC<NpcModalProps> = ({
                 <p className={styles.modalTitle}>{title}</p>
               </div>
               <div className={styles.modalContent}>{children}</div>
+              {/* <Typewriter
+                text={typeof children === "string" ? children : ""}
+                speed={50}
+              /> */}
             </div>
           </div>
         )}

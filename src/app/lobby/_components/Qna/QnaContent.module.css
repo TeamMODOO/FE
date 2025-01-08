@@ -1,0 +1,9 @@
+.qnaItem {
+  color: rgb(15, 190, 135);
+}
+
+.qnaItem:hover {
+  color: rgb(6, 209, 130, 0.7);
+  text-underline-position: below;
+  cursor: pointer;
+}
