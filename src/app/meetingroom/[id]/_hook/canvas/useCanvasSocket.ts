@@ -4,102 +4,183 @@ import { fabric } from "fabric";
 import Pako from "pako";
 import { Socket } from "socket.io-client";
 
+interface CanvasState {
+  objects: fabric.Object[];
+  timestamp: number;
+}
+
 export const useCanvasSocket = (
   canvas: fabric.Canvas | null,
   mainSocket: Socket | null,
 ) => {
-  const animationFrameIdRef = useRef<number>(0);
-  const lastCanvasStateRef = useRef<string>("");
+  // 마지막 캔버스 상태를 저장하는 ref
+  const lastCanvasStateRef = useRef<CanvasState>({ objects: [], timestamp: 0 });
+  // 업데이트 진행 중 여부를 추적하는 ref
+  const isUpdatingRef = useRef(false);
+  // 마지막 업데이트 시간을 추적하는 ref
+  const lastUpdateTimeRef = useRef<number>(Date.now());
 
-  const saveCanvasData = useCallback(() => {
-    if (!canvas || !mainSocket) return;
+  // 객체의 핵심 상태만 추출
+  const extractObjectState = useCallback((obj: fabric.Object) => {
+    const baseState = {
+      type: obj.type,
+      left: obj.left,
+      top: obj.top,
+      scaleX: obj.scaleX,
+      scaleY: obj.scaleY,
+      angle: obj.angle,
+    };
 
-    // 현재 캔버스의 전체 상태를 JSON 문자열로 변환
-    const currentCanvasState = JSON.stringify(canvas);
+    if (obj.type === "path") {
+      return {
+        ...baseState,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        path: (obj as any).path,
+      };
+    }
 
-    // 이전 상태와 비교하여 변경 사항을 감지
-    if (lastCanvasStateRef.current !== currentCanvasState) {
-      const newObjects = canvas.getObjects();
-      const compressedObjects = Pako.gzip(JSON.stringify(newObjects));
-      lastCanvasStateRef.current = currentCanvasState;
+    return baseState;
+  }, []);
+
+  // 상태 변경 감지 - 최적화된 비교 로직
+  const hasSignificantChanges = useCallback(
+    (currentObjects: fabric.Object[]) => {
+      if (currentObjects.length !== lastCanvasStateRef.current.objects.length) {
+        return true;
+      }
+
+      // 객체별 상태 비교를 통한 변경 감지
+      return currentObjects.some((obj, index) => {
+        const currentState = extractObjectState(obj);
+        const prevObject = lastCanvasStateRef.current.objects[index];
+
+        if (!prevObject) return true;
+
+        const prevState = extractObjectState(prevObject);
+        return JSON.stringify(currentState) !== JSON.stringify(prevState);
+      });
+    },
+    [extractObjectState],
+  );
+
+  // 상태 전송 함수 - 스로틀링 적용
+  const sendCanvasState = useCallback(
+    (objects: fabric.Object[]) => {
+      if (!mainSocket || isUpdatingRef.current) return;
+
+      const currentTime = Date.now();
+
+      const serializedObjects = objects.map((obj) =>
+        obj.toObject([
+          "type",
+          "path",
+          "left",
+          "top",
+          "scaleX",
+          "scaleY",
+          "angle",
+        ]),
+      );
+      const compressedData = Pako.gzip(JSON.stringify(serializedObjects));
 
       mainSocket.emit("CS_PICTURE_INFO", {
-        picture: compressedObjects,
+        picture: compressedData,
+        timestamp: currentTime,
       });
-    }
-  }, [canvas, mainSocket]);
 
+      lastUpdateTimeRef.current = currentTime;
+    },
+    [mainSocket],
+  );
+
+  // 캔버스 수정 이벤트 처리
+  const handleCanvasModification = useCallback(() => {
+    if (!canvas || isUpdatingRef.current) return;
+
+    const currentObjects = canvas.getObjects();
+    if (hasSignificantChanges(currentObjects)) {
+      lastCanvasStateRef.current = {
+        objects: [...currentObjects],
+        timestamp: Date.now(),
+      };
+      sendCanvasState(currentObjects);
+    }
+  }, [canvas, hasSignificantChanges, sendCanvasState]);
+
+  // 수신된 데이터 처리
+  const handleIncomingData = useCallback(
+    (data: { picture: Uint8Array }) => {
+      if (!canvas || !data.picture || isUpdatingRef.current) return;
+
+      isUpdatingRef.current = true;
+      const decompressedData = JSON.parse(
+        Pako.inflate(data.picture, { to: "string" }),
+      );
+
+      // 현재 상태와 새로운 데이터의 효율적인 비교
+      const currentState = canvas.getObjects().map(extractObjectState);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const newState = decompressedData.map((obj: any) => ({
+        type: obj.type,
+        path: obj.path,
+        left: obj.left,
+        top: obj.top,
+        scaleX: obj.scaleX,
+        scaleY: obj.scaleY,
+        angle: obj.angle,
+      }));
+
+      if (JSON.stringify(currentState) !== JSON.stringify(newState)) {
+        // requestAnimationFrame을 사용하여 렌더링 최적화
+        requestAnimationFrame(() => {
+          canvas.clear();
+          fabric.util.enlivenObjects(
+            decompressedData,
+            (objects: fabric.Object[]) => {
+              objects.forEach((obj) => canvas.add(obj));
+              canvas.renderAll();
+              isUpdatingRef.current = false;
+            },
+            "",
+          );
+        });
+      } else {
+        isUpdatingRef.current = false;
+      }
+    },
+    [canvas, extractObjectState],
+  );
+
+  // 이벤트 리스너 설정
   useEffect(() => {
     if (!canvas) return;
 
-    lastCanvasStateRef.current = JSON.stringify(canvas.toJSON());
+    const events = [
+      "object:added",
+      "object:modified",
+      "object:removed",
+      "path:created",
+    ];
 
-    const checkCanvasChanges = () => {
-      saveCanvasData();
-      animationFrameIdRef.current = requestAnimationFrame(checkCanvasChanges);
-    };
-
-    animationFrameIdRef.current = requestAnimationFrame(checkCanvasChanges);
+    events.forEach((event) => {
+      canvas.on(event, handleCanvasModification);
+    });
 
     return () => {
-      if (animationFrameIdRef.current) {
-        cancelAnimationFrame(animationFrameIdRef.current);
-      }
+      events.forEach((event) => {
+        canvas.off(event, handleCanvasModification);
+      });
     };
-  }, [canvas, saveCanvasData]);
+  }, [canvas, handleCanvasModification]);
 
-  const loadCanvasData = (data: { picture: Uint8Array }) => {
-    if (!canvas) return;
-    if (!data || !data.picture) return;
-    const isCanvasDataChanged = data.picture.byteLength !== 0;
-
-    if (!isCanvasDataChanged) return;
-    const receiveObjects = JSON.parse(
-      Pako.inflate(data.picture, { to: "string" }),
-    );
-    const currentObjects = canvas.getObjects();
-
-    // 객체를 식별하기 위한 고유 키 생성 함수
-    const findUniqueObjects = (a: fabric.Object[], b: fabric.Object[]) => {
-      const aSet = new Set(a.map((item) => JSON.stringify(item)));
-      const bSet = new Set(b.map((item) => JSON.stringify(item)));
-
-      const uniqueInA = a.filter((obj) => !bSet.has(JSON.stringify(obj)));
-      const uniqueInB = b.filter((obj) => !aSet.has(JSON.stringify(obj)));
-
-      return [uniqueInA, uniqueInB];
-    };
-
-    const [deletedObjects, newObjects] = findUniqueObjects(
-      currentObjects,
-      receiveObjects,
-    );
-
-    const deleteObject = () => {
-      for (let i = 0; i < deletedObjects.length; i++) {
-        canvas.remove(deletedObjects[i]);
-      }
-    };
-    const addObject = () => {
-      fabric.util.enlivenObjects(
-        newObjects,
-        (objs: fabric.Object[]) => {
-          objs.forEach((item) => {
-            canvas.add(item);
-          });
-        },
-        "",
-      );
-    };
-    deleteObject();
-    addObject();
-
-    canvas.renderAll();
-  };
-
+  // 소켓 이벤트 리스너
   useEffect(() => {
-    if (!canvas || !mainSocket) return;
+    if (!mainSocket) return;
 
-    mainSocket.on(`SC_PICTURE_INFO`, ({ data }) => loadCanvasData(data));
-  }, [canvas, saveCanvasData]);
+    mainSocket.on("SC_PICTURE_INFO", handleIncomingData);
+
+    return () => {
+      mainSocket.off("SC_PICTURE_INFO", handleIncomingData);
+    };
+  }, [mainSocket, handleIncomingData]);
 };
