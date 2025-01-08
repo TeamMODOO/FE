@@ -18,6 +18,7 @@ import CanvasSection from "./_components/canvas/CanvasSection";
 import { Header } from "./_components/Header";
 import { LocalVideo } from "./_components/video/LocalVideo";
 import { RemoteMedia } from "./_components/video/RemoteMedia";
+import { useMeetingRoomAttend } from "./_hook/useMeetingRoom";
 import { useMediaDevices } from "./_hook/webRTC/useMediaDevices";
 import { usePeerEvents } from "./_hook/webRTC/usePeerSocketEvent";
 import { useRoom } from "./_hook/webRTC/useRoom";
@@ -33,7 +34,7 @@ function Page() {
 
   useMainSocketConnect({ roomType: ROOM_TYPE, roomId: roomId });
   useAudioSocketConnect({ roomId: roomId });
-
+  useMeetingRoomAttend({ roomId: roomId });
   const audioSocket: Socket = useAudioSocketStore(
     (state) => state.socket,
   ) as Socket;
@@ -56,6 +57,8 @@ function Page() {
   >({});
   const [joined, setJoined] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
+
+  const [chatOpen, setChatOpen] = useState(false);
 
   const {
     deviceRef,
@@ -249,41 +252,6 @@ function Page() {
     }
   }, [audioSocket, isAudioConnected]);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const clientId = localStorage.getItem("client_id") ?? "";
-
-      const payload = {
-        room_id: roomId,
-        client_id: clientId,
-      };
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_API_SERVER_PATH}/meetingroom/join`,
-        payload,
-      );
-    };
-    fetchData();
-
-    return () => {
-      const fetchData = async () => {
-        const clientId = localStorage.getItem("client_id") ?? "";
-
-        const payload = {
-          room_id: roomId,
-          client_id: clientId,
-        };
-
-        await axios.post(
-          `${process.env.NEXT_PUBLIC_API_SERVER_PATH}/meetingroom/leave`,
-          payload,
-        );
-      };
-      fetchData();
-    };
-  }, []);
-
-  const [chatOpen, setChatOpen] = useState(false);
-
   return (
     <div className="flex h-screen flex-col">
       <Header
@@ -304,6 +272,7 @@ function Page() {
                 localVideoRef={localVideoRef}
                 isMuted={isMuted}
                 hasVideo={!!localStream}
+                userName="name"
               />
               {peers.length > 0 && (
                 <RemoteMedia
