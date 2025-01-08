@@ -37,4 +37,5 @@ export interface PeerMediaProps {
 export interface MediaStateIndicatorsProps {
   isAudioEnabled: boolean;
   isVideoEnabled: boolean;
+  userName: string;
 }
