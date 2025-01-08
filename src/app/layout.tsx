@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { cn } from "@/lib/utils";
 import { AppProviders } from "@/provider";
 import { QueryProvider } from "@/provider/query-provider";
-import { SpoqaHanSansNeo } from "@/styles/font";
+import { NotoSerifKR, SpoqaHanSansNeo } from "@/styles/font";
 
 import "@/styles/globals.css";
 
@@ -22,7 +22,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={SpoqaHanSansNeo.variable}>
+    <html
+      lang="en"
+      className={`${SpoqaHanSansNeo.variable} ${NotoSerifKR.variable}`}
+    >
       <body className={cn("font-spoqa-han-sans-neo", "w-full", "h-dvh")}>
         <QueryProvider>
           <AppProviders>
