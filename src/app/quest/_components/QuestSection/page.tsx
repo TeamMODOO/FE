@@ -13,8 +13,9 @@ import { python } from "@codemirror/lang-python";
 import { EditorView } from "@codemirror/view";
 import CodeMirror from "@uiw/react-codemirror";
 
+import AlertModal from "@/components/alertModal/AlertModal"; // ← 추가
+import NeedSignInModal from "@/components/modal/NeedSignIn/NeedSignInModal"; // (기존)
 import { Button } from "@/components/ui/button";
-// import { toast } from "react-hot-toast";
 import { useQuestGet } from "@/hooks/quest/useQuestGet";
 import { useQuestPost } from "@/hooks/quest/useQuestPost";
 import { useToast } from "@/hooks/use-toast";
@@ -38,19 +39,15 @@ const customFontSizeTheme = EditorView.theme(
     ".cm-content": {
       fontSize: "17px",
     },
-
     ".cm-scroller::-webkit-scrollbar": {
       width: "3px",
     },
-
     ".cm-scroller::-webkit-scrollbar:horizontal": {
       height: "3px",
     },
-
     ".cm-scroller::-webkit-scrollbar-track": {
       background: "none",
     },
-
     ".cm-scroller::-webkit-scrollbar-thumb": {
       background: "red",
       borderRadius: "5px",
@@ -63,12 +60,16 @@ export default function QuestSection() {
   const { toast } = useToast();
   const { data: session } = useSession();
   const router = useRouter();
+
   /** 문제 풀이 시작 여부 */
   const [isStart, setIsStart] = useState(false);
 
-  // src/app/quest/_component/QuestSection/page.tsx
+  // Confirm Modal 관련 State
+  const [confirmModalOpen, setConfirmModalOpen] = useState(false);
+  const [confirmModalMsg, setConfirmModalMsg] = useState("");
+  // “예” 버튼을 클릭했을 때 실행할 함수
+  const [onConfirm, setOnConfirm] = useState<() => void>(() => () => {});
 
-  // 'locked.webp' 이미지를 클릭 시에도 문제풀이를 시작시키는 함수
   const handleLockedClick = () => {
     setIsStart(true);
   };
@@ -76,7 +77,7 @@ export default function QuestSection() {
   /** (예시) 1시간(3600초) 타이머 */
   const [timeLeft, setTimeLeft] = useState(3600);
 
-  /** 추가: 문제 푸는데 걸린 시간(초) */
+  /** 문제 푼 데 걸린 시간(초) */
   const [timeSpent, setTimeSpent] = useState(0);
 
   /** 에디터 상태 */
@@ -84,37 +85,32 @@ export default function QuestSection() {
     useState<keyof typeof languageExtensions>("python");
   const [code, setCode] = useState("");
 
-  /* 모달 관련 상태 */
+  /* 결과 모달 */
   const [showModal, setShowModal] = useState(false);
-  /* ChatGPT 응답 */
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
-  const [betterSolution, setBetterSolution] = useState<string>("");
-  const [hint, setHint] = useState<string>("");
+  const [betterSolution, setBetterSolution] = useState("");
+  const [hint, setHint] = useState("");
 
   /* Loading 상태 */
   const [isLoading, setIsLoading] = useState(false);
 
-  // 오늘 날짜를 시드로 해서 난수 생성
+  // 난수 문제
   const randomQuestNumber = getRandomQuestNumber();
-
   const { data, loading, error } = useQuestGet(randomQuestNumber);
   const { submitQuestResult } = useQuestPost(randomQuestNumber);
 
+  // 문제 정보
   const qNum = data?.quest_number;
   const qTitle = data?.title;
   const qProblem = data?.content;
   const qInput = data?.input_example;
   const qOutput = data?.output_example;
 
-  /* 제출 이벤트 */
+  /** 제출 이벤트 */
   const handleSubmit = async () => {
-    // 1. 모달창 띄우기 (결과 표시용)
     setShowModal(true);
-    // 2. 로딩 시작
     setIsLoading(true);
-
     try {
-      // 3. API 호출
       const res = await fetch("/api/check-answer", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -127,27 +123,21 @@ export default function QuestSection() {
       });
       const data = await res.json();
 
-      // 4. 결과 파싱
-      // data = { isCorrect: boolean, betterSolution: string, hint: string }
       setIsCorrect(data.isCorrect);
       setBetterSolution(data.betterSolution);
       setHint(data.hint);
 
-      // --- 추가: 정답이면 타이머 멈추고, 경과시간(timeSpent) 계산 ---
+      // 정답이면 시간 계산
       if (data.isCorrect) {
-        // 1) 타이머 멈춤
         setIsStart(false);
-        // 2) 문제 푼 데 걸린 시간(초)
         const spent = 3600 - timeLeft;
         setTimeSpent(spent);
       }
     } catch (error) {
-      // console.error(error);
       setIsCorrect(false);
       setBetterSolution("");
       setHint("에러가 발생했습니다.");
     } finally {
-      // 5. 로딩 종료
       setIsLoading(false);
     }
   };
@@ -155,10 +145,6 @@ export default function QuestSection() {
   /* 모달 닫기 */
   const handleCloseModal = () => {
     setShowModal(false);
-    // 모달 닫으면서 필요하다면 state 초기화
-    // setIsCorrect(null);
-    // setBetterSolution("");
-    // setHint("");
   };
 
   /** 타이머 로직 */
@@ -169,19 +155,16 @@ export default function QuestSection() {
         setTimeLeft((prev) => (prev <= 0 ? 0 : prev - 1));
       }, 1000);
     }
-
     return () => {
       if (timerId) clearInterval(timerId);
     };
   }, [isStart]);
 
   useEffect(() => {
-    // isStart인 상태에서 timeLeft가 0이 되면
     if (isStart && timeLeft === 0) {
       toast({
         title: "시간 초과!",
-        description: `아쉽습니다. 시간 초과로 인해 일일 챌린지를 해결하지 못했습니다.
-        (메인 화면으로 이동합니다...)`,
+        description: `아쉽습니다. 시간 초과로 인해 일일 챌린지를 해결하지 못했습니다. (메인 화면으로 이동합니다...)`,
         variant: "destructive",
         duration: 3000,
       });
@@ -199,31 +182,32 @@ export default function QuestSection() {
     minutes,
   ).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 
-  /** 버튼 */
+  /** “문제 풀이 시작”/“중단” 버튼 */
   const buttonText = isStart ? "중단하고 나가기" : "문제 풀이 시작";
+
   const handleStartOrStop = () => {
     if (!isStart) {
-      // 문제 풀이 시작 전이면 그냥 시작
       setIsStart(true);
     } else {
-      // 이미 문제 풀이가 시작됐다면, 정말 나갈지 확인
-      const confirmResult = window.confirm("정말 포기하고 나가시겠습니까?");
-      if (confirmResult) {
-        router.push("/questmap");
-      }
+      // 기존 window.confirm 대신 → ConfirmModal 열기
+      setConfirmModalMsg("정말 포기하고 나가시겠습니까?");
+      setOnConfirm(() => () => {
+        router.push("/lobby");
+      });
+      setConfirmModalOpen(true);
     }
   };
 
-  /** 에디터 onChange */
+  /** 언어 선택/에디터 onChange */
   const onChangeLanguage = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedLang(e.target.value as keyof typeof languageExtensions);
   };
   const onChangeCode = (value: string) => setCode(value);
 
-  /** CodeMirror 6: 읽기 전용 제어 -> editable Extension */
+  /** 에디터의 “읽기 전용” 여부 */
   const editableExtension = EditorView.editable.of(isStart);
 
-  // --- 추가: 걸린 시간 포맷 함수 (timeSpent를 시:분:초로 표현) ---
+  /** 걸린 시간 포맷 */
   function formatTimeSpent(totalSec: number) {
     const h = Math.floor(totalSec / 3600);
     const m = Math.floor((totalSec % 3600) / 60);
@@ -234,12 +218,10 @@ export default function QuestSection() {
   }
 
   const handleCompleteQuest = async () => {
-    // guest 로그인이 아닌 경우에만 제출
     if (session?.user.role !== "guest") {
       await submitQuestResult(formatTimeSpent(timeSpent));
     }
-    // 제출이 끝난 뒤 페이지 이동
-    router.push("/questmap");
+    router.push("/lobby");
   };
 
   return (
@@ -253,10 +235,6 @@ export default function QuestSection() {
       </div>
 
       <div className={styles.questionBoard}>
-        {/**
-         * Problem 컴포넌트에 Props로
-         *  isStart, qNum, qTitle, qProblem, qInput, qOutput 전달
-         */}
         <Problem
           isStart={isStart}
           qNum={String(qNum ?? "")}
@@ -264,9 +242,8 @@ export default function QuestSection() {
           qProblem={qProblem ?? ""}
           qInput={qInput ?? ""}
           qOutput={qOutput ?? ""}
-          onLockedClick={handleLockedClick ?? ""}
+          onLockedClick={handleLockedClick}
         />
-
         <section className={styles.submitForm}>
           <select
             name="languages"
@@ -298,7 +275,7 @@ export default function QuestSection() {
             제출하기
           </Button>
 
-          {/* 모달 렌더링 */}
+          {/* 결과 모달 */}
           {showModal && (
             <Modal onClose={handleCloseModal}>
               {isLoading ? (
@@ -327,27 +304,36 @@ export default function QuestSection() {
                         className={styles.modalTitle}
                         style={{ color: "green" }}
                       >
-                        정답입니다! 용을 물리쳤습니다. 💫
+                        정답입니다! 용을 물리쳤습니다.
                       </h2>
 
-                      <p className={styles.timeSpent}>
-                        소요 시간: {formatTimeSpent(timeSpent)}
-                      </p>
                       {betterSolution && betterSolution !== "" ? (
                         <>
                           <p className={styles.modalSubTitle}>
                             이렇게도 풀 수 있어요:
                           </p>
-                          <section className={styles.modalBottomSection}>
+                          <div className={styles.modalBottomSection}>
                             <p>{betterSolution}</p>
-                          </section>
+                          </div>
+                          <div>
+                            <p className={styles.modalSubTitle}>
+                              <p>문제해결까지 소요 시간:</p>
+                            </p>
+                            <div className={styles.timeSpent}>
+                              <p>{formatTimeSpent(timeSpent)}</p>
+                            </div>
+                          </div>
                         </>
                       ) : (
                         <p className={styles.modalSubTitle}>
                           이미 모범답안 수준입니다!
                         </p>
                       )}
-                      <Button onClick={handleCompleteQuest} disabled={loading}>
+                      <Button
+                        onClick={handleCompleteQuest}
+                        disabled={loading}
+                        className="text-xl min-h-11"
+                      >
                         일일 챌린지 완료하기
                       </Button>
                       {session?.user?.role === "guest" && (
@@ -356,10 +342,6 @@ export default function QuestSection() {
                           않습니다.
                         </p>
                       )}
-
-                      {/* {loading && <p>제출 중...</p>}
-                      {error && <p style={{ color: "red" }}>{error}</p>}
-                      {data && <p style={{ color: "green" }}>{data.message}</p>} */}
                     </div>
                   ) : (
                     <div className={styles.incorrectDiv}>
@@ -370,14 +352,13 @@ export default function QuestSection() {
                           width={187}
                           height={250}
                         />
-                        <h2
-                          className={styles.modalTitle}
-                          style={{ color: "red" }}
-                        >
-                          아쉽습니다. 오답입니다! 😣
+                        <h2 className={styles.modalTitle}>
+                          아쉽습니다. 오답입니다!
                         </h2>
                       </div>
-                      <p className={styles.modalSubTitle}>Hint?</p>
+                      <p className={styles.modalSubTitle}>
+                        아래 힌트를 참고하세요.
+                      </p>
                       <div className={styles.modalBottomSection}>
                         <p>{hint}</p>
                       </div>
@@ -389,6 +370,22 @@ export default function QuestSection() {
           )}
         </section>
       </div>
+
+      {/* "확인(네/아니오)" AlertModal */}
+      {confirmModalOpen && (
+        <AlertModal
+          title="확인"
+          isConfirm
+          onClose={() => setConfirmModalOpen(false)}
+          onConfirm={() => {
+            // 예 버튼 클릭 시
+            onConfirm();
+            setConfirmModalOpen(false);
+          }}
+        >
+          <p>{confirmModalMsg}</p>
+        </AlertModal>
+      )}
     </div>
   );
 }

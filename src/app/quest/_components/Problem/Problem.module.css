@@ -53,11 +53,13 @@
   padding: 10px;
   flex-direction: column;
   gap: 10px;
+  font-size: 1.3rem;
+  white-space: pre-line;
 }
 
 .title {
   color: red;
-  font-size: 20px;
+  font-size: 1.3rem;
 }
 
 .showProblem > .problemSection {
