@@ -20,6 +20,7 @@
 }
 
 .title {
+  font-family: var(--font-noto-serif-kr), serif;
   flex: 1;
 }
 

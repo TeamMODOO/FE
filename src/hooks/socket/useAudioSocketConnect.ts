@@ -24,7 +24,7 @@ const useAudioSocketConnect = ({ roomId }: UseAudioSocketConnectType) => {
     if (audioSocket || isAudioConnected) return;
 
     const AUDIO_SERVER_URL = process.env.NEXT_PUBLIC_WEB_RTC_URL;
-    const newAudioSocket = io("localhost:8080", {
+    const newAudioSocket = io(AUDIO_SERVER_URL, {
       withCredentials: true,
       transports: ["websocket"],
       autoConnect: true,

@@ -1,0 +1,33 @@
+.qnaItem {
+  color: rgb(15, 190, 135);
+}
+
+.qnaItem:hover {
+  color: rgb(6, 209, 130, 0.7);
+  text-underline-position: below;
+  cursor: pointer;
+}
+
+.answerBox {
+  height: 30dvh;
+  overflow-x: auto;
+  padding-right: 5px;
+  margin-bottom: 2dvh;
+}
+
+.answerBox::-webkit-scrollbar {
+  width: 3px;
+}
+
+.answerBox::-webkit-scrollbar-track {
+  background: none;
+}
+
+.answerBox::-webkit-scrollbar-thumb {
+  background: white;
+  border-radius: 5px;
+}
+
+.asnwerOutput > span {
+  white-space: pre-line;
+}
