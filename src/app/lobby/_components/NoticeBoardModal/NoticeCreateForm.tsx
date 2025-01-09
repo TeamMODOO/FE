@@ -31,10 +31,10 @@ export default function NoticeCreateForm({
   return (
     <div className={styles.formContainer}>
       <div>
-        <Label htmlFor="writerName">작성자</Label>
+        <Label htmlFor="writerName">글 제목</Label>
         <Input
           id="writerName"
-          placeholder="작성자 이름"
+          placeholder="글 제목"
           value={writerName}
           onChange={(e) => setWriterName(e.target.value)}
           className={styles.writerArea}
