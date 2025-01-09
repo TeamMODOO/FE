@@ -1,7 +1,7 @@
 // src/app/quest/utils/getRandomQuestNumber.ts
 
 // 가져올 수 있는 문제 번호들
-const QUEST_NUMBERS = [8983, 11725, 14888, 2294, 2748];
+const QUEST_NUMBERS = [1978, 9020, 11725, 2178, 2748, 11047, 9935];
 
 // 시드 값을 바탕으로 난수를 생성해주는 함수
 function seededRandom(seed: number): number {
