@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { Users, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { MovementInfoFromServer } from "@/hooks/lobby/useLobbySocketEvents";
+import { SCUserPositionInfo } from "@/hooks/lobby/useLobbySocketEvents";
 import { UserType, useUserListQuery } from "@/queries/lobby/useUserQuery";
 import useMainSocketStore from "@/store/useMainSocketStore";
 
@@ -21,40 +21,41 @@ export const FriendInformation = () => {
   const [isAnimating, setIsAnimating] = useState(false);
 
   const mainSocket = useMainSocketStore((state) => state.socket);
-  const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
-  const { data: users } = useUserListQuery(isOpen);
+  const [onlineUsersId, setOnlineUsersId] = useState<string[]>([]);
+  const { data: users } = useUserListQuery();
 
-  const sortedUsers: ExtendedUser[] =
-    users
-      ?.map((user) => ({
-        ...user,
-        status: onlineUsers.includes(user.google_id)
-          ? ("online" as const)
-          : ("offline" as const),
-      }))
-      .sort((a, b) => {
-        if (a.status === "online" && b.status === "offline") return -1;
-        if (a.status === "offline" && b.status === "online") return 1;
-        return a.name.localeCompare(b.name);
-      }) ?? [];
+  const sortedUsers: ExtendedUser[] = useMemo(
+    () =>
+      users
+        ?.map((user) => ({
+          ...user,
+          status: onlineUsersId.includes(user.google_id) ? "online" : "offline",
+        }))
+        .sort((a, b) => {
+          if (a.status === "online" && b.status === "offline") return -1;
+          if (a.status === "offline" && b.status === "online") return 1;
+          return a.name.localeCompare(b.name);
+        }) ?? [],
+    [users, onlineUsersId],
+  );
 
   useEffect(() => {
     if (!mainSocket) return;
 
-    const handleUserConnect = (data: MovementInfoFromServer) => {
-      const { user_name } = data;
-      setOnlineUsers((prev) => [...prev, user_name]);
+    const handleUserConnect = (data: SCUserPositionInfo) => {
+      const { client_id } = data;
+      setOnlineUsersId((prev) => [...prev, client_id]);
     };
 
     const handleUserDisconnect = (clientId: string) => {
-      setOnlineUsers((prev) => prev.filter((id) => id !== clientId));
+      setOnlineUsersId((prev) => prev.filter((id) => id !== clientId));
     };
 
-    mainSocket.on("SC_MOVEMENT_INFO", handleUserConnect);
+    mainSocket.on("SC_USER_POSITION_INFO", handleUserConnect);
     mainSocket.on("user_disconnect", handleUserDisconnect);
 
     return () => {
-      mainSocket.off("SC_MOVEMENT_INFO", handleUserConnect);
+      mainSocket.off("SC_USER_POSITION_INFO", handleUserConnect);
       mainSocket.off("user_disconnect", handleUserDisconnect);
     };
   }, [mainSocket]);

@@ -48,7 +48,7 @@ interface SCLeaveUserData {
  * 새로 추가된 프로토콜: SC_USER_POSITION_INFO
  * : 서버가 "현재 접속해있는 모든 유저 정보"를 개별적으로 내려줌
  */
-interface SCUserPositionInfo {
+export interface SCUserPositionInfo {
   client_id: string;
   position_x: number;
   position_y: number;
