@@ -97,6 +97,7 @@
   line-height: 1.4;
   color: #fff;
   min-height: 30dvh;
+  max-height: 60dvh;
   overflow: hidden;
 }
 

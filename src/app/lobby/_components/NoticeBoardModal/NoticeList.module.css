@@ -17,7 +17,7 @@
   font-size: 1.3rem;
   line-height: 1.4;
   color: #fff;
-  min-height: 30dvh;
+  height: 50dvh;
   overflow: auto;
 }
 
