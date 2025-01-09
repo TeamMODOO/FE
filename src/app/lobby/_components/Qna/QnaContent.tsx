@@ -53,7 +53,7 @@ const QnaContent: React.FC<QnaProps> = ({ qnaList }) => {
     return (
       <div>
         {/* 안내 문구 */}
-        <div>
+        <div className={styles.mentSection}>
           <p>{text}</p>
         </div>
 
@@ -98,24 +98,15 @@ const QnaContent: React.FC<QnaProps> = ({ qnaList }) => {
       </div>
       <div className="mt-4 flex flex-row-reverse gap-4">
         {!isLastAnswer ? (
-          <button
-            onClick={handleNext}
-            className="rounded bg-gray-200 px-3 py-1 text-black"
-          >
+          <button onClick={handleNext} className={styles.btn}>
             다음
           </button>
         ) : (
-          <button
-            onClick={handleReset}
-            className="rounded bg-gray-200 px-3 py-1 text-black"
-          >
+          <button onClick={handleReset} className={styles.btn}>
             처음으로
           </button>
         )}
-        <button
-          onClick={handleGoBack}
-          className="rounded bg-gray-200 px-3 py-1 text-black"
-        >
+        <button onClick={handleGoBack} className={styles.btn}>
           이전
         </button>
       </div>

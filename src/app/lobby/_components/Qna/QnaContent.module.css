@@ -8,11 +8,17 @@
   cursor: pointer;
 }
 
+.mentSection {
+  pointer-events: none;
+}
+
 .answerBox {
-  height: 30dvh;
+  min-height: 25dvh;
   overflow-x: auto;
   padding-right: 5px;
   margin-bottom: 2dvh;
+  font-size: 1.5rem;
+  pointer-events: none;
 }
 
 .answerBox::-webkit-scrollbar {
@@ -30,4 +36,13 @@
 
 .asnwerOutput > span {
   white-space: pre-line;
+}
+
+.btn {
+  font-size: 1.7rem;
+  color: rgba(171, 159, 158, 0.9);
+}
+
+.btn:hover {
+  color: rgba(241, 229, 228, 0.9);
 }
