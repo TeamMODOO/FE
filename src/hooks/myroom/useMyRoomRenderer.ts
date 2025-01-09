@@ -85,21 +85,19 @@ export function useMyRoomRenderer({
     const frameInterval = 200; // 이동중 캐릭터 frame 전환 주기
     const maxMovingFrame = 3; // 1→2→3→1...
 
-    // 매 프레임 그리는 함수
     const renderLoop = (time: number) => {
       const delta = time - lastTime;
       if (delta >= frameDuration) {
         lastTime = time - (delta % frameDuration);
 
-        // (A) 화면 지우기
+        // (1) 화면 지우기
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // (B) 세로 기반 scale
+        // (2) 세로 기반 scale
         const scale = canvas.height / MAP_HEIGHT;
 
         // 뷰포트 크기 (월드 좌표계)
         const viewWidth = canvas.width / scale;
-        // 세로 스크롤 안함
         let cameraX = 0;
         const cameraY = 0;
 
@@ -112,93 +110,86 @@ export function useMyRoomRenderer({
         if (cameraX < 0) cameraX = 0;
         if (cameraX > maxCamX) cameraX = maxCamX;
 
-        // (C) 월드 좌표 → 화면에 그릴때 transform
+        // (3) transform
         ctx.save();
         ctx.scale(scale, scale);
         ctx.translate(-cameraX, -cameraY);
 
-        // (D) 배경
+        // (4) 배경
         if (backgroundImage) {
           ctx.drawImage(backgroundImage, 0, 0, MAP_WIDTH, MAP_HEIGHT);
         }
 
-        // (E) 가구/방명록/포탈 그리기
-        // 필요한 너비/높이 (임의)
-        const FURNITURE_SIZE = 100;
-        const BOARD_SIZE = 100; // 방명록
-        const PORTAL_WIDTH = portal.width;
-        const PORTAL_HEIGHT = portal.height;
-
+        // (5) 가구/방명록/포탈 그리기
         // 1) 이력서/포트폴리오/기술스택
         const allFurniture = [...resume, ...portfolio, ...technologyStack];
         allFurniture.forEach((f) => {
           const img = furnitureImages[f.funitureType];
           if (!img) return;
 
-          // 이미지
-          ctx.drawImage(img, f.x, f.y, FURNITURE_SIZE, FURNITURE_SIZE);
+          // width, height 가 지정되지 않았다면 기본값 100×100
+          const w = f.width ?? 100;
+          const h = f.height ?? 100;
 
-          // 텍스트(가구 이름)
+          // 이미지
+          ctx.drawImage(img, f.x, f.y, w, h);
+
+          // 텍스트 (가구 이름)
           ctx.font = "bold 14px Arial";
           ctx.fillStyle = "white";
           ctx.textAlign = "center";
-          ctx.fillText(
-            f.funiturename,
-            f.x + FURNITURE_SIZE / 2,
-            f.y + FURNITURE_SIZE + 15,
-          );
+          ctx.fillText(f.funiturename, f.x + w / 2, f.y + h + 15);
         });
 
         // 2) 방명록
         board.forEach((b) => {
           const img = furnitureImages[b.funitureType] ?? null;
+
+          // width, height 미지정 시 여기서는 100×100
+          const w = b.width ?? 100;
+          const h = b.height ?? 100;
+
           if (img) {
-            ctx.drawImage(img, b.x, b.y, BOARD_SIZE, BOARD_SIZE);
+            ctx.drawImage(img, b.x, b.y, w, h);
           } else {
             // 없는 경우 임시 표시
             ctx.fillStyle = "orange";
-            ctx.fillRect(b.x, b.y, BOARD_SIZE, BOARD_SIZE);
+            ctx.fillRect(b.x, b.y, w, h);
           }
 
           // 방명록 이름
           ctx.font = "bold 14px Arial";
           ctx.fillStyle = "white";
           ctx.textAlign = "center";
-          ctx.fillText(
-            b.funiturename,
-            b.x + BOARD_SIZE / 2,
-            b.y + BOARD_SIZE + 15,
-          );
+          ctx.fillText(b.funiturename, b.x + w / 2, b.y + h + 15);
         });
 
         // 3) 포탈
-        // 포탈 이미지를 furnitureImages["portal"] 등으로 접근해도 되고,
-        // 로딩 안되어 있으면 기본 사각형
+        // portal.width/height 이미 있음
         const portalImg = furnitureImages["portal"] ?? null;
         if (portalImg) {
           ctx.drawImage(
             portalImg,
             portal.x,
             portal.y,
-            PORTAL_WIDTH,
-            PORTAL_HEIGHT,
+            portal.width,
+            portal.height,
           );
         } else {
           ctx.fillStyle = "rgba(255, 0, 0, 0.5)";
-          ctx.fillRect(portal.x, portal.y, PORTAL_WIDTH, PORTAL_HEIGHT);
+          ctx.fillRect(portal.x, portal.y, portal.width, portal.height);
         }
-
         // 포탈 이름
         ctx.font = "bold 14px Arial";
         ctx.fillStyle = "white";
         ctx.textAlign = "center";
         ctx.fillText(
           portal.name,
-          portal.x + PORTAL_WIDTH / 2,
-          portal.y + PORTAL_HEIGHT + 15,
+          portal.x + portal.width / 2,
+          portal.y + portal.height + 15,
         );
 
-        // (F) 캐릭터 그리기 (스프라이트)
+        // (6) 캐릭터 스프라이트
         if (Object.keys(spriteImages).length === LAYER_ORDER.length) {
           const now2 = performance.now();
           const uf = userFrameRef.current;
@@ -220,11 +211,11 @@ export function useMyRoomRenderer({
 
           ctx.save();
           LAYER_ORDER.forEach((layer) => {
-            const img = spriteImages[layer];
-            if (!img) return;
+            const layerImg = spriteImages[layer];
+            if (!layerImg) return;
 
             ctx.drawImage(
-              img,
+              layerImg,
               sx,
               sy,
               FRAME_WIDTH,
