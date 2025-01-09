@@ -621,7 +621,9 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
       {noticeModalOpen && (
         <NoticeBoardModal
           open={noticeModalOpen}
-          onClose={setNoticeModalOpen}
+          onClose={() => {
+            setNoticeModalOpen(false);
+          }}
           noticeList={noticeList}
           writerName={writerName}
           writerMessage={writerMessage}
