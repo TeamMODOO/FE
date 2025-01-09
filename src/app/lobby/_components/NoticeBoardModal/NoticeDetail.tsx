@@ -16,11 +16,12 @@ interface NoticeDetailData {
 interface NoticeDetailProps {
   isError?: boolean;
   error?: unknown;
+  isLoading?: boolean;
   notice?: NoticeDetailData | null;
   onBack: () => void;
 }
 
-/** 날짜/시간 포매팅 함수 (간단 예시) */
+/** 날짜/시간 포매팅 함수 */
 function formatDateTime(isoString: string): string {
   const date = new Date(isoString);
   if (isNaN(date.getTime())) {
@@ -53,9 +54,15 @@ function formatDateTime(isoString: string): string {
 export default function NoticeDetail({
   isError,
   error,
+  isLoading, // ← 추가
   notice,
   onBack,
 }: NoticeDetailProps) {
+  if (isLoading) {
+    // 로딩 상태일 때
+    return <div>로딩중...</div>;
+  }
+
   if (isError) {
     return (
       <div className="text-red-500">
@@ -63,7 +70,9 @@ export default function NoticeDetail({
       </div>
     );
   }
+
   if (!notice) {
+    // 로딩도 아니고 에러도 아닌데 데이터가 없다면 → "없음" 처리
     return <div>해당 공지사항을 찾을 수 없습니다.</div>;
   }
 

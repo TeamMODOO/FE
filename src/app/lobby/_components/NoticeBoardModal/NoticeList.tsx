@@ -68,11 +68,9 @@ export default function NoticeList({
 
   if (!noticesList || noticesList.length === 0) {
     return (
-      <div>
-        아직 등록된 공지사항이 없습니다.
-        <button onClick={onClickWrite} className="ml-2 text-blue-500 underline">
-          글 작성
-        </button>
+      <div className={styles.nothingContainer}>
+        <p>아직 등록된 게시글이 없습니다.</p>
+        <Button onClick={onClickWrite}>글 작성하기</Button>
       </div>
     );
   }
@@ -83,7 +81,11 @@ export default function NoticeList({
         <ul className="space-y-3">
           {noticesList.map((notice) => (
             <li key={notice.id} className={styles.listItem}>
-              <button type="button" onClick={() => onSelectNotice(notice.id)}>
+              <button
+                type="button"
+                className={styles.itemButton}
+                onClick={() => onSelectNotice(notice.id)}
+              >
                 <div className={styles.noticeTitle}>{notice.title}</div>
                 <div className={styles.noticeSub}>
                   {notice.author_name} / {formatDateTime(notice.created_at)}

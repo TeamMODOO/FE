@@ -4,13 +4,9 @@ import { useState } from "react";
 
 import { useSession } from "next-auth/react";
 
+// AlertModal 추가 import
+import AlertModal from "@/components/alertModal/AlertModal";
 import NeedSignInModal from "@/components/modal/NeedSignIn/NeedSignInModal";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import {
   CreateNoticePayload,
   useCreateNoticeQuery,
@@ -18,28 +14,22 @@ import {
 import { useNoticeDetailQuery } from "@/queries/lobby/useNoticeDetailQuery";
 import { useNoticesListQuery } from "@/queries/lobby/useNoticesQuery";
 
+import NoticeCreateForm from "./NoticeCreateForm";
+import NoticeDetail from "./NoticeDetail";
+import NoticeList from "./NoticeList";
+
 import styles from "./NoticeBoardModal.module.css";
 
-// ─────────────────────────────────────────────────────────────────────────────
-// 추가) NoticeItem 타입
 export interface NoticeItem {
   id: number;
   name: string;
   message: string;
 }
 
-// 컴포넌트
-import NoticeCreateForm from "./NoticeCreateForm";
-import NoticeDetail from "./NoticeDetail";
-import NoticeList from "./NoticeList";
-
-// ─────────────────────────────────────────────────────────────────────────────
-// (A) 모달에서 받는 props 인터페이스 수정
 export interface NoticeBoardModalProps {
-  open: boolean; // 모달 열림/닫힘
-  onClose: () => void; // 모달 닫기 함수
+  open: boolean;
+  onClose: () => void;
 
-  // 새로 추가한 props들
   noticeList: NoticeItem[];
   writerName: string;
   writerMessage: string;
@@ -48,18 +38,9 @@ export interface NoticeBoardModalProps {
   handleAddNotice: () => void;
 }
 
-/**
- * 공지사항 모달 컴포넌트
- *  - 목록 조회 (useNoticesListQuery)
- *  - 공지사항 클릭 시 상세 조회 (useNoticeDetailQuery)
- *  - 글 작성 (useCreateNoticeQuery)
- *  - 부모에서 관리하는 noticeList 등을 함께 전달받아 사용할 수도 있음
- */
-
 export default function NoticeBoardModal({
   open,
   onClose,
-  // 새로 추가한 props
   noticeList,
   writerName,
   writerMessage,
@@ -69,36 +50,62 @@ export default function NoticeBoardModal({
 }: NoticeBoardModalProps) {
   const { data: session } = useSession();
 
-  // 1) 목록 조회 쿼리 (서버 데이터)
+  // ----------------------------
+  // (1) 목록 조회 쿼리
+  // ----------------------------
   const {
-    data: serverNoticesList, // ← 기존 noticesList → serverNoticesList 로 변경
+    data: serverNoticesList,
     isError: isListError,
     error: listError,
   } = useNoticesListQuery();
 
-  // 2) 상세 보기 위한 noticeId
+  // ----------------------------
+  // (2) 상세 조회 쿼리
+  // ----------------------------
   const [selectedNoticeId, setSelectedNoticeId] = useState<number | null>(null);
   const {
     data: selectedNotice,
     isError: isDetailError,
     error: detailError,
+    isLoading: isDetailLoading,
   } = useNoticeDetailQuery(selectedNoticeId);
 
-  // 3) 글 작성 모드 on/off
+  // ----------------------------
+  // (3) 글 작성 모드
+  // ----------------------------
   const [isWriting, setIsWriting] = useState(false);
 
-  // 5) 게시글 작성 훅
+  // ----------------------------
+  // (4) AlertModal 제어용 State
+  // ----------------------------
+  const [alertModalOpen, setAlertModalOpen] = useState(false);
+  const [alertModalTitle, setAlertModalTitle] = useState("");
+  const [alertModalMessage, setAlertModalMessage] = useState("");
+
+  /** AlertModal 열기 도우미 함수 */
+  function showAlertModal(title: string, message: string) {
+    setAlertModalTitle(title);
+    setAlertModalMessage(message);
+    setAlertModalOpen(true);
+  }
+
+  // ----------------------------
+  // (5) 게시글 작성 훅
+  // ----------------------------
   const { mutate: createNotice, status } = useCreateNoticeQuery();
   const isPosting = status === "pending";
 
+  // ----------------------------
   // (A) "작성하기" 버튼 로직
+  // ----------------------------
   const handleCreate = () => {
     if (!writerName.trim() || !writerMessage.trim()) {
-      alert("이름과 메세지를 입력하세요.");
+      // alert("제목과 메세지를 입력하세요.");
+      showAlertModal("알림", "제목과 메세지를 입력하세요.");
       return;
     }
 
-    // 서버로 보낼 payload (title → writerName, content → writerMessage)
+    // 서버로 보낼 payload
     const payload: CreateNoticePayload = {
       title: writerName,
       content: writerMessage,
@@ -106,51 +113,50 @@ export default function NoticeBoardModal({
 
     createNotice(payload, {
       onSuccess: (res) => {
+        // alert(res.message);
+        showAlertModal("안내", res.message); // 예) "게시글 작성 성공"
         // 폼 리셋
         setWriterName("");
         setWriterMessage("");
         setIsWriting(false);
-        alert(res.message); // "게시글 작성 성공"
       },
-      // ↓↓↓ 이 부분에서 any → unknown
       onError: (err: unknown) => {
-        // err가 AxiosError인지 확인 후 처리 (예시)
-        // const axiosError = err as AxiosError;
-        // alert(axiosError?.response?.data?.detail || "게시글 작성 중 오류가 발생했습니다.");
-        // console.error(err);
-        alert("게시글 작성 중 오류가 발생했습니다.");
+        // alert("게시글 작성 중 오류가 발생했습니다.");
+        showAlertModal("오류 발생", "게시글 작성 중 오류가 발생했습니다.");
       },
     });
   };
 
+  // ----------------------------
+  // (6) 비회원/게스트 모달
+  // ----------------------------
   const [signInModalOpen, setSignInModalOpen] = useState(false);
-
   const handleClickWrite = () => {
-    // 로그인 정보가 없거나, guest 계정이면 → NeedSignInModal
     if (!session?.user || session.user.role === "guest") {
       setSignInModalOpen(true);
-    }
-    // 그 외 (게스트가 아니면) 바로 작성 모드
-    else {
+    } else {
       setIsWriting(true);
     }
   };
 
-  // (B) 화면 모드별 렌더링
+  // ----------------------------
+  // (7) 화면 모드별 렌더링
+  // ----------------------------
   function renderContent() {
-    // 상세 보기 모드
+    // 상세 보기
     if (selectedNoticeId) {
       return (
         <NoticeDetail
           isError={isDetailError}
           error={detailError}
+          isLoading={isDetailLoading}
           notice={selectedNotice}
-          onBack={() => setSelectedNoticeId(null)} // 목록으로
+          onBack={() => setSelectedNoticeId(null)}
         />
       );
     }
 
-    // 글 작성 모드
+    // 글 작성
     if (isWriting) {
       return (
         <NoticeCreateForm
@@ -165,7 +171,7 @@ export default function NoticeBoardModal({
       );
     }
 
-    // 기본(목록) 모드
+    // 목록
     return (
       <NoticeList
         isError={isListError}
@@ -177,27 +183,11 @@ export default function NoticeBoardModal({
     );
   }
 
+  // ----------------------------
+  // (8) 모달 렌더링
+  // ----------------------------
   return (
     <>
-      {/* <Dialog open={open} onOpenChange={onClose}>
-        <DialogContent
-          className="w-full max-w-lg"
-          style={{
-            pointerEvents: signInModalOpen ? "none" : "auto",
-          }}
-          onPointerDownOutside={(event) => {
-            if (signInModalOpen) {
-              event.preventDefault();
-            }
-          }}
-        >
-          <DialogHeader>
-            <DialogTitle>공지사항</DialogTitle>
-          </DialogHeader>
-          {renderContent()}
-        </DialogContent>
-      </Dialog> */}
-
       {open && (
         <div className={styles.overlay}>
           <div className={styles.modalContainer}>
@@ -214,13 +204,21 @@ export default function NoticeBoardModal({
         </div>
       )}
 
-      {/* 비회원 상태로 글 작성 버튼 입력 시 모달 출력 */}
+      {/* 1) AlertModal (기존 alert 치환) */}
+      {alertModalOpen && (
+        <AlertModal
+          title={alertModalTitle}
+          onClose={() => setAlertModalOpen(false)}
+        >
+          <p>{alertModalMessage}</p>
+        </AlertModal>
+      )}
+
+      {/* 2) 비회원 → NeedSignInModal */}
       {signInModalOpen && (
         <NeedSignInModal
-          onClose={() => {
-            setSignInModalOpen(false);
-          }}
-        />
+          onClose={() => setSignInModalOpen(false)}
+        ></NeedSignInModal>
       )}
     </>
   );
