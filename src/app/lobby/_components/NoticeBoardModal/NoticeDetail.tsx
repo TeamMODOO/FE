@@ -2,6 +2,8 @@
 
 import { Button } from "@/components/ui/button";
 
+import styles from "./NoticeDetail.module.css";
+
 // 예시 NoticeDetail 데이터
 interface NoticeDetailData {
   id: number;
@@ -18,14 +20,42 @@ interface NoticeDetailProps {
   onBack: () => void;
 }
 
+/** 날짜/시간 포매팅 함수 (간단 예시) */
+function formatDateTime(isoString: string): string {
+  const date = new Date(isoString);
+  if (isNaN(date.getTime())) {
+    return "";
+  }
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  let hour = date.getHours(); // 0~23
+  const minute = String(date.getMinutes()).padStart(2, "0");
+  let ampm = "오전";
+
+  // 오후 구분
+  if (hour >= 12) {
+    ampm = "오후";
+    if (hour > 12) {
+      hour -= 12;
+    }
+  }
+  // 오전 0시 처리
+  if (hour === 0) {
+    hour = 12;
+  }
+
+  return `${year}.${month}.${day}. ${ampm} ${hour}시 ${minute}분`;
+}
+
 export default function NoticeDetail({
   isError,
   error,
   notice,
   onBack,
 }: NoticeDetailProps) {
-  // 로딩(isLoading) 로직 제거
-
   if (isError) {
     return (
       <div className="text-red-500">
@@ -38,16 +68,19 @@ export default function NoticeDetail({
   }
 
   return (
-    <div className="rounded border p-3">
-      <h2 className="mb-2 font-semibold text-gray-800">{notice.title}</h2>
-      <p className="text-sm text-gray-500">
-        작성자: {notice.author_name} / {notice.created_at}
-      </p>
-      <div className="mt-3 text-gray-700">{notice.content}</div>
-
-      <Button className="mt-4" onClick={onBack}>
-        목록으로
-      </Button>
+    <div>
+      <div>
+        <h2 className={styles.detailTitle}>{notice.title}</h2>
+        <p className={styles.detailSub}>
+          작성자: {notice.author_name} / {formatDateTime(notice.created_at)}
+        </p>
+      </div>
+      <div className={styles.detailContainer}>{notice.content}</div>
+      <div className={styles.buttonSection}>
+        <Button className="mt-4" onClick={onBack}>
+          목록으로
+        </Button>
+      </div>
     </div>
   );
 }
