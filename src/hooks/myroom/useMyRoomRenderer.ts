@@ -1,3 +1,4 @@
+// hooks/myroom/useMyRoomRenderer.ts
 "use client";
 
 import { RefObject, useEffect, useRef } from "react";
@@ -9,136 +10,145 @@ import {
 } from "@/hooks/performance/useLoadSprites";
 import { User } from "@/model/User";
 
+/** 원본 배경 크기 */
+const MAP_WIDTH = 2000;
+const MAP_HEIGHT = 900;
+
 interface MyRoomRendererProps {
   canvasRef: RefObject<HTMLCanvasElement | null>;
   canvasSize: { w: number; h: number };
   backgroundImage: HTMLImageElement | null;
 
+  /** 스프라이트 시트들 */
   spriteImages: Record<string, HTMLImageElement>;
-  users: User[];
 
+  /** "한 명"만 그릴 경우 → myUser */
+  myUser: User;
+
+  /** 캐릭터 확대 배율 */
   charScale: number;
-  emitMovement: (x: number, y: number, direction: number) => void;
-  mapSpeed: number;
-  myUserId: string;
 }
 
 /**
- * rAF로 배경 + 캐릭터를 그려주는 훅
- * (가구, 게시판 등은 DOM으로 표시)
+ * rAF로 배경 + (내 캐릭터만) 카메라/스크롤 적용
  */
 export function useMyRoomRenderer({
   canvasRef,
   canvasSize,
   backgroundImage,
   spriteImages,
-  users,
+  myUser,
   charScale,
-  emitMovement,
-  mapSpeed,
-  myUserId,
 }: MyRoomRendererProps) {
-  // 캐릭터 애니메이션용 ref
-  const userFrameMap = useRef<
-    Record<string, { frame: number; lastFrameTime: number }>
-  >({});
-
-  // users가 바뀔 때마다 frame 정보 초기화
-  useEffect(() => {
-    users.forEach((u) => {
-      userFrameMap.current[u.id] = {
-        frame: 0,
-        lastFrameTime: performance.now(),
-      };
-    });
-  }, [users]);
+  // 단일 캐릭터 애니메이션 frame
+  const userFrameRef = useRef<{ frame: number; lastFrameTime: number }>({
+    frame: 0,
+    lastFrameTime: performance.now(),
+  });
 
   useEffect(() => {
     if (!canvasRef.current) return;
-    const ctx = canvasRef.current.getContext("2d");
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    canvasRef.current.width = canvasSize.w;
-    canvasRef.current.height = canvasSize.h;
+    canvas.width = canvasSize.w;
+    canvas.height = canvasSize.h;
 
     let animationId = 0;
     let lastTime = 0;
     const fps = 30;
     const frameDuration = 1000 / fps;
-    const frameInterval = 200;
-    const maxMovingFrame = 3;
+
+    const frameInterval = 200; // 이동중 frame 전환 주기
+    const maxMovingFrame = 3; // 1→2→3→1...
 
     const renderLoop = (time: number) => {
       const delta = time - lastTime;
       if (delta >= frameDuration) {
         lastTime = time - (delta % frameDuration);
 
-        // 1) Clear
-        ctx.clearRect(0, 0, canvasSize.w, canvasSize.h);
+        // (A) 화면 지우기
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // 2) 배경
+        // (B) 세로 꽉 → scale = canvas.height / 900
+        const scale = canvas.height / MAP_HEIGHT;
+
+        // 뷰포트 크기(월드 좌표): w=canvas.width/scale, h=900
+        const viewWidth = canvas.width / scale;
+
+        // 카메라
+        let cameraX = 0;
+        const cameraY = 0; // 세로 스크롤 안함
+
+        // 캐릭터 중심
+        const centerX = myUser.x + (FRAME_WIDTH * charScale) / 2;
+        cameraX = centerX - viewWidth / 2;
+
+        // 맵 경계 보정
+        const maxCamX = MAP_WIDTH - viewWidth;
+        if (cameraX < 0) cameraX = 0;
+        if (cameraX > maxCamX) cameraX = maxCamX;
+
+        ctx.save();
+        ctx.scale(scale, scale);
+        ctx.translate(-cameraX, -cameraY);
+
+        // (C) 배경
         if (backgroundImage) {
-          ctx.drawImage(backgroundImage, 0, 0, canvasSize.w, canvasSize.h);
+          ctx.drawImage(backgroundImage, 0, 0, MAP_WIDTH, MAP_HEIGHT);
         }
 
-        // 3) 캐릭터
-        const now = performance.now();
+        // (D) 캐릭터 스프라이트
+        // 로딩 완료인지 체크
         if (Object.keys(spriteImages).length === LAYER_ORDER.length) {
-          users.forEach((user) => {
-            const uf = userFrameMap.current[user.id];
-            if (!uf) {
-              userFrameMap.current[user.id] = {
-                frame: 0,
-                lastFrameTime: now,
-              };
-              return;
+          const now2 = performance.now();
+          const uf = userFrameRef.current;
+
+          if (myUser.isMoving) {
+            if (now2 - uf.lastFrameTime > frameInterval) {
+              uf.frame++;
+              if (uf.frame > maxMovingFrame) uf.frame = 1;
+              uf.lastFrameTime = now2;
             }
+          } else {
+            uf.frame = 0;
+            uf.lastFrameTime = now2;
+          }
 
-            // 이동중이면 frame++
-            if (user.isMoving) {
-              if (now - uf.lastFrameTime > frameInterval) {
-                uf.frame++;
-                if (uf.frame > maxMovingFrame) uf.frame = 1;
-                uf.lastFrameTime = now;
-              }
-            } else {
-              uf.frame = 0;
-              uf.lastFrameTime = now;
-            }
+          const sx = uf.frame * FRAME_WIDTH;
+          const sy = (myUser.direction ?? 0) * FRAME_HEIGHT;
 
-            const sx = uf.frame * FRAME_WIDTH;
-            const sy = (user.direction ?? 0) * FRAME_HEIGHT;
-
-            // 레이어 순서대로
-            ctx.save();
-            LAYER_ORDER.forEach((layer) => {
-              const img = spriteImages[layer];
-              if (!img) return;
-              ctx.drawImage(
-                img,
-                sx,
-                sy,
-                FRAME_WIDTH,
-                FRAME_HEIGHT,
-                user.x,
-                user.y,
-                FRAME_WIDTH * charScale,
-                FRAME_HEIGHT * charScale,
-              );
-            });
-            ctx.restore();
-
-            // 닉네임
-            ctx.font = "bold 14px Arial";
-            ctx.fillStyle = "white";
-            ctx.textAlign = "center";
-            ctx.fillText(
-              user.nickname,
-              user.x + (FRAME_WIDTH * charScale) / 2,
-              user.y + FRAME_HEIGHT * charScale + 15,
+          ctx.save();
+          LAYER_ORDER.forEach((layer) => {
+            const img = spriteImages[layer];
+            if (!img) return;
+            ctx.drawImage(
+              img,
+              sx,
+              sy,
+              FRAME_WIDTH,
+              FRAME_HEIGHT,
+              myUser.x,
+              myUser.y,
+              FRAME_WIDTH * charScale,
+              FRAME_HEIGHT * charScale,
             );
           });
+          ctx.restore();
+
+          // 닉네임
+          ctx.font = "bold 14px Arial";
+          ctx.fillStyle = "white";
+          ctx.textAlign = "center";
+          ctx.fillText(
+            myUser.nickname,
+            myUser.x + (FRAME_WIDTH * charScale) / 2,
+            myUser.y + FRAME_HEIGHT * charScale + 15,
+          );
         }
+
+        ctx.restore();
       }
       animationId = requestAnimationFrame(renderLoop);
     };
@@ -147,5 +157,5 @@ export function useMyRoomRenderer({
     return () => {
       cancelAnimationFrame(animationId);
     };
-  }, [canvasRef, canvasSize, backgroundImage, spriteImages, users, charScale]);
+  }, [canvasRef, canvasSize, backgroundImage, spriteImages, myUser, charScale]);
 }

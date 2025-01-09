@@ -1,3 +1,4 @@
+// hooks/myroom/useMyRoomKeyboard.ts
 "use client";
 
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
@@ -23,7 +24,7 @@ interface MyRoomKeyboardProps {
 
 /**
  * 마이룸에서 키 입력을 처리하고,
- * 스페이스바로 "포탈 이동"만 처리하는 훅 (방명록은 제외)
+ * 스페이스바로 "포탈 이동" 처리하는 훅 (방명록은 제외)
  */
 export function useMyRoomKeyboard({
   users,
@@ -42,7 +43,8 @@ export function useMyRoomKeyboard({
     const portalW = portal.width ?? 200;
     const portalH = portal.height ?? 200;
 
-    // 현재 캐릭터 64×64로 가정
+    // 캐릭터 크기: 64×64 (CHAR_SCALE=3이면 192×192 일 수도 있음)
+    // 여기서는 간단히 64×64 가정
     const [cl, cr, ct, cb] = [me.x, me.x + 64, me.y, me.y + 64];
     const [pl, pr, pt, pb] = [
       portal.x,
@@ -51,23 +53,20 @@ export function useMyRoomKeyboard({
       portal.y + portalH,
     ];
 
-    // 충돌 여부
     return cr > pl && cl < pr && cb > pt && ct < pb;
   }
 
-  // (B) 스페이스바 → 포탈만 처리
+  // (B) 스페이스바 → 포탈
   function handleSpaceInteraction() {
     if (checkPortalOverlap()) {
-      // 페이지 이동
       window.location.href = portal.route;
     }
-    // 방명록(게시판) 로직은 제거
   }
 
   // (C) 키 다운/업
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if (isAnyModalOpen) return; // 모달 열려있으면 입력 막기
+      if (isAnyModalOpen) return; // 모달 열려있으면 막기
 
       // 이동 or 스페이스
       if (e.key === " ") {
@@ -84,7 +83,6 @@ export function useMyRoomKeyboard({
 
     window.addEventListener("keydown", handleKeyDown, { passive: false });
     window.addEventListener("keyup", handleKeyUp);
-
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);

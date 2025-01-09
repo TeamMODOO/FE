@@ -50,7 +50,7 @@ const TechStackModal: React.FC<TechStackModalProps> = ({
 
         <div className={Style.container}>
           <div className="mb-2 mt-4 text-sm text-muted-foreground">
-            여러 개를 선택할 수 있습니다. (최대 9개)
+            여러 개를 선택할 수 있습니다. (최대 8개)
           </div>
 
           <div className={Style.stackList}>

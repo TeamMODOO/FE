@@ -146,13 +146,6 @@ export const defaultTechnologyStack: Funiture[] = [
     funitureType: "none",
     funiturename: "기술스택8",
   },
-  {
-    id: "technologyStack-9",
-    x: 750,
-    y: 400,
-    funitureType: "none",
-    funiturename: "기술스택9",
-  },
 ];
 
 export const defaultBoard: Funiture[] = [
