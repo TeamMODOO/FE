@@ -50,6 +50,7 @@ const ResumeModal: React.FC<ResumeModalProps> = ({
             type="file"
             accept=".pdf"
             onChange={handleFileChange}
+            className="cursor-pointer"
           />
           {resumeFile && <div>선택된 파일: {resumeFile.name}</div>}
 

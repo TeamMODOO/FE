@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+import styles from "./NoticeCreateForm.module.css";
+
 /** 작성 화면 Props */
 interface NoticeCreateFormProps {
   writerName: string;
@@ -27,31 +29,39 @@ export default function NoticeCreateForm({
   isPosting,
 }: NoticeCreateFormProps) {
   return (
-    <div className="space-y-3">
+    <div className={styles.formContainer}>
       <div>
-        <Label htmlFor="writerName">작성자</Label>
+        <Label htmlFor="writerName">글 제목</Label>
         <Input
           id="writerName"
-          placeholder="작성자 이름"
+          placeholder="글 제목"
           value={writerName}
           onChange={(e) => setWriterName(e.target.value)}
+          className={styles.writerArea}
         />
       </div>
-      <div>
+      <div className={styles.textSection}>
         <Label htmlFor="writerMessage">글 내용</Label>
-        <Input
+        {/* <Input
           id="writerMessage"
           placeholder="작성할 내용을 입력하세요"
           value={writerMessage}
           onChange={(e) => setWriterMessage(e.target.value)}
-        />
+        /> */}
+        <textarea
+          id="writerMessage"
+          placeholder="작성할 내용을 입력하세요"
+          value={writerMessage}
+          className={styles.textArea}
+          onChange={(e) => setWriterMessage(e.target.value)}
+        ></textarea>
       </div>
-      <div className="flex gap-2">
-        <Button onClick={onCreate} disabled={isPosting}>
-          {isPosting ? "작성 중..." : "작성하기"}
-        </Button>
+      <div className={styles.buttonSection}>
         <Button variant="secondary" onClick={onCancel}>
           취소
+        </Button>
+        <Button onClick={onCreate} disabled={isPosting}>
+          {isPosting ? "작성 중..." : "작성하기"}
         </Button>
       </div>
     </div>

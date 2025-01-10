@@ -1,0 +1,100 @@
+/* src/app/lobby/_components/Npc/NpcModal.module.css */
+
+.modalContainer {
+  font-family: var(--font-noto-serif-kr), serif;
+  position: fixed;
+  bottom: 4dvh;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 90%;
+  max-width: 1200px;
+  min-height: 40dvh;
+  margin: 0 auto;
+  z-index: 9999;
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-end;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.6),
+    rgba(0, 0, 0, 0.9)
+  );
+  backdrop-filter: blur(2px);
+  border-radius: 10px;
+  overflow: visible;
+  border: 2px solid rgba(111, 99, 98, 1);
+  animation: fadeIn 0.15s ease-out;
+}
+
+.imageSection {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0 1rem;
+  overflow: visible;
+  max-height: 20dvh;
+}
+.imageSection img {
+  max-height: 60dvh;
+  height: auto;
+  width: auto;
+  object-fit: contain;
+}
+
+.rightSection {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1; /* 남은 공간을 대부분 차지 */
+  color: #ffffff; /* 흰색 텍스트 */
+  overflow: auto;
+  min-height: 20dvh;
+}
+
+.closeBtn {
+  position: absolute;
+  top: 0.5rem;
+  right: 1rem;
+  cursor: pointer;
+  font-family: none;
+  background: none; /* 배경 없앰 */
+  border: none; /* 테두리 없앰 */
+  font-size: 1.5rem;
+  color: #fff; /* 흰색으로 표시 */
+}
+.closeBtn:hover {
+  color: rgba(111, 99, 98, 1);
+}
+
+.modalHeader {
+  margin-bottom: 0.5rem;
+}
+.modalTitle {
+  font-weight: bold;
+  font-size: 2rem;
+  margin-top: 2rem;
+  margin-left: 1rem;
+  padding-left: 2rem;
+  color: rgba(192, 37, 202, 1);
+  pointer-events: none;
+}
+.modalContent {
+  margin: 1rem;
+  padding: 1rem 2rem;
+  margin-top: 0;
+  padding-top: 0;
+  font-size: 1.3rem;
+  line-height: 1.4;
+  color: #fff;
+  min-height: 30dvh;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

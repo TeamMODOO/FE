@@ -12,6 +12,8 @@ export interface Funiture {
   id: string;
   x: number;
   y: number;
+  width: number;
+  height: number;
   funitureType: string; // 예: "none" | "resume/resume1" | "portfolio/portfolio2" ...
   funiturename: string; // 예: "이력서(PDF)" 등
   data?: FurnitureData; // data 속성 (link, url 등)

@@ -34,6 +34,7 @@
 }
 
 .hideBody {
+  font-family: var(--font-noto-serif-kr), serif;
   align-items: center;
   display: flex;
   flex-direction: column;
@@ -46,16 +47,19 @@
 }
 
 .showProblem {
+  font-family: var(--font-noto-serif-kr), serif;
   display: none;
   height: 100%;
   padding: 10px;
   flex-direction: column;
   gap: 10px;
+  font-size: 1.3rem;
+  white-space: pre-line;
 }
 
 .title {
   color: red;
-  font-size: 20px;
+  font-size: 1.3rem;
 }
 
 .showProblem > .problemSection {

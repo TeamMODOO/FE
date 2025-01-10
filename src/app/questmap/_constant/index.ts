@@ -36,7 +36,7 @@ export const initialPortals: PortalInfo[] = [
     width: 120,
     height: 120,
     name: "포탈1",
-    image: "/furniture/portal.gif",
+    image: "/furniture/portal.png",
     route: "/lobby",
   },
 ];

@@ -10,39 +10,83 @@
   justify-content: center;
   align-items: center;
   z-index: 999; /* Ensure it's on top */
+  animation: fadeIn 0.15s ease-out;
 }
 
 .modal {
-  background: rgba(255, 255, 255, 0.9);
-  min-width: 500px;
-  padding: 20px;
-  border-radius: 8px;
+  background-image: url("/background/sheet.png");
+  aspect-ratio: 308 / 345;
+  /* 디버깅 용 */
+  /* border: 2px solid red; */
+
+  width: 27dvw;
+
+  padding: 60px;
+  padding-top: 70px;
+  /* border-radius: 8px; */
   position: relative;
   color: black;
+  /* border: 2px solid rgba(111, 99, 98, 1); */
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center;
 }
 
 .closeBtn {
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 0;
+  right: 0;
+  font-family: none;
   cursor: pointer;
+  font-size: 2rem;
+  color: white;
+}
+
+.closeBtn:hover {
+  color: rgba(111, 99, 98, 1);
 }
 
 .modalHeader {
-  margin: 2dvw;
+  margin-bottom: 2dvh;
 }
 
 .modalTitle {
-  color: red;
+  font-family: var(--font-noto-serif-kr), serif;
+  color: rgba(192, 37, 202, 1);
   font-weight: bold;
-  font-size: 1.5rem;
+  font-size: 2rem;
   margin-bottom: 5px;
 }
 
 .modalContent {
   padding: 10px;
-  height: 40dvh;
+  min-height: 28dvh;
   overflow: auto;
+  border-radius: 5px;
+  background-color: rgba(50, 50, 50, 0.6);
+  border: 1px solid rgba(111, 99, 98, 1);
+}
+
+.modalContent::-webkit-scrollbar {
+  width: 5px; /* 스크롤바의 너비 */
+}
+.modalContent::-webkit-scrollbar-track {
+  background: none; /* 스크롤바 트랙 색상 */
+}
+.modalContent::-webkit-scrollbar-thumb {
+  background: red; /* 스크롤바 색상 */
+  border-radius: 5px; /* 모서리 둥글게 */
+}
+
+.rankingItemTitle {
+  margin-left: 1dvh;
+  margin-right: 1dvh;
+  display: flex;
+  justify-content: space-between;
+  text-align: center;
+  align-items: center;
+  justify-items: center;
+  font-size: 1.1rem;
 }
 
 .rankingItem {
@@ -51,4 +95,21 @@
   text-align: center;
   align-items: center;
   justify-items: center;
+  font-size: 1.1rem;
+}
+
+.modalSub {
+  font-size: 1.5rem;
+  color: red;
+  font-family: var(--font-noto-serif-kr), serif;
+  font-weight: bold;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
