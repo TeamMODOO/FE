@@ -187,37 +187,6 @@ export const EnterMeetingRoom: React.FC<EnterMeetingRoomProps> = ({
                     <p>아직 생성된 방이 없습니다.</p>
                   </div>
                 )}
-                <RoomCard
-                  item={{ room_id: "1", title: "테스트용", clients: ["12345"] }}
-                />
-                <RoomCard
-                  item={{
-                    room_id: "2",
-                    title: "테스트용2",
-                    clients: ["12346"],
-                  }}
-                />
-                <RoomCard
-                  item={{
-                    room_id: "2",
-                    title: "테스트용2",
-                    clients: ["12346"],
-                  }}
-                />
-                <RoomCard
-                  item={{
-                    room_id: "2",
-                    title: "테스트용2",
-                    clients: ["12346"],
-                  }}
-                />
-                <RoomCard
-                  item={{
-                    room_id: "2",
-                    title: "테스트용2",
-                    clients: ["12346"],
-                  }}
-                />
               </div>
             </div>
           </TabsContent>
