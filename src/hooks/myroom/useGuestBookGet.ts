@@ -11,7 +11,7 @@ import axios, { AxiosResponse } from "axios";
 
 // 방명록 목록 조회 응답 타입
 export interface GuestBookEntry {
-  id: number;
+  id: string;
   content: string;
   author_name: string;
   guest_google_id: string;
