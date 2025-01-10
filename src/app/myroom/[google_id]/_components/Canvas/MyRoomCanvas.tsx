@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+
 import { useParams } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
@@ -8,11 +9,9 @@ import { Button } from "@/components/ui/button";
 import { useMyRoomKeyboard } from "@/hooks/myroom/useMyRoomKeyboard";
 import { useMyRoomRenderer } from "@/hooks/myroom/useMyRoomRenderer";
 import useLoadSprites from "@/hooks/performance/useLoadSprites";
-
 // ---- Models & Types
 import { Funiture } from "@/model/Funiture";
 import { Direction, User } from "@/model/User";
-
 // ---- API
 import { useMyRoomOwnerProfile } from "@/queries/myroom/useMyRoomOwnerProfile";
 import { usePatchMyRoomOwnerProfile } from "@/queries/myroom/usePatchMyRoomOwnerProfile";
@@ -26,10 +25,9 @@ import {
   defaultTechnologyStack,
   interiorImages,
   MAP_CONSTANTS,
-  techStackList,
   MYROOM_COLLISION_ZONES,
+  techStackList,
 } from "../../_constant";
-
 // ---- 모달
 import BoardModal from "../BoardModal/BoardModal";
 import FurnitureInfoModal from "../FurnitureInfoModal/FurnitureInfoModal";
@@ -38,7 +36,6 @@ import PdfViewerModal from "../PortfolioModal/PdfViewerModal";
 import PortfolioModal from "../PortfolioModal/PortfolioModal";
 import ResumeModal from "../ResumeModal/ResumeModal";
 import TechStackModal from "../TechStackModal/TechStackModal";
-
 // ---- 스타일
 import Style from "./Canvas.style";
 
@@ -109,8 +106,8 @@ const MyRoomCanvas: React.FC = () => {
 
   // (6) 포탈
   const [portal, setPortal] = useState({
-    x: 1300,
-    y: 600,
+    x: 20,
+    y: 620,
     width: 200,
     height: 200,
     route: "/lobby",
