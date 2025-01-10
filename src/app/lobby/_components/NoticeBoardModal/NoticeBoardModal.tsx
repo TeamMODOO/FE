@@ -18,6 +18,8 @@ import {
 import { useNoticeDetailQuery } from "@/queries/lobby/useNoticeDetailQuery";
 import { useNoticesListQuery } from "@/queries/lobby/useNoticesQuery";
 
+import styles from "./NoticeBoardModal.module.css";
+
 // ─────────────────────────────────────────────────────────────────────────────
 // 추가) NoticeItem 타입
 export interface NoticeItem {
@@ -35,7 +37,7 @@ import NoticeList from "./NoticeList";
 // (A) 모달에서 받는 props 인터페이스 수정
 export interface NoticeBoardModalProps {
   open: boolean; // 모달 열림/닫힘
-  onClose: (open: boolean) => void; // 모달 닫기 함수
+  onClose: () => void; // 모달 닫기 함수
 
   // 새로 추가한 props들
   noticeList: NoticeItem[];
@@ -177,7 +179,7 @@ export default function NoticeBoardModal({
 
   return (
     <>
-      <Dialog open={open} onOpenChange={onClose}>
+      {/* <Dialog open={open} onOpenChange={onClose}>
         <DialogContent
           className="w-full max-w-lg"
           style={{
@@ -194,7 +196,23 @@ export default function NoticeBoardModal({
           </DialogHeader>
           {renderContent()}
         </DialogContent>
-      </Dialog>
+      </Dialog> */}
+
+      {open && (
+        <div className={styles.overlay}>
+          <div className={styles.modalContainer}>
+            <div className={styles.rightSection}>
+              <button className={styles.closeBtn} onClick={onClose}>
+                X
+              </button>
+              <div className={styles.modalHeader}>
+                <p className={styles.modalTitle}>게시판</p>
+              </div>
+              <div className={styles.modalContent}>{renderContent()}</div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 비회원 상태로 글 작성 버튼 입력 시 모달 출력 */}
       {signInModalOpen && (

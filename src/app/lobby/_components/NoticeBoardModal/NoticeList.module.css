@@ -1,0 +1,60 @@
+.listContainer {
+  display: flex;
+  flex-direction: column;
+}
+
+.buttonSection {
+  display: flex;
+  flex-direction: row-reverse;
+}
+
+.itemsContainer {
+  background-color: rgba(50, 50, 50, 0.7);
+  border-radius: 10px;
+  border: 2px solid rgba(111, 99, 98, 1);
+  margin: 1rem;
+  padding: 1rem 2rem;
+  font-size: 1.3rem;
+  line-height: 1.4;
+  color: #fff;
+  min-height: 30dvh;
+  overflow: auto;
+}
+
+.itemsContainer::-webkit-scrollbar {
+  width: 10px;
+}
+
+.itemsContainer::-webkit-scrollbar-track {
+  background: none;
+}
+
+.itemsContainer::-webkit-scrollbar-thumb {
+  background: rgba(15, 190, 135, 1);
+  border-radius: 5px;
+}
+
+.listItem {
+  background: rgba(80, 80, 80, 0.7);
+  border-radius: 10px;
+  padding: 1rem;
+}
+
+.listItem:hover {
+  background: rgba(150, 150, 150, 0.7);
+  border-radius: 10px;
+  padding: 1rem;
+  cursor: pointer;
+}
+
+.noticeTitle {
+  text-align: left;
+  color: rgba(15, 190, 135, 1);
+  font-weight: bold;
+  font-size: 1.5rem;
+}
+
+.noticeSub {
+  margin-top: 1dvh;
+  font-size: 1rem;
+}
