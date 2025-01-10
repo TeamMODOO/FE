@@ -1,3 +1,4 @@
+import { CollisionZone } from "@/model/CollisionZone";
 import { Funiture } from "@/model/Funiture";
 import { User } from "@/model/User";
 
@@ -161,6 +162,11 @@ export const defaultBoard: Funiture[] = [
     funitureType: "board",
     funiturename: "방명록",
   },
+];
+
+export const MYROOM_COLLISION_ZONES: CollisionZone[] = [
+  // 상단 벽(가로로 쭉 막기)
+  { x: 0, y: 0, width: 2000, height: 580 },
 ];
 
 export const interiorImages: Record<string, string> = {

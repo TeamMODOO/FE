@@ -62,6 +62,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
   const [localClientId, setLocalClientId] = useState("");
   useEffect(() => {
     let stored = localStorage.getItem("client_id");
+    
     if (!stored) {
       if (session?.user?.id) {
         stored = `Y${session.user.id}`;

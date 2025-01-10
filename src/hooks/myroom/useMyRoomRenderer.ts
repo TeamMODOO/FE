@@ -2,6 +2,7 @@
 
 import { RefObject, useEffect, useRef } from "react";
 
+import { MYROOM_COLLISION_ZONES } from "@/app/myroom/[google_id]/_constant";
 import {
   FRAME_HEIGHT,
   FRAME_WIDTH,
@@ -188,6 +189,17 @@ export function useMyRoomRenderer({
           portal.x + portal.width / 2,
           portal.y + portal.height + 15,
         );
+
+        // (추가) 충돌 박스 디버깅
+
+        // MYROOM_COLLISION_ZONES.forEach((zone) => {
+        //   ctx.fillStyle = "rgba(255, 0, 0, 0.3)"; // 반투명 빨간색
+        //   ctx.fillRect(zone.x, zone.y, zone.width, zone.height);
+
+        //   ctx.strokeStyle = "red";
+        //   ctx.lineWidth = 2;
+        //   ctx.strokeRect(zone.x, zone.y, zone.width, zone.height);
+        // });
 
         // (6) 캐릭터 스프라이트
         if (Object.keys(spriteImages).length === LAYER_ORDER.length) {

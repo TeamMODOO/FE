@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-
 import { useParams } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
@@ -9,14 +8,16 @@ import { Button } from "@/components/ui/button";
 import { useMyRoomKeyboard } from "@/hooks/myroom/useMyRoomKeyboard";
 import { useMyRoomRenderer } from "@/hooks/myroom/useMyRoomRenderer";
 import useLoadSprites from "@/hooks/performance/useLoadSprites";
+
 // ---- Models & Types
 import { Funiture } from "@/model/Funiture";
 import { Direction, User } from "@/model/User";
+
 // ---- API
 import { useMyRoomOwnerProfile } from "@/queries/myroom/useMyRoomOwnerProfile";
 import { usePatchMyRoomOwnerProfile } from "@/queries/myroom/usePatchMyRoomOwnerProfile";
 
-// ---- 상수/데이터
+// ---- 상수/데이터 (myroom/[google_id]/_constant.ts 파일 등)
 import {
   CHAR_SCALE,
   defaultBoard,
@@ -26,7 +27,9 @@ import {
   interiorImages,
   MAP_CONSTANTS,
   techStackList,
+  MYROOM_COLLISION_ZONES,
 } from "../../_constant";
+
 // ---- 모달
 import BoardModal from "../BoardModal/BoardModal";
 import FurnitureInfoModal from "../FurnitureInfoModal/FurnitureInfoModal";
@@ -35,6 +38,7 @@ import PdfViewerModal from "../PortfolioModal/PdfViewerModal";
 import PortfolioModal from "../PortfolioModal/PortfolioModal";
 import ResumeModal from "../ResumeModal/ResumeModal";
 import TechStackModal from "../TechStackModal/TechStackModal";
+
 // ---- 스타일
 import Style from "./Canvas.style";
 
@@ -68,10 +72,11 @@ const MyRoomCanvas: React.FC = () => {
   }, []);
 
   // (3) 내 캐릭터 (1명)
+  //  - 초기 y값을 700으로 가정
   const [myUser, setMyUser] = useState<User>({
     id: "me",
     x: 500,
-    y: 500,
+    y: 700,
     nickname: "나",
     characterType: "sprite1",
     direction: 0,
@@ -135,11 +140,6 @@ const MyRoomCanvas: React.FC = () => {
   // 포트폴리오 링크 뷰어에서 사용할 링크
   const [clickedPortfolioLink, setClickedPortfolioLink] = useState("");
 
-  // 버튼 disabled 여부 (예시로 false 처리)
-  const isResumeButtonDisabled = false;
-  const isPortfolioButtonDisabled = false;
-  const isTechStackButtonDisabled = false;
-
   // 모달 열림 여부 통합
   const isAnyModalOpen =
     resumeModalOpen ||
@@ -176,7 +176,7 @@ const MyRoomCanvas: React.FC = () => {
    * (9-1) 가구/포탈/방명록 이미지 로딩
    *  interiorImages = { key: url } 이므로,
    *  전부 HTMLImageElement로 로딩한 뒤, useState로 관리
-   * */
+   */
   const [furnitureImages, setFurnitureImages] = useState<
     Record<string, HTMLImageElement>
   >({});
@@ -209,7 +209,7 @@ const MyRoomCanvas: React.FC = () => {
     myUser,
     charScale: CHAR_SCALE,
 
-    // 추가: 아래 props 받아서 내부에서 drawImage
+    // 가구/포탈/방명록
     furnitureImages,
     resume,
     portfolio,
@@ -218,16 +218,35 @@ const MyRoomCanvas: React.FC = () => {
     portal,
   });
 
+  /**
+   * (충돌 판정) 직사각형 겹침 여부
+   */
+  function doRectsOverlap(
+    rect1: { x: number; y: number; width: number; height: number },
+    rect2: { x: number; y: number; width: number; height: number },
+  ): boolean {
+    return !(
+      rect1.x + rect1.width <= rect2.x ||
+      rect1.x >= rect2.x + rect2.width ||
+      rect1.y + rect1.height <= rect2.y ||
+      rect1.y >= rect2.y + rect2.height
+    );
+  }
+
   // (11) 이동 로직
   useEffect(() => {
     if (isAnyModalOpen) return;
 
     setMyUser((prev) => {
+      // 이전 좌표
       const { x: prevX, y: prevY } = prev;
+
+      // 임시 변수
       let x = prevX;
       let y = prevY;
-      let newDir: Direction | null = null;
 
+      // 방향 설정 (위=1, 아래=0, 오른=2, 왼=3)
+      let newDir: Direction | null = null;
       if (pressedKeys["w"] || pressedKeys["W"] || pressedKeys["ArrowUp"]) {
         newDir = 1; // Up
       } else if (
@@ -251,28 +270,94 @@ const MyRoomCanvas: React.FC = () => {
       }
 
       if (newDir === null) {
+        // 이동 키가 없다면 isMoving = false
         return { ...prev, isMoving: false };
       }
 
-      const SPEED = MAP_CONSTANTS.SPEED; // 30
-      const SPRITE_SIZE = 64 * CHAR_SCALE;
+      const SPEED = MAP_CONSTANTS.SPEED; // ex) 30
+      const SPRITE_SIZE = 64 * CHAR_SCALE; // 64 * 3 = 192
 
       let moved = false;
 
-      // 세로: 0~900
-      // 가로: 0~2000
-      if (newDir === 1 && y > 0) {
-        y -= SPEED;
-        moved = true;
-      } else if (newDir === 0 && y < 900 - SPRITE_SIZE) {
-        y += SPEED;
-        moved = true;
-      } else if (newDir === 2 && x < 2000 - SPRITE_SIZE) {
-        x += SPEED;
-        moved = true;
-      } else if (newDir === 3 && x > 0) {
-        x -= SPEED;
-        moved = true;
+      // (A) 부분 보정: 이동할 때 맵 경계까지 자연스럽게 이동
+      switch (newDir) {
+        case 1: // 위
+          if (y > 0) {
+            // 만약 SPEED가 너무 커서 음수가 될 위험이 있으면 보정
+            // ex) y - SPEED < 0인 경우
+            if (y - SPEED < 0) {
+              y = 0;
+            } else {
+              y -= SPEED;
+            }
+            moved = true;
+          }
+          break;
+
+        case 0: // 아래
+          // 최대 y좌표 = 900 - SPRITE_SIZE (캐릭터 전체가 맵 안에 있어야 하므로)
+          {
+            const maxY = 900 - 128;
+            if (y < maxY) {
+              y += SPEED;
+              // 만약 y+SPEED이 maxY보다 커져버리면 maxY로 보정
+              if (y > maxY) {
+                y = maxY;
+              }
+              moved = true;
+            }
+          }
+          break;
+
+        case 2: // 오른쪽
+          // 최대 x좌표 = 2000 - SPRITE_SIZE
+          {
+            const maxX = 2000 - 96;
+            if (x < maxX) {
+              x += SPEED;
+              if (x > maxX) {
+                x = maxX;
+              }
+              moved = true;
+            }
+          }
+          break;
+
+        case 3: // 왼쪽
+          if (x > 0) {
+            if (x - SPEED < 0) {
+              x = 0;
+            } else {
+              x -= SPEED;
+            }
+            moved = true;
+          }
+          break;
+      }
+
+      // (B) “충돌 체크” (실제 이동하기 전에 확인)
+      if (moved) {
+        const newBoundingBox = {
+          x,
+          y,
+          width: SPRITE_SIZE,
+          height: SPRITE_SIZE,
+        };
+
+        let collision = false;
+        for (const zone of MYROOM_COLLISION_ZONES) {
+          if (doRectsOverlap(newBoundingBox, zone)) {
+            collision = true;
+            break;
+          }
+        }
+
+        // 충돌이면 이동 취소 (원래 자리로 복귀)
+        if (collision) {
+          x = prevX;
+          y = prevY;
+          moved = false;
+        }
       }
 
       return {
@@ -302,7 +387,7 @@ const MyRoomCanvas: React.FC = () => {
   const { data: ownerProfile } = useMyRoomOwnerProfile(googleId);
   const { mutate: patchProfile } = usePatchMyRoomOwnerProfile();
 
-  // (A) ownerProfile → 로컬 state
+  // (13-A) ownerProfile → 로컬 state
   useEffect(() => {
     if (!ownerProfile) return;
 
@@ -374,12 +459,12 @@ const MyRoomCanvas: React.FC = () => {
   }, [ownerProfile]);
 
   /**
-   * (B) canvas 클릭 → 좌표를 월드 좌표로 변환 → 가구/포탈/방명록 히트 테스트
-   *  - 히트 시 모달 또는 이동 로직
+   * (14) canvas 클릭 → 좌표를 월드 좌표로 변환 → 가구/포탈/방명록 히트 테스트
    */
   useEffect(() => {
     if (!canvasRef.current) return;
     const canvas = canvasRef.current;
+
     const handleClick = (e: MouseEvent) => {
       // 이미 모달 열려 있으면 무시
       if (isAnyModalOpen) return;
@@ -388,15 +473,16 @@ const MyRoomCanvas: React.FC = () => {
       const clickX = e.clientX - rect.left;
       const clickY = e.clientY - rect.top;
 
-      // (1) 전체 스케일 / 카메라 계산
-      const scale = canvasSize.h / 900; // 세로 기준
-      const viewWidth = canvasSize.w / scale; // 월드 좌표계에서 뷰 너비
+      // (A) 전체 스케일 / 카메라 계산 (세로 기준)
+      const scale = canvasSize.h / 900;
+      const viewWidth = canvasSize.w / scale;
       let cameraX = 0;
-      // myUser 중심
-      const centerX = myUser.x + 64 * CHAR_SCALE * 0.5; // 캐릭터 기준
+
+      // 캐릭터 중심
+      const centerX = myUser.x + 64 * CHAR_SCALE * 0.5;
       cameraX = centerX - viewWidth / 2;
 
-      // 맵 최대 범위 보정
+      // 맵 범위 보정
       const maxCamX = 2000 - viewWidth;
       if (cameraX < 0) cameraX = 0;
       if (cameraX > maxCamX) cameraX = maxCamX;
@@ -405,14 +491,13 @@ const MyRoomCanvas: React.FC = () => {
       const worldX = cameraX + clickX / scale;
       const worldY = clickY / scale;
 
-      // (2) furniture, board, portal 영역과 충돌 체크
-      // 임의로 가구 너비=100, 높이=100 지정 (필요하다면 Funiture에 width/height 저장)
+      // (B) 가구/포탈/방명록 히트 테스트
       const FURNITURE_WIDTH = 100;
       const FURNITURE_HEIGHT = 100;
       const PORTAL_WIDTH = 200;
       const PORTAL_HEIGHT = 200;
 
-      // (2-1) 방명록(board)
+      // 방명록
       for (const b of board) {
         if (
           worldX >= b.x &&
@@ -420,25 +505,23 @@ const MyRoomCanvas: React.FC = () => {
           worldY >= b.y &&
           worldY <= b.y + FURNITURE_HEIGHT
         ) {
-          // 방명록 열기
           setIsBoardOpen(true);
           return;
         }
       }
 
-      // (2-2) 포탈
+      // 포탈
       if (
         worldX >= portal.x &&
         worldX <= portal.x + PORTAL_WIDTH &&
         worldY >= portal.y &&
         worldY <= portal.y + PORTAL_HEIGHT
       ) {
-        // 포탈로 이동
         window.location.href = portal.route;
         return;
       }
 
-      // (2-3) 기타 가구 (이력서/포트폴리오/기술스택)
+      // 가구 (이력서/포트폴리오/기술스택)
       const allFurniture = [...resume, ...portfolio, ...technologyStack];
       for (const f of allFurniture) {
         if (
@@ -469,7 +552,9 @@ const MyRoomCanvas: React.FC = () => {
     canvasSize,
   ]);
 
-  // (C) 가구 클릭 로직
+  /**
+   * (C) 가구 클릭 로직
+   */
   const handleFurnitureClickCustom = (item: Funiture) => {
     if (item.funitureType === "none") {
       alert("아직 등록되지 않은 항목입니다.");
@@ -486,7 +571,7 @@ const MyRoomCanvas: React.FC = () => {
       setPdfModalOpen(true);
       return;
     }
-    // 그 외 (포트폴리오/기술스택)
+    // 그 외(포트폴리오/기술스택)
     setSelectedFurnitureData(item);
     setViewModalOpen(true);
   };
@@ -604,19 +689,19 @@ const MyRoomCanvas: React.FC = () => {
       <div className={Style.bottomButtonsClass}>
         <Button
           onClick={handleOpenResumeModal}
-          disabled={isResumeButtonDisabled}
+          disabled={false /* 예시로 false */}
         >
           이력서(PDF) 추가
         </Button>
         <Button
           onClick={handleOpenPortfolioModal}
-          disabled={isPortfolioButtonDisabled}
+          disabled={false /* 예시로 false */}
         >
           포트폴리오(링크) 추가
         </Button>
         <Button
           onClick={handleOpenTechStackModal}
-          disabled={isTechStackButtonDisabled}
+          disabled={false /* 예시로 false */}
         >
           기술 스택 추가
         </Button>
