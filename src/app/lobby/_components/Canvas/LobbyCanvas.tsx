@@ -87,6 +87,8 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
       socket.emit("leave_room", { roomId: currentRoom });
     }
 
+    // console.log("socket");
+
     // 새로운 방 입장
     socket.emit("CS_JOIN_ROOM", {
       client_id: clientId,
@@ -109,11 +111,11 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     if (status === "loading") return;
 
     // 소켓이 연결되었을 때만 emit
-    if (mainSocket && isMainConnected) {
+    if (socket && isMainConnected) {
       // 아무 내용 없이 "CS_USER_POSTION_INFO" 보냄
-      mainSocket.emit("CS_USER_POSITION_INFO", {});
+      socket.emit("CS_USER_POSITION_INFO", {});
     }
-  }, [localClientId, status, mainSocket, isMainConnected]);
+  }, [localClientId, status, socket, isMainConnected]);
 
   // ------------------ 화면 사이즈 (동적) ------------------
   const [canvasSize, setCanvasSize] = useState({

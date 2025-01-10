@@ -66,7 +66,7 @@ const useMainSocketConnect = ({
       }
 
       const baseURL = process.env.NEXT_PUBLIC_BASE_URL;
-
+      return;
       // 새로운 소켓 연결 시도
       const newMainSocket = io(baseURL!, {
         path: "/sio/sockets",

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect } from "react";
 
-import useMainSocketStore from "@/store/useMainSocketStore";
+import useSocketStore from "@/store/useSocketStore";
 import useUsersStore from "@/store/useUsersStore";
 
 /**
@@ -67,7 +67,8 @@ export default function useLobbySocketEvents({
   userId,
   userNickname,
 }: LobbySocketEventsProps) {
-  const mainSocket = useMainSocketStore((state) => state.socket);
+  // const mainSocket = useMainSocketStore((state) => state.socket);
+  const { socket } = useSocketStore();
 
   // 유저 스토어
   const { users, addUser, updateUserPosition, removeUser } = useUsersStore();
@@ -77,23 +78,23 @@ export default function useLobbySocketEvents({
   // ─────────────────────────────────────────────
   const emitMovement = useCallback(
     (x: number, y: number, direction: number) => {
-      if (!mainSocket) return;
+      if (!socket) return;
 
       const data: MovementInfoToServer = {
         position_x: x,
         position_y: y,
         direction,
       };
-      mainSocket.emit("CS_MOVEMENT_INFO", data);
+      socket.emit("CS_MOVEMENT_INFO", data);
     },
-    [mainSocket],
+    [socket],
   );
 
   // ─────────────────────────────────────────────
   // (B) 다른 사용자 이동 정보 수신 → "SC_MOVEMENT_INFO"
   // ─────────────────────────────────────────────
   useEffect(() => {
-    if (!mainSocket) return;
+    if (!socket) return;
 
     const onMovement = (data: MovementInfoFromServer) => {
       // 1) 스토어에 없으면 새 유저 등록
@@ -138,20 +139,24 @@ export default function useLobbySocketEvents({
       }, 200);
     };
 
-    mainSocket.on("SC_MOVEMENT_INFO", onMovement);
+    socket.on("SC_MOVEMENT_INFO", onMovement);
 
     return () => {
-      mainSocket.off("SC_MOVEMENT_INFO", onMovement);
+      socket.off("SC_MOVEMENT_INFO", onMovement);
     };
-  }, [mainSocket, users, addUser, updateUserPosition]);
+  }, [socket, users, addUser, updateUserPosition]);
 
   // ─────────────────────────────────────────────
   // (C) 내가 방에 처음 들어왔을 때 → "SC_ENTER_ROOM"
   // ─────────────────────────────────────────────
   useEffect(() => {
-    if (!mainSocket) return;
+    // console.log(socket);
+
+    if (!socket) return;
 
     const onEnterRoom = (data: SCEnterRoomData) => {
+      // console.log("SCEnterRoomData: ", data);
+
       // data = { client_id, position_x, position_y, direction, user_name }
       const exists = users.find((u) => u.id === data.client_id);
       if (!exists) {
@@ -171,36 +176,38 @@ export default function useLobbySocketEvents({
       );
     };
 
-    mainSocket.on("SC_ENTER_ROOM", onEnterRoom);
+    socket.on("SC_ENTER_ROOM", onEnterRoom);
 
     return () => {
-      mainSocket.off("SC_ENTER_ROOM", onEnterRoom);
+      socket.off("SC_ENTER_ROOM", onEnterRoom);
     };
-  }, [mainSocket, users, addUser, updateUserPosition]);
+  }, [socket, users, addUser, updateUserPosition]);
 
   // ─────────────────────────────────────────────
   // (D) 유저 퇴장 → "SC_LEAVE_USER"
   // ─────────────────────────────────────────────
   useEffect(() => {
-    if (!mainSocket) return;
+    if (!socket) return;
 
     const onLeaveUser = (data: SCLeaveUserData) => {
       removeUser(data.client_id);
     };
 
-    mainSocket.on("SC_LEAVE_USER", onLeaveUser);
+    socket.on("SC_LEAVE_USER", onLeaveUser);
 
     return () => {
-      mainSocket.off("SC_LEAVE_USER", onLeaveUser);
+      socket.off("SC_LEAVE_USER", onLeaveUser);
     };
-  }, [mainSocket, removeUser]);
+  }, [socket, removeUser]);
 
   // ─────────────────────────────────────────────
   // (E) **새로 추가**: "SC_USER_POSITION_INFO"
   //     : 서버가 "현재 방에 있는 모든 사용자 정보"를 개별적으로 내려줌
   // ─────────────────────────────────────────────
   useEffect(() => {
-    if (!mainSocket) return;
+    // console.log("E: ", socket);
+
+    if (!socket) return;
 
     const onUserPositionInfo = (userData: SCUserPositionInfo) => {
       // console.log("Received SC_USER_POSITION_INFO:", userData);
@@ -223,12 +230,12 @@ export default function useLobbySocketEvents({
       );
     };
 
-    mainSocket.on("SC_USER_POSITION_INFO", onUserPositionInfo);
+    socket.on("SC_USER_POSITION_INFO", onUserPositionInfo);
 
     return () => {
-      mainSocket.off("SC_USER_POSITION_INFO", onUserPositionInfo);
+      socket.off("SC_USER_POSITION_INFO", onUserPositionInfo);
     };
-  }, [mainSocket, users, addUser, updateUserPosition]);
+  }, [socket, users, addUser, updateUserPosition]);
 
   // ─────────────────────────────────────────────
   // export

@@ -63,7 +63,7 @@ export function SocketProvider({ children }: PropsWithChildren) {
       socket.disconnect();
       reset();
     };
-  }, [status, session, clientId]);
+  }, [clientId]);
 
   return children;
 }

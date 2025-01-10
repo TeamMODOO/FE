@@ -12,7 +12,6 @@ import { Socket } from "socket.io-client";
 
 import { ChatWidget } from "@/components/chat/ChatWidget";
 import useAudioSocketConnect from "@/hooks/socket/useAudioSocketConnect";
-import useMainSocketConnect from "@/hooks/socket/useMainSocketConnect";
 import useAudioSocketStore from "@/store/useAudioSocketStore";
 
 import CanvasSection from "./_components/canvas/CanvasSection";
@@ -32,8 +31,7 @@ function Page() {
   const router = useRouter();
   const params = useParams();
   const roomId = (params.id as string) ?? "99999";
-
-  useMainSocketConnect({ roomType: ROOM_TYPE, roomId: roomId });
+  //useMainSocketConnect({ roomType: ROOM_TYPE, roomId: roomId });
   useAudioSocketConnect({ roomId: roomId });
   useMeetingRoomAttend({ roomId: roomId });
   const audioSocket: Socket = useAudioSocketStore(
