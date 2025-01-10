@@ -6,6 +6,21 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# canvas 라이브러리와 sharp를 위한 시스템 의존성 설치
+RUN apk add --no-cache \
+    build-base \
+    g++ \
+    cairo-dev \
+    jpeg-dev \
+    pango-dev \
+    giflib-dev \
+    python3 \
+    pkgconfig \
+    vips-dev
+
+# sharp 패키지 설치
+RUN npm install --platform=linuxmusl --arch=x64 sharp
+
 # 시스템 의존성 설치
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
