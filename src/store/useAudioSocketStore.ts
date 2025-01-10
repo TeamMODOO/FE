@@ -1,8 +1,8 @@
 import { create } from "zustand";
 
-import { SocketStoreType } from "@/model/socket";
+import { AudioSocketType } from "@/model/socket";
 
-const useAudioSocketStore = create<SocketStoreType>((set) => ({
+const useAudioSocketStore = create<AudioSocketType>((set) => ({
   socket: null,
   isConnected: false,
   setSocket: (socket) => set({ socket }),
