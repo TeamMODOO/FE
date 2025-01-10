@@ -67,8 +67,7 @@ export default function useLobbySocketEvents({
   userId,
   userNickname,
 }: LobbySocketEventsProps) {
-  // const mainSocket = useMainSocketStore((state) => state.socket);
-  const { socket } = useSocketStore();
+  const { socket, isConnected } = useSocketStore();
 
   // 유저 스토어
   const { users, addUser, updateUserPosition, removeUser } = useUsersStore();
@@ -78,7 +77,7 @@ export default function useLobbySocketEvents({
   // ─────────────────────────────────────────────
   const emitMovement = useCallback(
     (x: number, y: number, direction: number) => {
-      if (!socket) return;
+      if (!socket || !isConnected) return;
 
       const data: MovementInfoToServer = {
         position_x: x,
@@ -94,7 +93,7 @@ export default function useLobbySocketEvents({
   // (B) 다른 사용자 이동 정보 수신 → "SC_MOVEMENT_INFO"
   // ─────────────────────────────────────────────
   useEffect(() => {
-    if (!socket) return;
+    if (!socket || !isConnected) return;
 
     const onMovement = (data: MovementInfoFromServer) => {
       // 1) 스토어에 없으면 새 유저 등록
@@ -150,9 +149,7 @@ export default function useLobbySocketEvents({
   // (C) 내가 방에 처음 들어왔을 때 → "SC_ENTER_ROOM"
   // ─────────────────────────────────────────────
   useEffect(() => {
-    // console.log(socket);
-
-    if (!socket) return;
+    if (!socket || !isConnected) return;
 
     const onEnterRoom = (data: SCEnterRoomData) => {
       // console.log("SCEnterRoomData: ", data);
@@ -187,7 +184,7 @@ export default function useLobbySocketEvents({
   // (D) 유저 퇴장 → "SC_LEAVE_USER"
   // ─────────────────────────────────────────────
   useEffect(() => {
-    if (!socket) return;
+    if (!socket || !isConnected) return;
 
     const onLeaveUser = (data: SCLeaveUserData) => {
       removeUser(data.client_id);
@@ -205,13 +202,9 @@ export default function useLobbySocketEvents({
   //     : 서버가 "현재 방에 있는 모든 사용자 정보"를 개별적으로 내려줌
   // ─────────────────────────────────────────────
   useEffect(() => {
-    // console.log("E: ", socket);
-
-    if (!socket) return;
+    if (!socket || !isConnected) return;
 
     const onUserPositionInfo = (userData: SCUserPositionInfo) => {
-      // console.log("Received SC_USER_POSITION_INFO:", userData);
-
       const exists = users.find((x) => x.id === userData.client_id);
       if (!exists) {
         addUser(

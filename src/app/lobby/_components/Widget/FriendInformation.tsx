@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { SCUserPositionInfo } from "@/hooks/lobby/useLobbySocketEvents";
 import { UserType, useUserListQuery } from "@/queries/lobby/useUserQuery";
-import useMainSocketStore from "@/store/useMainSocketStore";
+import useSocketStore from "@/store/useSocketStore";
 
 import FriendDoor from "./FriendDoor";
 
@@ -20,7 +20,8 @@ export const FriendInformation = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
 
-  const mainSocket = useMainSocketStore((state) => state.socket);
+  const { socket, isConnected } = useSocketStore();
+
   const [onlineUsersId, setOnlineUsersId] = useState<string[]>([]);
   const { data: users } = useUserListQuery();
 
@@ -40,7 +41,7 @@ export const FriendInformation = () => {
   );
 
   useEffect(() => {
-    if (!mainSocket) return;
+    if (!socket || !isConnected) return;
 
     const handleUserConnect = (data: SCUserPositionInfo) => {
       const { client_id } = data;
@@ -51,14 +52,14 @@ export const FriendInformation = () => {
       setOnlineUsersId((prev) => prev.filter((id) => id !== clientId));
     };
 
-    mainSocket.on("SC_USER_POSITION_INFO", handleUserConnect);
-    mainSocket.on("user_disconnect", handleUserDisconnect);
+    socket.on("SC_USER_POSITION_INFO", handleUserConnect);
+    socket.on("user_disconnect", handleUserDisconnect);
 
     return () => {
-      mainSocket.off("SC_USER_POSITION_INFO", handleUserConnect);
-      mainSocket.off("user_disconnect", handleUserDisconnect);
+      socket.off("SC_USER_POSITION_INFO", handleUserConnect);
+      socket.off("user_disconnect", handleUserDisconnect);
     };
-  }, [mainSocket]);
+  }, [socket]);
 
   useEffect(() => {
     if (isOpen) {

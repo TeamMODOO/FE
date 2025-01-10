@@ -42,80 +42,33 @@ interface LobbyCanvasProps {
 
 const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
   const router = useRouter();
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const localClientId = localStorage.getItem("client_id") ?? "";
-
-  // 세션
-  const { data: session, status } = useSession();
-
-  // (2) 모달 열림 여부 state
   const [signInModalOpen, setSignInModalOpen] = useState(false);
 
-  // (2) 소켓 훅
-  const userNickname = session?.user?.name || "Guest";
-  const { emitMovement } = useLobbySocketEvents({
-    userId: localClientId,
-    userNickname,
-  });
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const { data: session, status } = useSession();
 
   // (3) 유저 스토어
   const updateUserPosition = useUsersStore((s) => s.updateUserPosition);
 
-  // ------------------
-  // **신규**: 연결 완료 후, 내 사용자 정보 요청 (CS_USER_POSTION_INFO)
-  // ------------------
-  // - 소켓이 connect된 상태인지 확인 → 그때 emit("CS_USER_POSTION_INFO", {})
-  // const mainSocket = useMainSocketStore((s) => s.socket);
-  // const isMainConnected = useMainSocketStore((s) => s.isConnected);
-
-  // 수정된 코드 (임시)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const mainSocket: any = null;
-  const isMainConnected = null;
-
-  const { socket, isConnected, currentRoom, setCurrentRoom } = useSocketStore();
-
-  const ROOM_TYPE = "floor";
-  const ROOM_ID = "floor7";
+  // 소켓 연동
+  const { socket, isConnected } = useSocketStore();
+  // 클라이언트 아이디
   const { clientId } = useClientIdStore();
+  // 이동 소켓
+  const { emitMovement } = useLobbySocketEvents({
+    userId: clientId ?? "",
+    userNickname: session?.user?.name ?? "Guest",
+  });
 
   useEffect(() => {
-    if (!clientId || !socket || !isConnected) return;
-
-    // 이전 방에서 나가기
-    if (currentRoom) {
-      socket.emit("leave_room", { roomId: currentRoom });
-    }
-
-    // console.log("socket");
-
-    // 새로운 방 입장
-    socket.emit("CS_JOIN_ROOM", {
-      client_id: clientId,
-      room_type: ROOM_TYPE,
-      room_id: ROOM_ID,
-    });
-
-    setCurrentRoom(ROOM_ID);
-
-    return () => {
-      if (socket && isConnected) {
-        socket.emit("leave_room", { ROOM_ID });
-        setCurrentRoom(null);
-      }
-    };
-  }, [socket, isConnected]);
-
-  useEffect(() => {
-    if (!localClientId) return;
+    if (!clientId) return;
     if (status === "loading") return;
 
     // 소켓이 연결되었을 때만 emit
-    if (socket && isMainConnected) {
-      // 아무 내용 없이 "CS_USER_POSTION_INFO" 보냄
-      socket.emit("CS_USER_POSITION_INFO", {});
-    }
-  }, [localClientId, status, socket, isMainConnected]);
+    if (!socket || !isConnected) return;
+    // 아무 내용 없이 "CS_USER_POSTION_INFO" 보냄
+    socket.emit("CS_USER_POSITION_INFO", {});
+  }, [clientId, status, socket, isConnected]);
 
   // ------------------ 화면 사이즈 (동적) ------------------
   const [canvasSize, setCanvasSize] = useState({
@@ -203,7 +156,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
   // ------------------ 스페이스바 상호작용 ------------------
   function handleSpacebarInteraction() {
     const store = useUsersStore.getState();
-    const me = store.users.find((u) => u.id === localClientId);
+    const me = store.users.find((u) => u.id === clientId);
     if (!me) return;
 
     const [cl, cr, ct, cb] = [me.x, me.x + 32, me.y, me.y + 32];
@@ -306,16 +259,16 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
   const throttledPressedKeys = useThrottle(pressedKeys, 100);
   useEffect(() => {
     if (chatOpen || isAnyModalOpen) return;
-
+    if (!clientId) return;
     const store = useUsersStore.getState();
-    const me = store.users.find((u) => u.id === localClientId);
+    const me = store.users.find((u) => u.id === clientId);
     if (!me) return;
 
     let { x, y } = me;
     const newDir = getDirection(throttledPressedKeys);
 
     if (newDir === null) {
-      updateUserPosition(localClientId, x, y, me.direction, false);
+      updateUserPosition(clientId, x, y, me.direction, false);
       return;
     }
 
@@ -341,16 +294,16 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     }
 
     if (moved) {
-      updateUserPosition(localClientId, x, y, newDir, true);
+      updateUserPosition(clientId, x, y, newDir, true);
       emitMovement(x, y, newDir);
     } else {
-      updateUserPosition(localClientId, x, y, newDir, false);
+      updateUserPosition(clientId, x, y, newDir, false);
     }
   }, [
     throttledPressedKeys,
     chatOpen,
     isAnyModalOpen,
-    localClientId,
+    clientId,
     emitMovement,
     updateUserPosition,
   ]);
@@ -391,7 +344,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         const store = useUsersStore.getState();
-        const me = store.users.find((u) => u.id === localClientId);
+        const me = store.users.find((u) => u.id === clientId);
 
         // 카메라
         let cameraX = 0;
@@ -544,7 +497,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     return () => {
       cancelAnimationFrame(animationId);
     };
-  }, [backgroundImage, npcImages, spriteImages, canvasSize, localClientId]);
+  }, [backgroundImage, npcImages, spriteImages, canvasSize, clientId]);
 
   return (
     <>

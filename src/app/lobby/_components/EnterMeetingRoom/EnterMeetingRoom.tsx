@@ -22,6 +22,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CreateMeetingRoomPayload } from "@/model/MeetingRoom";
 import { useMeetingRoom } from "@/queries/meetingroom/useMeetingRoom";
 import { useCreateMeetingRoom } from "@/queries/meetingroom/useMeetingRoomCreate";
+import useClientIdStore from "@/store/useClientIdStore";
 
 import { RoomCard } from "./Room";
 
@@ -35,18 +36,19 @@ export const EnterMeetingRoom: React.FC<EnterMeetingRoomProps> = ({
   onOpenChange,
 }) => {
   const { data: session } = useSession();
+  const { clientId } = useClientIdStore();
 
   const [roomName, setRoomName] = useState("");
   // 데이터 요청
-  const { data, isLoading, isError, refetch } = useMeetingRoom();
+  const { data, isLoading, refetch } = useMeetingRoom();
   const { mutate: createNotice } = useCreateMeetingRoom();
 
   const router = useRouter();
 
   const handleSubmit = (e: React.FormEvent) => {
+    if (!clientId) return;
     e.preventDefault();
 
-    const clientId = localStorage.getItem("client_id") ?? "";
     const roomId = uuid();
     const payload: CreateMeetingRoomPayload = {
       room_id: roomId,

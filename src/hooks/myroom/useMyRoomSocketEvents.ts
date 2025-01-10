@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect } from "react";
 
-import useMainSocketStore from "@/store/useMainSocketStore";
+import useSocketStore from "@/store/useSocketStore";
 import useUsersStore from "@/store/useUsersStore";
 
 type MyRoomSocketEventsProps = {
@@ -33,15 +33,15 @@ export default function useMyRoomSocketEvents({
   roomId,
   userId,
 }: MyRoomSocketEventsProps) {
-  const mainSocket = useMainSocketStore((state) => state.socket);
   const { users, updateUserPosition, addUser } = useUsersStore();
+  const { socket, isConnected } = useSocketStore();
 
   // -----------------------------
   // (1) 내 캐릭터 이동 emit
   // -----------------------------
   const emitMovement = useCallback(
     (x: number, y: number, direction: number) => {
-      if (!mainSocket) return;
+      if (!socket || !isConnected) return;
       const data = {
         user_id: userId,
         room_id: roomId,
@@ -49,16 +49,16 @@ export default function useMyRoomSocketEvents({
         position_y: y,
         direction,
       };
-      mainSocket.emit("CS_MYROOM_MOVEMENT_INFO", data);
+      socket.emit("CS_MYROOM_MOVEMENT_INFO", data);
     },
-    [mainSocket, roomId, userId],
+    [socket, roomId, userId],
   );
 
   // -----------------------------
   // (2) 다른 사용자 이동 수신 (SC_MYROOM_MOVEMENT_INFO)
   // -----------------------------
   useEffect(() => {
-    if (!mainSocket) return;
+    if (!socket || !isConnected) return;
 
     const onMovement = (data: MovementInfo) => {
       // data = { user_id, room_id, position_x, position_y, direction }
@@ -95,17 +95,17 @@ export default function useMyRoomSocketEvents({
       }, 200);
     };
 
-    mainSocket.on("SC_MYROOM_MOVEMENT_INFO", onMovement);
+    socket.on("SC_MYROOM_MOVEMENT_INFO", onMovement);
     return () => {
-      mainSocket.off("SC_MYROOM_MOVEMENT_INFO", onMovement);
+      socket.off("SC_MYROOM_MOVEMENT_INFO", onMovement);
     };
-  }, [mainSocket, users, updateUserPosition]);
+  }, [socket, users, updateUserPosition]);
 
   // -----------------------------
   // (3) 새 유저 입장 or 기타 이벤트도 가능
   // -----------------------------
   useEffect(() => {
-    if (!mainSocket) return;
+    if (!socket || !isConnected) return;
 
     const onEnterMyRoom = (newUserData: EnterMyRoomData) => {
       // 예) { user_id, nickname, x, y, ... }
@@ -116,12 +116,12 @@ export default function useMyRoomSocketEvents({
         newUserData.y,
       );
     };
-    mainSocket.on("SC_ENTER_MYROOM", onEnterMyRoom);
+    socket.on("SC_ENTER_MYROOM", onEnterMyRoom);
 
     return () => {
-      mainSocket.off("SC_ENTER_MYROOM", onEnterMyRoom);
+      socket.off("SC_ENTER_MYROOM", onEnterMyRoom);
     };
-  }, [mainSocket, addUser]);
+  }, [socket, addUser]);
 
   return { emitMovement };
 }
