@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { ChatWidget } from "@/components/chat/ChatWidget";
+import useClientIdStore from "@/store/useClientIdStore";
+import useSocketStore from "@/store/useSocketStore";
 
 import LobbyCanvas from "./_components/Canvas/LobbyCanvas";
 import FriendInformation from "./_components/Widget/FriendInformation";
@@ -12,12 +14,42 @@ const ROOM_ID = "floor7";
 
 export default function Page() {
   const [chatOpen, setChatOpen] = useState(false);
-  // useSignInPost();
-  //useMainSocketConnect({ roomType: ROOM_TYPE, roomId: ROOM_ID });
+  const { clientId } = useClientIdStore();
+  const { socket, isConnected, currentRoom, setCurrentRoom } = useSocketStore();
+
+  useEffect(() => {
+    if (!clientId || !socket || !isConnected) return;
+
+    // 이전 방에서 나가기
+    if (currentRoom) {
+      socket.emit("CS_LEAVE_ROOM", {
+        client_id: clientId,
+        roomId: currentRoom,
+      });
+    }
+
+    // 새로운 방 입장
+    socket.emit("CS_JOIN_ROOM", {
+      client_id: clientId,
+      room_type: ROOM_TYPE,
+      room_id: ROOM_ID,
+    });
+
+    setCurrentRoom(ROOM_ID);
+
+    return () => {
+      if (socket && isConnected) {
+        socket.emit("CS_LEAVE_ROOM", {
+          client_id: clientId,
+          roomId: currentRoom,
+        });
+        setCurrentRoom(null);
+      }
+    };
+  }, [socket, isConnected]);
 
   return (
     <>
-      {/* chatOpen 넘기기 */}
       <LobbyCanvas chatOpen={chatOpen} />
       <ChatWidget isOpen={chatOpen} setIsOpen={setChatOpen} position="right" />
       <FriendInformation />

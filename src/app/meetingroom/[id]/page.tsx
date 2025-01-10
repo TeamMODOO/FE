@@ -13,6 +13,8 @@ import { Socket } from "socket.io-client";
 import { ChatWidget } from "@/components/chat/ChatWidget";
 import useAudioSocketConnect from "@/hooks/socket/useAudioSocketConnect";
 import useAudioSocketStore from "@/store/useAudioSocketStore";
+import useClientIdStore from "@/store/useClientIdStore";
+import useSocketStore from "@/store/useSocketStore";
 
 import CanvasSection from "./_components/canvas/CanvasSection";
 import { Header } from "./_components/Header";
@@ -31,18 +33,24 @@ function Page() {
   const router = useRouter();
   const params = useParams();
   const roomId = (params.id as string) ?? "99999";
-  //useMainSocketConnect({ roomType: ROOM_TYPE, roomId: roomId });
+
   useAudioSocketConnect({ roomId: roomId });
   useMeetingRoomAttend({ roomId: roomId });
+
   const audioSocket: Socket = useAudioSocketStore(
     (state) => state.socket,
   ) as Socket;
   const isAudioConnected = useAudioSocketStore((state) => state.isConnected);
+
+  const { clientId } = useClientIdStore();
+  const { socket, isConnected, currentRoom, setCurrentRoom } = useSocketStore();
+
   const { data: session } = useSession();
 
   const [device, setDevice] = useState<mediasoupClient.Device | null>(null);
   const [localStream, setLocalStream] = useState<MediaStream | null>(null);
   const [remoteStreams, setRemoteStreams] = useState<RemoteStream[]>([]);
+
   const [sendTransport, setSendTransport] =
     useState<mediasoupClient.types.Transport | null>(null);
   const [recvTransport, setRecvTransport] =
@@ -51,10 +59,12 @@ function Page() {
     useState<mediasoupClient.types.Producer | null>(null);
   const [audioProducer, setAudioProducer] =
     useState<mediasoupClient.types.Producer | null>(null);
+
   const [peers, setPeers] = useState<PeersType[]>([]);
   const [peerStates, setPeerStates] = useState<
     Record<string, { audio: boolean; video: boolean }>
   >({});
+
   const [joined, setJoined] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
 
@@ -257,6 +267,37 @@ function Page() {
       joinRoom();
     }
   }, [audioSocket, isAudioConnected]);
+
+  useEffect(() => {
+    if (!clientId || !socket || !isConnected) return;
+
+    // 이전 방에서 나가기
+    if (currentRoom) {
+      socket.emit("CS_LEAVE_ROOM", {
+        client_id: clientId,
+        roomId: currentRoom,
+      });
+    }
+
+    // 새로운 방 입장
+    socket.emit("CS_JOIN_ROOM", {
+      client_id: clientId,
+      room_type: ROOM_TYPE,
+      room_id: roomId,
+    });
+
+    setCurrentRoom(roomId);
+
+    return () => {
+      if (socket && isConnected) {
+        socket.emit("CS_LEAVE_ROOM", {
+          client_id: clientId,
+          roomId: currentRoom,
+        });
+        setCurrentRoom(null);
+      }
+    };
+  }, [socket, isConnected]);
 
   return (
     <div className="flex h-screen flex-col">
