@@ -14,8 +14,10 @@ import {
   LOBBY_PORTALS,
   QNA_LIST,
 } from "@/app/lobby/_constant";
+import RankingModal from "@/app/questmap/_components/RankingModal/RankingModal";
 // AlertModal 불러오기
 import AlertModal from "@/components/alertModal/AlertModal";
+import MiniGameModal from "@/components/modal/MiniGame/MiniGameModal";
 import NeedSignInModal from "@/components/modal/NeedSignIn/NeedSignInModal";
 import { useLobbyRenderer } from "@/hooks/lobby/useLobbyRenderer";
 import useLobbySocketEvents from "@/hooks/lobby/useLobbySocketEvents";
@@ -47,6 +49,8 @@ interface LobbyCanvasProps {
 const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
   const router = useRouter();
   const [signInModalOpen, setSignInModalOpen] = useState(false);
+  const [rankingModalOpen, setRankingModalOpen] = useState(false);
+  const [minigameModalOpen, setMinigameModalOpen] = useState(false);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const { data: session, status } = useSession();
@@ -135,6 +139,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
   // ------------------ 모달 상태들 ------------------
   const [npc1ModalOpen, setNpc1ModalOpen] = useState(false);
   const [npc2ModalOpen, setNpc2ModalOpen] = useState(false);
+  const [npc3ModalOpen, setNpc3ModalOpen] = useState(false);
   const [noticeModalOpen, setNoticeModalOpen] = useState(false);
   const [meetingModalOpen, setMeetingModalOpen] = useState(false);
 
@@ -163,8 +168,14 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
 
   // 어떤 모달이라도 열려있는지
   const isAnyModalOpen =
-    npc1ModalOpen || npc2ModalOpen || noticeModalOpen || meetingModalOpen;
-
+    npc1ModalOpen ||
+    npc2ModalOpen ||
+    npc2ModalOpen ||
+    npc3ModalOpen ||
+    noticeModalOpen ||
+    meetingModalOpen ||
+    rankingModalOpen ||
+    minigameModalOpen;
   // ------------------ AlertModal 관련 상태 추가 ------------------
   const [alertModalOpen, setAlertModalOpen] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
@@ -222,6 +233,9 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
         if (i === 0) setNpc1ModalOpen(true);
         if (i === 1) setNpc2ModalOpen(true);
         if (i === 2) setNoticeModalOpen(true);
+        if (i == 3) setNpc3ModalOpen(true);
+        if (i == 4) setRankingModalOpen(true);
+        if (i == 5) setMinigameModalOpen(true);
         return;
       }
     }
@@ -438,12 +452,31 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
         />
       )}
 
+      {/* NPC3 모달 */}
+      <NpcModal
+        isOpen={npc3ModalOpen}
+        onClose={() => setNpc3ModalOpen(false)}
+        imgSrc="/npc_event/npc3.png"
+        title="정글의 원장"
+      >
+        <div>어떻게, 좀 잘 되어가나요?</div>
+      </NpcModal>
+
       {/* 회의실 모달 */}
       {meetingModalOpen && (
         <EnterMeetingRoom
           open={meetingModalOpen}
           onOpenChange={setMeetingModalOpen}
         />
+      )}
+
+      {/* (백준) 랭킹 출력 모달 */}
+      {rankingModalOpen && (
+        <RankingModal onClose={() => setRankingModalOpen(false)} />
+      )}
+
+      {minigameModalOpen && (
+        <MiniGameModal onClose={() => setMinigameModalOpen(false)} />
       )}
 
       {/* AlertModal (대체된 alert) */}
