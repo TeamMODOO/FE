@@ -8,8 +8,6 @@ import { useRouter } from "next/navigation";
 
 import { useSession } from "next-auth/react";
 
-import { v4 as uuid } from "uuid";
-
 import {
   LOBBY_COLLISION_ZONES,
   LOBBY_MAP_CONSTANTS,
@@ -20,15 +18,12 @@ import {
 import NeedSignInModal from "@/components/modal/NeedSignIn/NeedSignInModal";
 import { useLobbyRenderer } from "@/hooks/lobby/useLobbyRenderer";
 import useLobbySocketEvents from "@/hooks/lobby/useLobbySocketEvents";
-import useLoadSprites, {
-  FRAME_HEIGHT,
-  FRAME_WIDTH,
-  LAYER_ORDER,
-} from "@/hooks/performance/useLoadSprites";
+import useLoadSprites from "@/hooks/performance/useLoadSprites";
 import useThrottle from "@/hooks/performance/useThrottle";
 import { NoticeItem } from "@/model/NoticeBoard";
 import { Direction } from "@/model/User";
-import useMainSocketStore from "@/store/useMainSocketStore";
+import useClientIdStore from "@/store/useClientIdStore";
+import useSocketStore from "@/store/useSocketStore";
 import useUsersStore from "@/store/useUsersStore";
 
 import DailyProblemContent from "../DailyProblem/DailyProblemContent";
@@ -50,59 +45,40 @@ interface LobbyCanvasProps {
  */
 const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
   const router = useRouter();
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-
-  // 세션
-  const { data: session, status } = useSession();
-
-  // 로그인 모달
   const [signInModalOpen, setSignInModalOpen] = useState(false);
 
-  // client_id
-  const [localClientId, setLocalClientId] = useState("");
-  useEffect(() => {
-    let stored = localStorage.getItem("client_id");
-
-    if (!stored) {
-      if (session?.user?.id) {
-        stored = `Y${session.user.id}`;
-      } else {
-        stored = `N${uuid()}`;
-      }
-      localStorage.setItem("client_id", stored);
-    }
-    setLocalClientId(stored || "");
-  }, [session]);
-
-  // 유저 닉네임
-  const userNickname = session?.user?.name || "Guest";
-
-  // 소켓 훅
-  const { emitMovement } = useLobbySocketEvents({
-    userId: localClientId,
-    userNickname,
-  });
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const { data: session, status } = useSession();
 
   // 유저 스토어
   const updateUserPosition = useUsersStore((s) => s.updateUserPosition);
 
-  // 소켓 연결 완료 후, 사용자 위치 정보 요청
-  const mainSocket = useMainSocketStore((s) => s.socket);
-  const isConnected = useMainSocketStore((s) => s.isConnected);
+  // 소켓 연동
+  const { socket, isConnected } = useSocketStore();
+  // 클라이언트 아이디
+  const { clientId } = useClientIdStore();
+  // 이동 소켓
+  const { emitMovement } = useLobbySocketEvents({
+    userId: clientId ?? "",
+    userNickname: session?.user?.name ?? "Guest",
+  });
 
   useEffect(() => {
-    if (!localClientId) return;
+    if (!clientId) return;
     if (status === "loading") return;
-    if (mainSocket && isConnected) {
-      mainSocket.emit("CS_USER_POSITION_INFO", {});
-    }
-  }, [localClientId, status, mainSocket, isConnected]);
+
+    // 소켓이 연결되었을 때만 emit
+    if (!socket || !isConnected) return;
+    // 아무 내용 없이 "CS_USER_POSTION_INFO" 보냄
+    socket.emit("CS_USER_POSITION_INFO", {});
+  }, [clientId, status, socket, isConnected]);
 
   // 화면 사이즈
   const [canvasSize, setCanvasSize] = useState({
     w: LOBBY_MAP_CONSTANTS.CANVAS_WIDTH,
     h: LOBBY_MAP_CONSTANTS.CANVAS_HEIGHT,
   });
+
   useEffect(() => {
     function handleResize() {
       setCanvasSize({ w: window.innerWidth, h: window.innerHeight });
@@ -117,7 +93,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     useState<HTMLImageElement | null>(null);
   useEffect(() => {
     const bg = new Image();
-    bg.src = "/background/lobby.webp";
+    bg.src = "/background/lobby_image.webp";
     bg.onload = () => setBackgroundImage(bg);
   }, []);
 
@@ -135,6 +111,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
   const [npcImages, setNpcImages] = useState<Record<string, HTMLImageElement>>(
     {},
   );
+
   useEffect(() => {
     const temp: Record<string, HTMLImageElement> = {};
     let loadedCount = 0;
@@ -191,7 +168,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
   // ------------------ 스페이스바 상호작용 ------------------
   function handleSpacebarInteraction() {
     const store = useUsersStore.getState();
-    const me = store.users.find((u) => u.id === localClientId);
+    const me = store.users.find((u) => u.id === clientId);
     if (!me) return;
 
     const [cl, cr, ct, cb] = [me.x, me.x + 32, me.y, me.y + 32];
@@ -304,16 +281,16 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
   const throttledPressedKeys = useThrottle(pressedKeys, 100);
   useEffect(() => {
     if (chatOpen || isAnyModalOpen) return;
-
+    if (!clientId) return;
     const store = useUsersStore.getState();
-    const me = store.users.find((u) => u.id === localClientId);
+    const me = store.users.find((u) => u.id === clientId);
     if (!me) return;
 
     let { x, y } = me;
     const newDir = getDirection(throttledPressedKeys);
 
     if (newDir === null) {
-      updateUserPosition(localClientId, x, y, me.direction, false);
+      updateUserPosition(clientId, x, y, me.direction, false);
       return;
     }
 
@@ -361,17 +338,17 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     }
 
     if (moved) {
-      updateUserPosition(localClientId, x, y, newDir, true);
+      updateUserPosition(clientId, x, y, newDir, true);
       emitMovement(x, y, newDir);
     } else {
       // 못 움직여도 방향은 업데이트
-      updateUserPosition(localClientId, x, y, newDir, false);
+      updateUserPosition(clientId, x, y, newDir, false);
     }
   }, [
     throttledPressedKeys,
     chatOpen,
     isAnyModalOpen,
-    localClientId,
+    clientId,
     emitMovement,
     updateUserPosition,
   ]);
@@ -384,7 +361,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     npcImages,
     portalImage, // (추가됨) 여기에 넘김!
     spriteImages,
-    localClientId,
+    localClientId: clientId!,
     portals: LOBBY_PORTALS,
     npcs: LOBBY_NPCS,
   });
@@ -415,7 +392,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
       <NpcModal
         isOpen={npc1ModalOpen}
         onClose={() => setNpc1ModalOpen(false)}
-        imgSrc="/npc_event/.png"
+        imgSrc="/npc_event/npc1.png"
         title="정글의 수석 코치"
       >
         <DailyProblemContent />

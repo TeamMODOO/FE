@@ -332,7 +332,7 @@ export default function QuestSection() {
                       <Button
                         onClick={handleCompleteQuest}
                         disabled={loading}
-                        className="text-xl min-h-11"
+                        className="min-h-11 text-xl"
                       >
                         일일 챌린지 완료하기
                       </Button>

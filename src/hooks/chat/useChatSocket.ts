@@ -8,12 +8,13 @@ import {
 } from "react";
 
 import { ChattingResponse, ChattingType } from "@/model/chatting";
-import useMainSocketStore from "@/store/useMainSocketStore";
+import useSocketStore from "@/store/useSocketStore";
 
 export const useChatSocket = (
   setNotification: Dispatch<SetStateAction<number>>,
 ) => {
-  const mainSocket = useMainSocketStore((state) => state.socket);
+  const { socket, isConnected, currentRoom, setCurrentRoom } = useSocketStore();
+
   const [messageList, setMessageList] = useState<ChattingType[]>([]);
   const [messageValue, setMessageValue] = useState<string>("");
 
@@ -28,21 +29,21 @@ export const useChatSocket = (
   }, []);
 
   const handleSendMessage = useCallback(() => {
-    if (!mainSocket || !messageValue.trim()) return;
+    if (!socket || !isConnected || !messageValue.trim()) return;
 
     const messageInfo = {
       message: messageValue,
     };
 
-    mainSocket.emit("CS_CHAT", messageInfo);
+    socket.emit("CS_CHAT", messageInfo);
     setMessageValue("");
-  }, [mainSocket, messageValue]);
+  }, [socket, messageValue]);
 
   useEffect(() => {
-    if (!mainSocket) return;
+    if (!socket || !isConnected) return;
 
-    mainSocket.on("SC_CHAT", addMessage);
-  }, [mainSocket, addMessage]);
+    socket.on("SC_CHAT", addMessage);
+  }, [socket, addMessage]);
 
   return {
     messageList,

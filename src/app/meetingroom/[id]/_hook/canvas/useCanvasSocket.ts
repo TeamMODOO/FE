@@ -11,7 +11,8 @@ interface CanvasState {
 
 export const useCanvasSocket = (
   canvas: fabric.Canvas | null,
-  mainSocket: Socket | null,
+  socket: Socket | null,
+  isConnected: boolean,
 ) => {
   // 마지막 캔버스 상태를 저장하는 ref
   const lastCanvasStateRef = useRef<CanvasState>({ objects: [], timestamp: 0 });
@@ -42,7 +43,7 @@ export const useCanvasSocket = (
     return baseState;
   }, []);
 
-  // 상태 변경 감지 - 최적화된 비교 로직
+  // 상태 변경 감지
   const hasSignificantChanges = useCallback(
     (currentObjects: fabric.Object[]) => {
       if (currentObjects.length !== lastCanvasStateRef.current.objects.length) {
@@ -63,10 +64,10 @@ export const useCanvasSocket = (
     [extractObjectState],
   );
 
-  // 상태 전송 함수 - 스로틀링 적용
+  // 상태 전송 함수
   const sendCanvasState = useCallback(
     (objects: fabric.Object[]) => {
-      if (!mainSocket || isUpdatingRef.current) return;
+      if (!socket || !isConnected || isUpdatingRef.current) return;
 
       const currentTime = Date.now();
 
@@ -83,14 +84,14 @@ export const useCanvasSocket = (
       );
       const compressedData = Pako.gzip(JSON.stringify(serializedObjects));
 
-      mainSocket.emit("CS_PICTURE_INFO", {
+      socket.emit("CS_PICTURE_INFO", {
         picture: compressedData,
         timestamp: currentTime,
       });
 
       lastUpdateTimeRef.current = currentTime;
     },
-    [mainSocket],
+    [socket],
   );
 
   // 캔버스 수정 이벤트 처리
@@ -175,12 +176,12 @@ export const useCanvasSocket = (
 
   // 소켓 이벤트 리스너
   useEffect(() => {
-    if (!mainSocket) return;
+    if (!socket || !isConnected) return;
 
-    mainSocket.on("SC_PICTURE_INFO", handleIncomingData);
+    socket.on("SC_PICTURE_INFO", handleIncomingData);
 
     return () => {
-      mainSocket.off("SC_PICTURE_INFO", handleIncomingData);
+      socket.off("SC_PICTURE_INFO", handleIncomingData);
     };
-  }, [mainSocket, handleIncomingData]);
+  }, [socket, handleIncomingData]);
 };

@@ -2,14 +2,17 @@ import { useEffect } from "react";
 
 import axios from "axios";
 
+import useClientIdStore from "@/store/useClientIdStore";
+
 interface UseMeetingRoomParams {
   roomId: string;
 }
 
 export const useMeetingRoomAttend = ({ roomId }: UseMeetingRoomParams) => {
+  const { clientId } = useClientIdStore();
+
   useEffect(() => {
     const joinMeetingRoom = async () => {
-      const clientId = localStorage.getItem("client_id") ?? "";
       const payload = {
         room_id: roomId,
         client_id: clientId,
@@ -22,7 +25,6 @@ export const useMeetingRoomAttend = ({ roomId }: UseMeetingRoomParams) => {
     };
 
     const leaveMeetingRoom = async () => {
-      const clientId = localStorage.getItem("client_id") ?? "";
       const payload = {
         room_id: roomId,
         client_id: clientId,
@@ -34,12 +36,10 @@ export const useMeetingRoomAttend = ({ roomId }: UseMeetingRoomParams) => {
       );
     };
 
-    // Join meeting room when component mounts
     joinMeetingRoom();
 
-    // Leave meeting room when component unmounts
     return () => {
       leaveMeetingRoom();
     };
-  }, [roomId]); // Add roomId as dependency
+  }, [roomId]);
 };
