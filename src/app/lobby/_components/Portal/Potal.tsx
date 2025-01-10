@@ -18,7 +18,7 @@ function Portal({ x, y, width, height, name }: PortalProps) {
       }}
     >
       <NextImage
-        src="/furniture/portal.gif"
+        src="/furniture/portal.png"
         alt="Portal"
         width={width}
         height={height}

@@ -1,6 +1,8 @@
 "use client";
 
-import React from "react";
+import * as React from "react";
+
+import { RotateCcw, Search } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -9,16 +11,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-
-import Style from "./TechStackModal.style";
+import { Input } from "@/components/ui/input";
 
 export interface TechStackModalProps {
   open: boolean;
   onClose: (v: boolean) => void;
   techStackList: string[];
-  selectedTechList: string[]; // ← 다중 선택 목록
-  setSelectedTechList: (list: string[]) => void; // ← 다중 선택 세터
-  onSave: () => void; // 최종 저장 (MyRoomCanvas에서 호출)
+  selectedTechList: string[];
+  setSelectedTechList: (list: string[]) => void;
+  onSave: () => void;
 }
 
 const TechStackModal: React.FC<TechStackModalProps> = ({
@@ -29,50 +30,85 @@ const TechStackModal: React.FC<TechStackModalProps> = ({
   setSelectedTechList,
   onSave,
 }) => {
-  // 체크박스 onChange
+  const [searchTerm, setSearchTerm] = React.useState("");
+
+  const filteredTechStack = techStackList.filter((stack) =>
+    stack.toLowerCase().includes(searchTerm.toLowerCase()),
+  );
+
   const handleCheckboxChange = (stack: string) => {
     if (selectedTechList.includes(stack)) {
-      // 이미 선택되어 있으면 제거
       const newList = selectedTechList.filter((item) => item !== stack);
       setSelectedTechList(newList);
     } else {
-      // 새로 추가
-      setSelectedTechList([...selectedTechList, stack]);
+      if (selectedTechList.length < 9) {
+        setSelectedTechList([...selectedTechList, stack]);
+      }
     }
+  };
+
+  const resetSelection = () => {
+    setSelectedTechList([]);
+    setSearchTerm("");
   };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className={Style.dialogContent}>
+      <DialogContent className="sm:max-w-[600px] ">
         <DialogHeader>
-          <DialogTitle>기술 스택 선택</DialogTitle>
+          <DialogTitle className="text-xl font-semibold">
+            기술 스택 선택
+          </DialogTitle>
         </DialogHeader>
 
-        <div className={Style.container}>
-          <div className="mb-2 mt-4 text-sm text-muted-foreground">
-            여러 개를 선택할 수 있습니다. (최대 9개)
+        <div className="space-y-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-3 size-4 text-muted-foreground" />
+            <Input
+              placeholder="기술 스택 검색"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9"
+            />
           </div>
 
-          <div className={Style.stackList}>
-            {techStackList.map((stack) => {
-              const isChecked = selectedTechList.includes(stack);
-              return (
-                <label
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-muted-foreground">
+              최대 9개를 선택할 수 있습니다.
+              {selectedTechList.length > 0 &&
+                ` • ${selectedTechList.length}개 선택됨`}
+            </div>
+            {selectedTechList.length > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 text-muted-foreground"
+                onClick={resetSelection}
+              >
+                <RotateCcw className="mr-2 size-4" />
+                초기화
+              </Button>
+            )}
+          </div>
+
+          <div className="max-h-[300px] overflow-y-auto">
+            <div className="flex flex-wrap gap-2">
+              {filteredTechStack.map((stack) => (
+                <Button
                   key={stack}
-                  className="flex items-center gap-2 rounded px-2 py-1 hover:bg-secondary"
+                  variant={
+                    selectedTechList.includes(stack) ? "default" : "outline"
+                  }
+                  className="rounded-full"
+                  onClick={() => handleCheckboxChange(stack)}
                 >
-                  <input
-                    type="checkbox"
-                    checked={isChecked}
-                    onChange={() => handleCheckboxChange(stack)}
-                  />
-                  <span>{stack}</span>
-                </label>
-              );
-            })}
+                  {stack}
+                </Button>
+              ))}
+            </div>
           </div>
 
-          <div className={Style.bottomSection}>
+          <div className="flex justify-end border-t pt-4">
             <Button onClick={onSave}>저장하기</Button>
           </div>
         </div>

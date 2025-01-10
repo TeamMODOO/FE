@@ -7,6 +7,7 @@ const Style = {
     h-[830px]     
     bg-overlay      
     bg-blend-overlay
+    bg-black
     /* 필요하다면 overflow-hidden 등 추가 가능 */
   `,
 };

@@ -17,28 +17,28 @@ export const LOBBY_MAP_CONSTANTS = {
 export const LOBBY_PORTALS: PortalInfo[] = [
   {
     x: 950,
-    y: 70,
+    y: 90,
     width: 100,
-    height: 100,
+    height: 80,
     route: "/myroom",
     name: "마이룸",
-    image: "/furniture/portal.gif",
+    image: "/furniture/portal.png",
   },
   {
-    x: 830,
-    y: 420,
+    x: 840,
+    y: 440,
     width: 100,
-    height: 100,
+    height: 80,
     route: "/meetingroom",
     name: "회의실",
-    image: "/furniture/portal.gif",
+    image: "/furniture/portal.png",
   },
 ];
 
 export const LOBBY_NPCS: NpcInfo[] = [
   {
-    x: 420,
-    y: 150,
+    x: 300,
+    y: 450,
     width: 20,
     height: 35,
     image: "/character/npc1.png",
@@ -62,6 +62,33 @@ export const LOBBY_NPCS: NpcInfo[] = [
     image: "/furniture/board.png",
     modalTitle: "게시판 NPC",
     name: "게시판",
+  },
+  {
+    x: 135,
+    y: 350,
+    width: 120,
+    height: 120,
+    image: "/character/npc6.png",
+    modalTitle: "---",
+    name: "오늘의 랭킹",
+  },
+  {
+    x: 90,
+    y: 50,
+    width: 150,
+    height: 100,
+    image: "/character/npc5.png",
+    modalTitle: "---",
+    name: "미니 게임기",
+  },
+  {
+    x: 420,
+    y: 170,
+    width: 40,
+    height: 40,
+    image: "/character/npc3.png",
+    modalTitle: "---",
+    name: "정글의 원장",
   },
 ];
 
