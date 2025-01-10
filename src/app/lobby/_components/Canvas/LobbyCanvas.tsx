@@ -1,3 +1,4 @@
+// components/LobbyCanvas.tsx
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
@@ -9,7 +10,15 @@ import { useSession } from "next-auth/react";
 
 import { v4 as uuid } from "uuid";
 
+import {
+  LOBBY_COLLISION_ZONES,
+  LOBBY_MAP_CONSTANTS,
+  LOBBY_NPCS,
+  LOBBY_PORTALS,
+  QNA_LIST,
+} from "@/app/lobby/_constant";
 import NeedSignInModal from "@/components/modal/NeedSignIn/NeedSignInModal";
+import { useLobbyRenderer } from "@/hooks/lobby/useLobbyRenderer";
 import useLobbySocketEvents from "@/hooks/lobby/useLobbySocketEvents";
 import useLoadSprites, {
   FRAME_HEIGHT,
@@ -22,13 +31,6 @@ import { Direction } from "@/model/User";
 import useMainSocketStore from "@/store/useMainSocketStore";
 import useUsersStore from "@/store/useUsersStore";
 
-import {
-  LOBBY_COLLISION_ZONES,
-  LOBBY_MAP_CONSTANTS,
-  LOBBY_NPCS,
-  LOBBY_PORTALS,
-  QNA_LIST,
-} from "../../_constant";
 import DailyProblemContent from "../DailyProblem/DailyProblemContent";
 import { EnterMeetingRoom } from "../EnterMeetingRoom/EnterMeetingRoom";
 import NoticeBoardModal from "../NoticeBoardModal/NoticeBoardModal";
@@ -38,10 +40,14 @@ import PortalList from "../Portal/PortalList";
 import QnaContent from "../Qna/QnaContent";
 import Style from "./Canvas.style";
 
+/** 컴포넌트 Props */
 interface LobbyCanvasProps {
   chatOpen: boolean;
 }
 
+/**
+ * 메인 로비 Canvas + 모달들
+ */
 const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
   const router = useRouter();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -49,13 +55,14 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
   // 세션
   const { data: session, status } = useSession();
 
-  // (2) 모달 열림 여부 state
+  // 로그인 모달
   const [signInModalOpen, setSignInModalOpen] = useState(false);
 
-  // (1) localStorage에서 client_id 가져오기
+  // client_id
   const [localClientId, setLocalClientId] = useState("");
   useEffect(() => {
     let stored = localStorage.getItem("client_id");
+
     if (!stored) {
       if (session?.user?.id) {
         stored = `Y${session.user.id}`;
@@ -67,35 +74,31 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     setLocalClientId(stored || "");
   }, [session]);
 
-  // (2) 소켓 훅
+  // 유저 닉네임
   const userNickname = session?.user?.name || "Guest";
+
+  // 소켓 훅
   const { emitMovement } = useLobbySocketEvents({
     userId: localClientId,
     userNickname,
   });
 
-  // (3) 유저 스토어
+  // 유저 스토어
   const updateUserPosition = useUsersStore((s) => s.updateUserPosition);
 
-  // ------------------
-  // **신규**: 연결 완료 후, 내 사용자 정보 요청 (CS_USER_POSTION_INFO)
-  // ------------------
-  // - 소켓이 connect된 상태인지 확인 → 그때 emit("CS_USER_POSTION_INFO", {})
+  // 소켓 연결 완료 후, 사용자 위치 정보 요청
   const mainSocket = useMainSocketStore((s) => s.socket);
   const isConnected = useMainSocketStore((s) => s.isConnected);
 
   useEffect(() => {
     if (!localClientId) return;
     if (status === "loading") return;
-
-    // 소켓이 연결되었을 때만 emit
     if (mainSocket && isConnected) {
-      // 아무 내용 없이 "CS_USER_POSTION_INFO" 보냄
       mainSocket.emit("CS_USER_POSITION_INFO", {});
     }
   }, [localClientId, status, mainSocket, isConnected]);
 
-  // ------------------ 화면 사이즈 (동적) ------------------
+  // 화면 사이즈
   const [canvasSize, setCanvasSize] = useState({
     w: LOBBY_MAP_CONSTANTS.CANVAS_WIDTH,
     h: LOBBY_MAP_CONSTANTS.CANVAS_HEIGHT,
@@ -109,7 +112,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // ------------------ 배경 이미지 ------------------
+  // 배경 이미지
   const [backgroundImage, setBackgroundImage] =
     useState<HTMLImageElement | null>(null);
   useEffect(() => {
@@ -118,8 +121,15 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     bg.onload = () => setBackgroundImage(bg);
   }, []);
 
-  // 포탈 GIF
-  const portalGifRef = useRef<HTMLImageElement | null>(null);
+  // (추가됨) 포탈 이미지(= portal.png) 로딩
+  const [portalImage, setPortalImage] = useState<HTMLImageElement | null>(null);
+  useEffect(() => {
+    const img = new Image();
+    img.src = "/furniture/portal.png"; // public 폴더의 경로
+    img.onload = () => {
+      setPortalImage(img);
+    };
+  }, []);
 
   // NPC 이미지 로딩
   const [npcImages, setNpcImages] = useState<Record<string, HTMLImageElement>>(
@@ -145,7 +155,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
   // 캐릭터 스프라이트
   const spriteImages = useLoadSprites();
 
-  // ------------------ 모달 ------------------
+  // ------------------ 모달 상태들 ------------------
   const [npc1ModalOpen, setNpc1ModalOpen] = useState(false);
   const [npc2ModalOpen, setNpc2ModalOpen] = useState(false);
   const [noticeModalOpen, setNoticeModalOpen] = useState(false);
@@ -174,7 +184,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     setSelectedQnaIndex((prev) => (prev === index ? null : index));
   };
 
-  // ------------------ 모달 열림 여부 ------------------
+  // 어떤 모달이라도 열려있는지
   const isAnyModalOpen =
     npc1ModalOpen || npc2ModalOpen || noticeModalOpen || meetingModalOpen;
 
@@ -186,7 +196,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
 
     const [cl, cr, ct, cb] = [me.x, me.x + 32, me.y, me.y + 32];
 
-    // (1) 포탈
+    // 1) 포탈
     for (const p of LOBBY_PORTALS) {
       const [pl, pr, pt, pb] = [p.x, p.x + p.width, p.y, p.y + p.height];
       const overlap = cr > pl && cl < pr && cb > pt && ct < pb;
@@ -201,7 +211,6 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
             return;
           }
           if (!session?.user?.id) {
-            // alert("로그인 필요");
             setSignInModalOpen(true);
             return;
           }
@@ -211,7 +220,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
       }
     }
 
-    // (2) NPC
+    // 2) NPC
     for (let i = 0; i < LOBBY_NPCS.length; i++) {
       const npc = LOBBY_NPCS[i];
       const [nl, nr, nt, nb] = [
@@ -230,12 +239,10 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     }
   }
 
-  // ------------------ 키 입력 ------------------
+  // ------------------ 키 입력 처리 ------------------
   const [pressedKeys, setPressedKeys] = useState<Record<string, boolean>>({});
   useEffect(() => {
-    if (isAnyModalOpen) {
-      setPressedKeys({});
-    }
+    if (isAnyModalOpen) setPressedKeys({});
   }, [isAnyModalOpen]);
 
   useEffect(() => {
@@ -272,7 +279,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     };
   }, [chatOpen, isAnyModalOpen, router, session, status]);
 
-  // ------------------ Collision Detection Helper ------------------
+  // ------------------ Collision Detection ------------------
   function doRectsOverlap(
     rect1: { x: number; y: number; width: number; height: number },
     rect2: { x: number; y: number; width: number; height: number },
@@ -314,6 +321,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     let newX = x;
     let newY = y;
 
+    // 방향별 이동
     if (newDir === 1 && y > 0) {
       newY -= LOBBY_MAP_CONSTANTS.SPEED;
     } else if (
@@ -330,7 +338,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
       newX -= LOBBY_MAP_CONSTANTS.SPEED;
     }
 
-    // Define the new bounding box after movement
+    // 충돌 박스
     const newBoundingBox = {
       x: newX,
       y: newY,
@@ -338,7 +346,6 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
       height: LOBBY_MAP_CONSTANTS.IMG_HEIGHT,
     };
 
-    // Check collision with each collision zone
     let collision = false;
     for (const zone of LOBBY_COLLISION_ZONES) {
       if (doRectsOverlap(newBoundingBox, zone)) {
@@ -348,7 +355,6 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     }
 
     if (!collision) {
-      // No collision, apply movement
       x = newX;
       y = newY;
       moved = true;
@@ -358,7 +364,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
       updateUserPosition(localClientId, x, y, newDir, true);
       emitMovement(x, y, newDir);
     } else {
-      // If movement was blocked, still update direction without changing position
+      // 못 움직여도 방향은 업데이트
       updateUserPosition(localClientId, x, y, newDir, false);
     }
   }, [
@@ -370,210 +376,22 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     updateUserPosition,
   ]);
 
-  // ------------------ rAF 렌더링 ------------------
-  const zoomFactor = 2;
-  function clamp(value: number, min: number, max: number) {
-    return Math.max(min, Math.min(max, value));
-  }
-
-  useEffect(() => {
-    if (!canvasRef.current) return;
-    const canvas = canvasRef.current;
-    canvas.width = canvasSize.w;
-    canvas.height = canvasSize.h;
-
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    const fps = 30;
-    const frameDuration = 1000 / fps;
-    let lastTime = 0;
-    let animationId = 0;
-
-    // 캐릭터 애니 관리를 위한 객체
-    const userFrameMap: Record<
-      string,
-      { frame: number; lastFrameTime: number }
-    > = {};
-    const frameInterval = 200;
-    const maxMovingFrame = 3;
-
-    const renderLoop = (time: number) => {
-      const delta = time - lastTime;
-      if (delta >= frameDuration) {
-        lastTime = time - (delta % frameDuration);
-
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-        const store = useUsersStore.getState();
-        const me = store.users.find((u) => u.id === localClientId);
-
-        // 카메라
-        let cameraX = 0;
-        let cameraY = 0;
-        if (me) {
-          const centerX = me.x + LOBBY_MAP_CONSTANTS.IMG_WIDTH / 2;
-          const centerY = me.y + LOBBY_MAP_CONSTANTS.IMG_HEIGHT / 2;
-          const viewWidth = canvas.width / zoomFactor;
-          const viewHeight = canvas.height / zoomFactor;
-
-          const maxCamX = LOBBY_MAP_CONSTANTS.MAP_WIDTH - viewWidth;
-          const maxCamY = LOBBY_MAP_CONSTANTS.MAP_HEIGHT - viewHeight;
-
-          cameraX = centerX - viewWidth / 2;
-          cameraY = centerY - viewHeight / 2;
-
-          if (maxCamX > 0) cameraX = clamp(cameraX, 0, maxCamX);
-          else cameraX = 0;
-
-          if (maxCamY > 0) cameraY = clamp(cameraY, 0, maxCamY);
-          else cameraY = 0;
-        }
-
-        ctx.save();
-        ctx.scale(zoomFactor, zoomFactor);
-        ctx.translate(-cameraX, -cameraY);
-
-        // 배경
-        if (backgroundImage) {
-          ctx.drawImage(
-            backgroundImage,
-            0,
-            0,
-            LOBBY_MAP_CONSTANTS.MAP_WIDTH,
-            LOBBY_MAP_CONSTANTS.MAP_HEIGHT,
-          );
-        }
-
-        // 포탈
-        if (portalGifRef.current && portalGifRef.current.complete) {
-          LOBBY_PORTALS.forEach((p) => {
-            ctx.drawImage(portalGifRef.current!, p.x, p.y, p.width, p.height);
-            ctx.font = "bold 12px Arial";
-            ctx.fillStyle = "yellow";
-            ctx.textAlign = "center";
-            ctx.fillText(p.name, p.x + p.width / 2, p.y + p.height + 12);
-          });
-        } else {
-          // 대체 표시
-          LOBBY_PORTALS.forEach((p) => {
-            ctx.fillStyle = "rgba(0,255,255,0.3)";
-            ctx.fillRect(p.x, p.y, p.width, p.height);
-            ctx.font = "bold 12px Arial";
-            ctx.fillStyle = "yellow";
-            ctx.textAlign = "center";
-            ctx.fillText(p.name, p.x + p.width / 2, p.y + p.height + 12);
-          });
-        }
-
-        // NPC
-        LOBBY_NPCS.forEach((npc) => {
-          const npcImg = npcImages[npc.image];
-          if (npcImg && npcImg.complete) {
-            ctx.drawImage(npcImg, npc.x, npc.y, npc.width, npc.height);
-            ctx.font = "12px Arial";
-            ctx.fillStyle = "yellow";
-            ctx.textAlign = "center";
-            ctx.fillText(
-              npc.name,
-              npc.x + npc.width / 2,
-              npc.y + npc.height + 12,
-            );
-          } else {
-            ctx.fillStyle = "rgba(255,0,0,0.3)";
-            ctx.fillRect(npc.x, npc.y, npc.width, npc.height);
-          }
-        });
-
-        // ------------------ 충돌 영역 화면 표시 (디버깅) ------------------
-        // LOBBY_COLLISION_ZONES.forEach((zone) => {
-        //   ctx.fillStyle = "rgba(255, 0, 0, 0.3)"; // Semi-transparent red
-        //   ctx.fillRect(zone.x, zone.y, zone.width, zone.height);
-        //   ctx.strokeStyle = "red";
-        //   ctx.lineWidth = 2;
-        //   ctx.strokeRect(zone.x, zone.y, zone.width, zone.height);
-        // });
-        // ------------------------------------------------------------------------
-
-        // 캐릭터(유저) 스프라이트
-        const now = performance.now();
-        const spriteKeys = Object.keys(spriteImages);
-        const loadedSpriteCount = spriteKeys.length;
-
-        store.users.forEach((user) => {
-          if (!userFrameMap[user.id]) {
-            userFrameMap[user.id] = { frame: 0, lastFrameTime: now };
-          }
-          const uf = userFrameMap[user.id];
-
-          if (user.isMoving) {
-            if (now - uf.lastFrameTime > frameInterval) {
-              uf.frame++;
-              if (uf.frame > maxMovingFrame) uf.frame = 1;
-              uf.lastFrameTime = now;
-            }
-          } else {
-            uf.frame = 0;
-            uf.lastFrameTime = now;
-          }
-
-          const sx = uf.frame * FRAME_WIDTH;
-          const sy = (user.direction ?? 0) * FRAME_HEIGHT;
-
-          if (loadedSpriteCount === LAYER_ORDER.length) {
-            ctx.save();
-            LAYER_ORDER.forEach((layerName) => {
-              const layerImg = spriteImages[layerName];
-              if (!layerImg) return;
-              ctx.drawImage(
-                layerImg,
-                sx,
-                sy,
-                FRAME_WIDTH,
-                FRAME_HEIGHT,
-                user.x,
-                user.y,
-                FRAME_WIDTH,
-                FRAME_HEIGHT,
-              );
-            });
-            ctx.restore();
-          } else {
-            // 로딩 중이면 임시 박스
-            ctx.fillStyle = "rgba(0,0,255,0.3)";
-            ctx.fillRect(
-              user.x,
-              user.y,
-              LOBBY_MAP_CONSTANTS.IMG_WIDTH,
-              LOBBY_MAP_CONSTANTS.IMG_HEIGHT,
-            );
-          }
-
-          // 닉네임
-          ctx.font = "bold 12px Arial";
-          ctx.fillStyle = "white";
-          ctx.textAlign = "center";
-          ctx.fillText(
-            user.nickname,
-            user.x + LOBBY_MAP_CONSTANTS.IMG_WIDTH / 2,
-            user.y + LOBBY_MAP_CONSTANTS.IMG_HEIGHT + 12,
-          );
-        });
-
-        ctx.restore();
-      }
-      animationId = requestAnimationFrame(renderLoop);
-    };
-
-    animationId = requestAnimationFrame(renderLoop);
-    return () => {
-      cancelAnimationFrame(animationId);
-    };
-  }, [backgroundImage, npcImages, spriteImages, canvasSize, localClientId]);
+  // ------------------ "useLobbyRenderer" 훅으로 실제 rAF 렌더링 ------------------
+  useLobbyRenderer({
+    canvasRef,
+    canvasSize,
+    backgroundImage,
+    npcImages,
+    portalImage, // (추가됨) 여기에 넘김!
+    spriteImages,
+    localClientId,
+    portals: LOBBY_PORTALS,
+    npcs: LOBBY_NPCS,
+  });
 
   return (
     <>
-      {/* {로그인 필요한 동작 요청 시} */}
+      {/* 로그인 모달 */}
       {signInModalOpen && (
         <NeedSignInModal
           onClose={() => {
@@ -582,10 +400,10 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
         />
       )}
 
-      {/* 숨긴 포탈 GIF 로드 */}
+      {/* (기존) 포탈 GIF 미리 로드용 NextImage: 꼭 필요한 건 아니지만, 
+          아래처럼 숨겨서 함께 로딩하는 예시라면 유지해도 됨 */}
       <NextImage
-        ref={portalGifRef as React.RefObject<HTMLImageElement>}
-        src="/furniture/portal.gif"
+        src="/furniture/portal.png"
         alt="portal"
         width={1}
         height={1}
@@ -597,7 +415,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
       <NpcModal
         isOpen={npc1ModalOpen}
         onClose={() => setNpc1ModalOpen(false)}
-        imgSrc="/npc_event/npc1.png"
+        imgSrc="/npc_event/.png"
         title="정글의 수석 코치"
       >
         <DailyProblemContent />
@@ -641,6 +459,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
         />
       )}
 
+      {/* Canvas 영역 */}
       <div
         className={Style.canvasContainerClass}
         style={{
@@ -649,8 +468,11 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
           overflow: "hidden",
         }}
       >
+        {/* (포탈 리스트, NPC 리스트는 배치 UI 용도) */}
         <PortalList portals={[]} />
         <NpcList npcs={[]} />
+
+        {/* 실제 캔버스 */}
         <canvas ref={canvasRef} />
       </div>
     </>
