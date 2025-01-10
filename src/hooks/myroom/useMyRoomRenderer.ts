@@ -134,7 +134,7 @@ export function useMyRoomRenderer({
           ctx.drawImage(img, f.x, f.y, w, h);
 
           // 가구 이름
-          ctx.font = "bold 14px Arial";
+          ctx.font = "bold 20px Arial";
           ctx.fillStyle = "white";
           ctx.textAlign = "center";
           ctx.fillText(f.funiturename, f.x + w / 2, f.y + h + 15);
@@ -154,7 +154,7 @@ export function useMyRoomRenderer({
           }
 
           // 방명록 이름
-          ctx.font = "bold 14px Arial";
+          ctx.font = "bold 20px Arial";
           ctx.fillStyle = "white";
           ctx.textAlign = "center";
           ctx.fillText(b.funiturename, b.x + w / 2, b.y + h + 15);
@@ -174,7 +174,7 @@ export function useMyRoomRenderer({
           ctx.fillStyle = "rgba(255, 0, 0, 0.5)";
           ctx.fillRect(portal.x, portal.y, portal.width, portal.height);
         }
-        ctx.font = "bold 14px Arial";
+        ctx.font = "bold 20px Arial";
         ctx.fillStyle = "white";
         ctx.textAlign = "center";
         ctx.fillText(
@@ -231,13 +231,13 @@ export function useMyRoomRenderer({
           ctx.restore();
 
           // 캐릭터 닉네임
-          ctx.font = "bold 14px Arial";
+          ctx.font = "bold 20px Arial";
           ctx.fillStyle = "white";
           ctx.textAlign = "center";
           ctx.fillText(
             myUser.nickname,
             myUser.x + (FRAME_WIDTH * charScale) / 2,
-            myUser.y + FRAME_HEIGHT * charScale + 15,
+            myUser.y + FRAME_HEIGHT * charScale + 22,
           );
         }
 
