@@ -40,7 +40,9 @@ const ResumeModal: React.FC<ResumeModalProps> = ({
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className={Style.dialogContent}>
         <DialogHeader>
-          <DialogTitle>이력서(PDF) 업로드</DialogTitle>
+          <DialogTitle className={Style.modalTitle}>
+            이력서(PDF) 업로드
+          </DialogTitle>
         </DialogHeader>
 
         <div className={Style.formContainer}>
@@ -50,11 +52,17 @@ const ResumeModal: React.FC<ResumeModalProps> = ({
             type="file"
             accept=".pdf"
             onChange={handleFileChange}
-            className="cursor-pointer"
+            className={Style.fileInput}
           />
-          {resumeFile && <div>선택된 파일: {resumeFile.name}</div>}
+          {resumeFile && (
+            <div>
+              <p className={Style.chosenFile}>선택된 파일: {resumeFile.name}</p>
+            </div>
+          )}
 
-          <Button onClick={onSave}>저장하기</Button>
+          <Button onClick={onSave} className={Style.saveButton}>
+            저장하기
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

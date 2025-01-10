@@ -1,4 +1,3 @@
-// components/LobbyCanvas.tsx
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
@@ -15,6 +14,8 @@ import {
   LOBBY_PORTALS,
   QNA_LIST,
 } from "@/app/lobby/_constant";
+// AlertModal 불러오기
+import AlertModal from "@/components/alertModal/AlertModal";
 import NeedSignInModal from "@/components/modal/NeedSignIn/NeedSignInModal";
 import { useLobbyRenderer } from "@/hooks/lobby/useLobbyRenderer";
 import useLobbySocketEvents from "@/hooks/lobby/useLobbySocketEvents";
@@ -69,7 +70,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
 
     // 소켓이 연결되었을 때만 emit
     if (!socket || !isConnected) return;
-    // 아무 내용 없이 "CS_USER_POSTION_INFO" 보냄
+    // 아무 내용 없이 "CS_USER_POSITION_INFO" 보냄
     socket.emit("CS_USER_POSITION_INFO", {});
   }, [clientId, status, socket, isConnected]);
 
@@ -111,7 +112,6 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
   const [npcImages, setNpcImages] = useState<Record<string, HTMLImageElement>>(
     {},
   );
-
   useEffect(() => {
     const temp: Record<string, HTMLImageElement> = {};
     let loadedCount = 0;
@@ -165,6 +165,16 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
   const isAnyModalOpen =
     npc1ModalOpen || npc2ModalOpen || noticeModalOpen || meetingModalOpen;
 
+  // ------------------ AlertModal 관련 상태 추가 ------------------
+  const [alertModalOpen, setAlertModalOpen] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
+
+  // 알림 모달을 띄워주는 헬퍼
+  const openAlertModal = (message: string) => {
+    setAlertMessage(message);
+    setAlertModalOpen(true);
+  };
+
   // ------------------ 스페이스바 상호작용 ------------------
   function handleSpacebarInteraction() {
     const store = useUsersStore.getState();
@@ -184,7 +194,8 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
         }
         if (p.name === "마이룸") {
           if (status === "loading") {
-            alert("세션 로딩중");
+            // alert("세션 로딩중"); -> AlertModal로 교체
+            openAlertModal("세션 로딩중");
             return;
           }
           if (!session?.user?.id) {
@@ -359,7 +370,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     canvasSize,
     backgroundImage,
     npcImages,
-    portalImage, // (추가됨) 여기에 넘김!
+    portalImage, // (추가됨)
     spriteImages,
     localClientId: clientId!,
     portals: LOBBY_PORTALS,
@@ -377,8 +388,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
         />
       )}
 
-      {/* (기존) 포탈 GIF 미리 로드용 NextImage: 꼭 필요한 건 아니지만, 
-          아래처럼 숨겨서 함께 로딩하는 예시라면 유지해도 됨 */}
+      {/* (기존) 포탈 GIF 미리 로드용 NextImage */}
       <NextImage
         src="/furniture/portal.png"
         alt="portal"
@@ -434,6 +444,13 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
           open={meetingModalOpen}
           onOpenChange={setMeetingModalOpen}
         />
+      )}
+
+      {/* AlertModal (대체된 alert) */}
+      {alertModalOpen && (
+        <AlertModal title="알림" onClose={() => setAlertModalOpen(false)}>
+          {alertMessage}
+        </AlertModal>
       )}
 
       {/* Canvas 영역 */}

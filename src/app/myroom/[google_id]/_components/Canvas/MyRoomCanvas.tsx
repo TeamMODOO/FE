@@ -6,6 +6,8 @@ import { useParams } from "next/navigation";
 
 import { useSession } from "next-auth/react";
 
+// (추가) AlertModal import
+import AlertModal from "@/components/alertModal/AlertModal";
 import { Button } from "@/components/ui/button";
 // ---- Hooks
 import { useMyRoomKeyboard } from "@/hooks/myroom/useMyRoomKeyboard";
@@ -489,16 +491,27 @@ const MyRoomCanvas: React.FC = () => {
     canvasSize,
   ]);
 
+  // (추가) AlertModal 관련 상태
+  const [alertModalOpen, setAlertModalOpen] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
+
+  const openAlertModal = (message: string) => {
+    setAlertMessage(message);
+    setAlertModalOpen(true);
+  };
+
   /** (C) 가구 클릭 로직 */
   const handleFurnitureClickCustom = (item: Funiture) => {
     if (item.funitureType === "none") {
-      alert("아직 등록되지 않은 항목입니다.");
+      // alert("아직 등록되지 않은 항목입니다."); → AlertModal로 교체
+      openAlertModal("아직 등록되지 않은 항목입니다.");
       return;
     }
     if (item.funitureType.startsWith("resume/")) {
       const pdf = item.data?.resumeLink;
       if (!pdf) {
-        alert("PDF 링크가 없습니다.");
+        // alert("PDF 링크가 없습니다."); → AlertModal로 교체
+        openAlertModal("PDF 링크가 없습니다.");
         return;
       }
       setPdfUrl(pdf);
@@ -514,15 +527,17 @@ const MyRoomCanvas: React.FC = () => {
 
   const handleSaveResume = async () => {
     // ...
-    // (생략 없이, 기존 로직 동일)
+    // 원래 사용하던 로직. alert()가 있으면 openAlertModal로 교체
   };
 
   const handleSavePortfolio = () => {
     // ...
+    // 원래 사용하던 로직. alert()가 있으면 openAlertModal로 교체
   };
 
   const handleSaveTechStack = () => {
     // ...
+    // 원래 사용하던 로직. alert()가 있으면 openAlertModal로 교체
   };
 
   /** (E) 이력서/포트폴리오/기술스택 모달 열기 버튼 */
@@ -552,13 +567,26 @@ const MyRoomCanvas: React.FC = () => {
 
           {/* (2) 하단 버튼들 */}
           <div className={Style.bottomButtonsClass}>
-            <Button onClick={handleOpenResumeModal} disabled={false}>
+            <p className={Style.bottomTitle}>마이룸 꾸미기</p>
+            <Button
+              onClick={handleOpenResumeModal}
+              disabled={false}
+              className={Style.bottomButton}
+            >
               이력서(PDF) 추가
             </Button>
-            <Button onClick={handleOpenPortfolioModal} disabled={false}>
+            <Button
+              onClick={handleOpenPortfolioModal}
+              disabled={false}
+              className={Style.bottomButton}
+            >
               포트폴리오(링크) 추가
             </Button>
-            <Button onClick={handleOpenTechStackModal} disabled={false}>
+            <Button
+              onClick={handleOpenTechStackModal}
+              disabled={false}
+              className={Style.bottomButton}
+            >
               기술 스택 추가
             </Button>
           </div>
@@ -625,6 +653,13 @@ const MyRoomCanvas: React.FC = () => {
             onClose={setPortfolioLinkViewModalOpen}
             link={clickedPortfolioLink}
           />
+
+          {/* (추가) AlertModal (대체된 alert) */}
+          {alertModalOpen && (
+            <AlertModal title="알림" onClose={() => setAlertModalOpen(false)}>
+              {alertMessage}
+            </AlertModal>
+          )}
         </div>
       )}
     </>
