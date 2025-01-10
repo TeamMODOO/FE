@@ -7,8 +7,6 @@ import { useRouter } from "next/navigation";
 
 import { useSession } from "next-auth/react";
 
-import { v4 as uuid } from "uuid";
-
 import NeedSignInModal from "@/components/modal/NeedSignIn/NeedSignInModal";
 import useLobbySocketEvents from "@/hooks/lobby/useLobbySocketEvents";
 import useLoadSprites, {
@@ -19,7 +17,8 @@ import useLoadSprites, {
 import useThrottle from "@/hooks/performance/useThrottle";
 import { NoticeItem } from "@/model/NoticeBoard";
 import { Direction } from "@/model/User";
-import useMainSocketStore from "@/store/useMainSocketStore";
+import useClientIdStore from "@/store/useClientIdStore";
+import useSocketStore from "@/store/useSocketStore";
 import useUsersStore from "@/store/useUsersStore";
 
 import {
@@ -44,27 +43,13 @@ interface LobbyCanvasProps {
 const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
   const router = useRouter();
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const localClientId = localStorage.getItem("client_id") ?? "";
 
   // 세션
   const { data: session, status } = useSession();
 
   // (2) 모달 열림 여부 state
   const [signInModalOpen, setSignInModalOpen] = useState(false);
-
-  // (1) localStorage에서 client_id 가져오기
-  const [localClientId, setLocalClientId] = useState("");
-  useEffect(() => {
-    let stored = localStorage.getItem("client_id");
-    if (!stored) {
-      if (session?.user?.id) {
-        stored = `Y${session.user.id}`;
-      } else {
-        stored = `N${uuid()}`;
-      }
-      localStorage.setItem("client_id", stored);
-    }
-    setLocalClientId(stored || "");
-  }, [session]);
 
   // (2) 소켓 훅
   const userNickname = session?.user?.name || "Guest";
@@ -80,19 +65,55 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
   // **신규**: 연결 완료 후, 내 사용자 정보 요청 (CS_USER_POSTION_INFO)
   // ------------------
   // - 소켓이 connect된 상태인지 확인 → 그때 emit("CS_USER_POSTION_INFO", {})
-  const mainSocket = useMainSocketStore((s) => s.socket);
-  const isConnected = useMainSocketStore((s) => s.isConnected);
+  // const mainSocket = useMainSocketStore((s) => s.socket);
+  // const isMainConnected = useMainSocketStore((s) => s.isConnected);
+
+  // 수정된 코드 (임시)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const mainSocket: any = null;
+  const isMainConnected = null;
+
+  const { socket, isConnected, currentRoom, setCurrentRoom } = useSocketStore();
+
+  const ROOM_TYPE = "floor";
+  const ROOM_ID = "floor7";
+  const { clientId } = useClientIdStore();
+
+  useEffect(() => {
+    if (!clientId || !socket || !isConnected) return;
+
+    // 이전 방에서 나가기
+    if (currentRoom) {
+      socket.emit("leave_room", { roomId: currentRoom });
+    }
+
+    // 새로운 방 입장
+    socket.emit("CS_JOIN_ROOM", {
+      client_id: clientId,
+      room_type: ROOM_TYPE,
+      room_id: ROOM_ID,
+    });
+
+    setCurrentRoom(ROOM_ID);
+
+    return () => {
+      if (socket && isConnected) {
+        socket.emit("leave_room", { ROOM_ID });
+        setCurrentRoom(null);
+      }
+    };
+  }, [socket, isConnected]);
 
   useEffect(() => {
     if (!localClientId) return;
     if (status === "loading") return;
 
     // 소켓이 연결되었을 때만 emit
-    if (mainSocket && isConnected) {
+    if (mainSocket && isMainConnected) {
       // 아무 내용 없이 "CS_USER_POSTION_INFO" 보냄
       mainSocket.emit("CS_USER_POSITION_INFO", {});
     }
-  }, [localClientId, status, mainSocket, isConnected]);
+  }, [localClientId, status, mainSocket, isMainConnected]);
 
   // ------------------ 화면 사이즈 (동적) ------------------
   const [canvasSize, setCanvasSize] = useState({

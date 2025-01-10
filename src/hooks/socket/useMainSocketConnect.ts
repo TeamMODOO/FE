@@ -14,80 +14,22 @@ type UseMainSocketConnectType = {
   roomId: string;
 };
 
-/**
- * 전역적으로 소켓을 연결하는 훅 (공통)
- */
 const useMainSocketConnect = ({
   roomType,
   roomId,
 }: UseMainSocketConnectType) => {
   const mainSocketRef = useRef<Socket | null>(null);
+  // 소켓 초기화 상태를 추적하는 새로운 ref
+  const isCleanupCompleteRef = useRef(false);
 
-  // 소켓 Store
-  const mainSocket = useMainSocketStore((state) => state.socket);
-  const isMainConnected = useMainSocketStore((state) => state.isConnected);
   const setMainSocket = useMainSocketStore((state) => state.setSocket);
   const setIsConnected = useMainSocketStore((state) => state.setIsConnected);
 
-  // NextAuth session
   const { data: session, status } = useSession();
 
   useEffect(() => {
-    // 세션 로딩 중이면 소켓 연결 X
-    // (중요) 배포시 세션이 천천히 로드되면, user_name이 null/undefined가 될 수 있음
-    if (status === "loading") return;
-    // 이미 소켓 연결이 되어 있다면 재연결하지 않도록 방어
-    if (mainSocketRef.current || mainSocket || isMainConnected) return;
-
-    // 세션에서 user_name 가져오기 (없으면 "Guest")
-    const userName = session?.user?.name || "Guest";
-
-    // (3) 소켓 접속 로직 (client_id 생성/조회)
-    let clientId = localStorage.getItem("client_id");
-    if (!clientId) {
-      if (session && session.user && session.user.id)
-        clientId = `Y${session.user.id}`;
-      else clientId = `N${uuid()}`;
-      localStorage.setItem("client_id", clientId);
-    }
-
-    // 서버 URL
-    const baseURL = process.env.NEXT_PUBLIC_BASE_URL;
-
-    // (4) io 연결 - 여기서 query로 user_name, client_id를 넘김
-    const newMainSocket = io(baseURL!, {
-      path: "/sio/sockets",
-      withCredentials: true,
-      transports: ["websocket"],
-      autoConnect: true,
-      query: {
-        client_id: clientId, // 클라이언트 ID
-        user_name: userName, // 세션에서 가져온 닉네임(혹은 이름)
-        room_id: roomId,
-        room_type: roomType,
-      },
-    });
-
-    // (5) 이벤트 등록
-
-    newMainSocket.on("connect", () => {
-      mainSocketRef.current = newMainSocket;
-      setMainSocket(newMainSocket);
-      setIsConnected(true);
-    });
-
-    newMainSocket.on("disconnect", () => {
-      setIsConnected(false);
-    });
-
-    newMainSocket.on("connect_error", () => {
-      if (mainSocketRef.current) {
-        mainSocketRef.current = null;
-      }
-    });
-
-    // (6) unmount 시 해제
-    return () => {
+    // cleanup 함수를 별도로 정의
+    const cleanup = () => {
       if (mainSocketRef.current) {
         mainSocketRef.current.off("connect");
         mainSocketRef.current.off("connect_error");
@@ -95,13 +37,76 @@ const useMainSocketConnect = ({
         mainSocketRef.current.disconnect();
         mainSocketRef.current = null;
       }
-
       setMainSocket(null);
       setIsConnected(false);
+      // cleanup 완료 표시
+      isCleanupCompleteRef.current = true;
     };
-  }, [status]);
 
-  // 커스텀 훅이므로 return 없음
+    // 이전 연결이 있다면 먼저 정리
+    if (!isCleanupCompleteRef.current) cleanup();
+
+    // 세션 로딩 중이면 소켓 연결 X
+    if (status === "loading") return;
+
+    // 새로운 연결 시도 전에 약간의 지연을 주어 cleanup이 완료되도록 보장
+    const initializeSocket = () => {
+      const userName = session?.user?.name || "Guest";
+
+      let clientId = localStorage.getItem("client_id");
+      if (!clientId) {
+        if (session?.user?.id) clientId = session.user.id;
+        else clientId = uuid();
+        localStorage.setItem("client_id", clientId);
+      } else {
+        if (session?.user?.id) {
+          if (clientId !== session?.user?.id) clientId = session.user.id;
+          localStorage.setItem("client_id", clientId);
+        }
+      }
+
+      const baseURL = process.env.NEXT_PUBLIC_BASE_URL;
+
+      // 새로운 소켓 연결 시도
+      const newMainSocket = io(baseURL!, {
+        path: "/sio/sockets",
+        withCredentials: true,
+        transports: ["websocket"],
+        autoConnect: true,
+        query: {
+          client_id: clientId,
+          user_name: userName,
+          room_id: roomId,
+          room_type: roomType,
+        },
+      });
+
+      newMainSocket.on("connect", () => {
+        mainSocketRef.current = newMainSocket;
+        setMainSocket(newMainSocket);
+        setIsConnected(true);
+        // 연결 성공 시 cleanup 상태 초기화
+        isCleanupCompleteRef.current = false;
+      });
+
+      newMainSocket.on("disconnect", () => {
+        setIsConnected(false);
+      });
+
+      newMainSocket.on("connect_error", () => {
+        if (mainSocketRef.current) {
+          mainSocketRef.current = null;
+        }
+      });
+    };
+
+    // cleanup이 완료된 후에만 새로운 연결 시도
+    if (isCleanupCompleteRef.current) {
+      initializeSocket();
+    }
+
+    return cleanup;
+  }, [status, roomId, roomType]);
 };
 
 export default useMainSocketConnect;

@@ -1,6 +1,6 @@
 //next.config.mjs
 const nextConfig = {
-  reactStrictMode: true,
+  reactStrictMode: false,
   output: "standalone",
   images: {
     remotePatterns: [
