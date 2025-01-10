@@ -117,8 +117,8 @@ export const EnterMeetingRoom: React.FC<EnterMeetingRoomProps> = ({
                 <TabsTrigger
                   value="make"
                   className="
-                  data-[state=active]:text-bold 
-                  min-h-[4dvh]
+                  mx-[0.3dvw]
+                  h-[5dvh]
                   p-0
                   text-xl
                   data-[state=active]:bg-[rgba(255,255,255,0.7)]
