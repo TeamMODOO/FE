@@ -106,9 +106,9 @@ const MyRoomCanvas: React.FC = () => {
   // 포탈
   const [portal, setPortal] = useState({
     x: 20,
-    y: 620,
+    y: 680,
     width: 200,
-    height: 200,
+    height: 150,
     route: "/lobby",
     name: "로비 포탈",
   });

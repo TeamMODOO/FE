@@ -25,7 +25,7 @@ interface UseLobbyRendererParams {
 
   /** NPC & 포탈 이미지를 이미 로딩해둔 상태로 넘김 */
   npcImages: Record<string, HTMLImageElement>;
-  /** 단일 포탈 이미지 (예: portal.gif) */
+  /** 단일 포탈 이미지 (예: portal.png) */
   portalImage?: HTMLImageElement | null;
 
   spriteImages: Record<string, HTMLImageElement>;

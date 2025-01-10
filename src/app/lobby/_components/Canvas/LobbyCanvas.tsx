@@ -121,8 +121,15 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     bg.onload = () => setBackgroundImage(bg);
   }, []);
 
-  // 포탈 GIF
-  const portalGifRef = useRef<HTMLImageElement | null>(null);
+  // (추가됨) 포탈 이미지(= portal.png) 로딩
+  const [portalImage, setPortalImage] = useState<HTMLImageElement | null>(null);
+  useEffect(() => {
+    const img = new Image();
+    img.src = "/furniture/portal.png"; // public 폴더의 경로
+    img.onload = () => {
+      setPortalImage(img);
+    };
+  }, []);
 
   // NPC 이미지 로딩
   const [npcImages, setNpcImages] = useState<Record<string, HTMLImageElement>>(
@@ -375,6 +382,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     canvasSize,
     backgroundImage,
     npcImages,
+    portalImage, // (추가됨) 여기에 넘김!
     spriteImages,
     localClientId,
     portals: LOBBY_PORTALS,
@@ -392,10 +400,10 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
         />
       )}
 
-      {/* 포탈 GIF 미리 로드 (숨김) */}
+      {/* (기존) 포탈 GIF 미리 로드용 NextImage: 꼭 필요한 건 아니지만, 
+          아래처럼 숨겨서 함께 로딩하는 예시라면 유지해도 됨 */}
       <NextImage
-        ref={portalGifRef as React.RefObject<HTMLImageElement>}
-        src="/furniture/portal.gif"
+        src="/furniture/portal.png"
         alt="portal"
         width={1}
         height={1}
@@ -407,7 +415,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
       <NpcModal
         isOpen={npc1ModalOpen}
         onClose={() => setNpc1ModalOpen(false)}
-        imgSrc="/npc_event/npc1.png"
+        imgSrc="/npc_event/.png"
         title="정글의 수석 코치"
       >
         <DailyProblemContent />

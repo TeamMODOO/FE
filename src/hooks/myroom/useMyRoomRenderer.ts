@@ -180,7 +180,7 @@ export function useMyRoomRenderer({
         ctx.fillText(
           portal.name,
           portal.x + portal.width / 2,
-          portal.y + portal.height + 15,
+          portal.y + portal.height + 20,
         );
 
         // (추가) 충돌 박스 디버깅
