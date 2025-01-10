@@ -84,7 +84,7 @@ export function useMyRoomRenderer({
     const frameDuration = 1000 / fps;
 
     const frameInterval = 200; // 이동중 캐릭터 frame 전환 주기
-    const maxMovingFrame = 3; // 1→2→3→1...
+    const maxMovingFrame = 3; // ex) 1→2→3→1...
 
     const renderLoop = (time: number) => {
       const delta = time - lastTime;
@@ -103,7 +103,7 @@ export function useMyRoomRenderer({
         const cameraY = 0;
 
         // 캐릭터 중심
-        const centerX = myUser.x + (FRAME_WIDTH * charScale) / 2;
+        const centerX = myUser.x + FRAME_WIDTH * charScale * 0.5;
         cameraX = centerX - viewWidth / 2;
 
         // 맵 경계 보정
@@ -128,14 +128,12 @@ export function useMyRoomRenderer({
           const img = furnitureImages[f.funitureType];
           if (!img) return;
 
-          // width, height 가 지정되지 않았다면 기본값 100×100
           const w = f.width ?? 100;
           const h = f.height ?? 100;
 
-          // 이미지
           ctx.drawImage(img, f.x, f.y, w, h);
 
-          // 텍스트 (가구 이름)
+          // 가구 이름
           ctx.font = "bold 14px Arial";
           ctx.fillStyle = "white";
           ctx.textAlign = "center";
@@ -145,15 +143,12 @@ export function useMyRoomRenderer({
         // 2) 방명록
         board.forEach((b) => {
           const img = furnitureImages[b.funitureType] ?? null;
-
-          // width, height 미지정 시 여기서는 100×100
           const w = b.width ?? 100;
           const h = b.height ?? 100;
 
           if (img) {
             ctx.drawImage(img, b.x, b.y, w, h);
           } else {
-            // 없는 경우 임시 표시
             ctx.fillStyle = "orange";
             ctx.fillRect(b.x, b.y, w, h);
           }
@@ -166,7 +161,6 @@ export function useMyRoomRenderer({
         });
 
         // 3) 포탈
-        // portal.width/height 이미 있음
         const portalImg = furnitureImages["portal"] ?? null;
         if (portalImg) {
           ctx.drawImage(
@@ -180,7 +174,6 @@ export function useMyRoomRenderer({
           ctx.fillStyle = "rgba(255, 0, 0, 0.5)";
           ctx.fillRect(portal.x, portal.y, portal.width, portal.height);
         }
-        // 포탈 이름
         ctx.font = "bold 14px Arial";
         ctx.fillStyle = "white";
         ctx.textAlign = "center";
@@ -191,11 +184,9 @@ export function useMyRoomRenderer({
         );
 
         // (추가) 충돌 박스 디버깅
-
         // MYROOM_COLLISION_ZONES.forEach((zone) => {
-        //   ctx.fillStyle = "rgba(255, 0, 0, 0.3)"; // 반투명 빨간색
+        //   ctx.fillStyle = "rgba(255, 0, 0, 0.3)";
         //   ctx.fillRect(zone.x, zone.y, zone.width, zone.height);
-
         //   ctx.strokeStyle = "red";
         //   ctx.lineWidth = 2;
         //   ctx.strokeRect(zone.x, zone.y, zone.width, zone.height);
@@ -206,7 +197,6 @@ export function useMyRoomRenderer({
           const now2 = performance.now();
           const uf = userFrameRef.current;
 
-          // 이동중이면 frame 애니메이션
           if (myUser.isMoving) {
             if (now2 - uf.lastFrameTime > frameInterval) {
               uf.frame++;
