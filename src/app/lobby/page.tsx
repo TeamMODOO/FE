@@ -24,7 +24,7 @@ export default function Page() {
     if (currentRoom) {
       socket.emit("CS_LEAVE_ROOM", {
         client_id: clientId,
-        roomId: currentRoom,
+        room_id: currentRoom,
       });
     }
 
@@ -41,7 +41,7 @@ export default function Page() {
       if (socket && isConnected) {
         socket.emit("CS_LEAVE_ROOM", {
           client_id: clientId,
-          roomId: currentRoom,
+          room_id: currentRoom,
         });
         setCurrentRoom(null);
       }
