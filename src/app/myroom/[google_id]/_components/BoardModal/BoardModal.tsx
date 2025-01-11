@@ -37,9 +37,11 @@ const BoardModal: React.FC<BoardModalProps> = ({
 
   // 1) 비밀 여부 체크박스 상태
   const [isSecret, setIsSecret] = useState<boolean>(false);
+  // needsigninmodal 오픈 상태
+  const [signInModalOpen, setSignInModalOpen] = useState(false);
 
   // 2) useGuestBookPost 훅 사용
-  const { postGuestBook, postLoading, postError, postData } =
+  const { postGuestBook, deleteGuestBook, postLoading, postError, postData } =
     useGuestBookPost(hostGoogleId);
 
   // 3) 방명록 목록 조회 훅
@@ -70,8 +72,10 @@ const BoardModal: React.FC<BoardModalProps> = ({
     }
   };
 
-  // needsigninmodal 오픈 상태
-  const [signInModalOpen, setSignInModalOpen] = useState(false);
+  const deleteCommentHandler = async (id: string) => {
+    await deleteGuestBook(id);
+    await fetchGuestBookList();
+  };
 
   return (
     <>
@@ -122,6 +126,9 @@ const BoardModal: React.FC<BoardModalProps> = ({
                       ? "비밀 방명록입니다." // 실제로 방 주인만 보려면 서버 로직에서 처리
                       : entry.content}
                   </div>
+                  <button onClick={() => deleteCommentHandler(entry.id)}>
+                    삭제
+                  </button>
                 </div>
               ))}
           </div>

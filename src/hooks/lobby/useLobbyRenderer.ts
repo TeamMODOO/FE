@@ -1,45 +1,43 @@
 // hooks/lobby/useLobbyRenderer.ts
 "use client";
 
-import { RefObject, useEffect } from "react";
+import { RefObject, useEffect, useRef } from "react";
 
 import { LOBBY_MAP_CONSTANTS } from "@/app/lobby/_constant";
-// import { LOBBY_COLLISION_ZONES } from "@/app/lobby/_constant";
 import {
   FRAME_HEIGHT,
   FRAME_WIDTH,
   LAYER_ORDER,
 } from "@/hooks/performance/useLoadSprites";
+import { User } from "@/model/LobbyUser";
 import { NpcInfo } from "@/model/Npc";
 import { PortalInfo } from "@/model/Portal";
-import useUsersStore from "@/store/useUsersStore";
 
 /** 11:6 비율 (550×301) 고정 뷰포트 예시 */
 const FIXED_VIEWPORT_WIDTH = 605;
 const FIXED_VIEWPORT_HEIGHT = 330;
 
+/** 파라미터 */
 interface UseLobbyRendererParams {
   canvasRef: RefObject<HTMLCanvasElement | null>;
   canvasSize: { w: number; h: number };
   backgroundImage: HTMLImageElement | null;
-
-  /** NPC & 포탈 이미지를 이미 로딩해둔 상태로 넘김 */
   npcImages: Record<string, HTMLImageElement>;
-  /** 단일 포탈 이미지 (예: portal.png) */
   portalImage?: HTMLImageElement | null;
-
   spriteImages: Record<string, HTMLImageElement>;
+
+  // [중요] usersRef
+  usersRef: React.MutableRefObject<User[]>;
+
   localClientId: string;
   portals: PortalInfo[];
   npcs: NpcInfo[];
 }
 
 /**
- * rAF로 배경/포탈/NPC/캐릭터를 그려주는 훅
- * - 고정 뷰포트(FIXED_VIEWPORT_WIDTH × FIXED_VIEWPORT_HEIGHT)
- * - 사용자의 실제 화면에 맞춰 scale
- * - CAMERA_ZOOM으로 추가 확대
- * - NPC & 포탈도 함께 렌더링
+ * (1) 30fps 고정 (frameDuration)
+ * (2) usersRef.current로부터 유저 정보를 가져와 그리기
+ * (3) 각 유저에 대해 drawX, drawY를 보간(lerp) 처리
  */
 export function useLobbyRenderer({
   canvasRef,
@@ -48,21 +46,23 @@ export function useLobbyRenderer({
   npcImages,
   portalImage,
   spriteImages,
+  usersRef,
   localClientId,
   portals,
   npcs,
 }: UseLobbyRendererParams) {
+  // 카메라 좌표
+  const cameraPosRef = useRef({ x: 0, y: 0 });
+
   useEffect(() => {
     if (!canvasRef.current) return;
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // 1) 캔버스 픽셀 사이즈 설정
     canvas.width = canvasSize.w;
     canvas.height = canvasSize.h;
 
-    // 편의 함수
     function clamp(value: number, min: number, max: number) {
       return Math.max(min, Math.min(max, value));
     }
@@ -72,29 +72,28 @@ export function useLobbyRenderer({
     let lastTime = 0;
     let animationId = 0;
 
-    // 캐릭터 frame 관리
+    // (캐릭터 애니메이션) frame 관리
     const userFrameMap: Record<
       string,
       { frame: number; lastFrameTime: number }
     > = {};
-    const frameInterval = 200;
+    const frameInterval = 100;
     const maxMovingFrame = 3;
 
-    // 초기화
-    const { users } = useUsersStore.getState();
-    users.forEach((u) => {
+    // 초기화(이미 있는 유저들에 대해)
+    usersRef.current.forEach((u) => {
       userFrameMap[u.id] = { frame: 0, lastFrameTime: performance.now() };
     });
 
+    /** rAF 렌더 함수 */
     const render = (time: number) => {
       const delta = time - lastTime;
       if (delta >= frameDuration) {
         lastTime = time - (delta % frameDuration);
 
-        // (A) 화면 지우기
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        // (B) 고정 뷰포트 대비 현재 화면 스케일 계산
+        // 화면 스케일
         const scaleX = canvas.width / FIXED_VIEWPORT_WIDTH;
         const scaleY = canvas.height / FIXED_VIEWPORT_HEIGHT;
         const baseScale = Math.min(scaleX, scaleY);
@@ -102,32 +101,64 @@ export function useLobbyRenderer({
         ctx.save();
         ctx.scale(baseScale, baseScale);
 
-        // (C) 카메라 위치 결정
-        const store = useUsersStore.getState();
-        const me = store.users.find((u) => u.id === localClientId);
+        // (A) 각 유저의 drawX, drawY 보간
+        const now = performance.now();
+        usersRef.current.forEach((user) => {
+          const { lerpStartTime, lerpDuration } = user;
+          if (lerpDuration > 0) {
+            const progress = (now - lerpStartTime) / lerpDuration;
+            if (progress >= 1) {
+              // 목표지점 도달
+              user.drawX = user.lerpTargetX;
+              user.drawY = user.lerpTargetY;
+            } else {
+              // lerp
+              user.drawX =
+                user.lerpStartX +
+                (user.lerpTargetX - user.lerpStartX) * progress;
+              user.drawY =
+                user.lerpStartY +
+                (user.lerpTargetY - user.lerpStartY) * progress;
+            }
+          } else {
+            // lerpDuration = 0이면 그냥 x,y
+            user.drawX = user.lerpTargetX;
+            user.drawY = user.lerpTargetY;
+          }
+        });
 
-        let cameraX = 0;
-        let cameraY = 0;
+        // (B) 카메라 위치 결정
+        const me = usersRef.current.find((u) => u.id === localClientId);
+        let targetCameraX = 0;
+        let targetCameraY = 0;
         if (me) {
-          const centerX = me.x + LOBBY_MAP_CONSTANTS.IMG_WIDTH / 2;
-          const centerY = me.y + LOBBY_MAP_CONSTANTS.IMG_HEIGHT / 2;
+          // 카메라는 drawX, drawY 기준으로 (캐릭터가 보간중이라면 중간지점 따라감)
+          const centerX = me.drawX + LOBBY_MAP_CONSTANTS.IMG_WIDTH / 2;
+          const centerY = me.drawY + LOBBY_MAP_CONSTANTS.IMG_HEIGHT / 2;
+          const viewW = FIXED_VIEWPORT_WIDTH;
+          const viewH = FIXED_VIEWPORT_HEIGHT;
 
-          const viewWidth = FIXED_VIEWPORT_WIDTH;
-          const viewHeight = FIXED_VIEWPORT_HEIGHT;
+          targetCameraX = centerX - viewW / 2;
+          targetCameraY = centerY - viewH / 2;
 
-          cameraX = centerX - viewWidth / 2;
-          cameraY = centerY - viewHeight / 2;
-
-          const maxCamX = LOBBY_MAP_CONSTANTS.MAP_WIDTH - viewWidth;
-          const maxCamY = LOBBY_MAP_CONSTANTS.MAP_HEIGHT - viewHeight;
-
-          cameraX = clamp(cameraX, 0, Math.max(0, maxCamX));
-          cameraY = clamp(cameraY, 0, Math.max(0, maxCamY));
+          const maxCamX = LOBBY_MAP_CONSTANTS.MAP_WIDTH - viewW;
+          const maxCamY = LOBBY_MAP_CONSTANTS.MAP_HEIGHT - viewH;
+          targetCameraX = clamp(targetCameraX, 0, Math.max(0, maxCamX));
+          targetCameraY = clamp(targetCameraY, 0, Math.max(0, maxCamY));
         }
 
-        ctx.translate(-cameraX, -cameraY);
+        // (B-1) 카메라도 부드럽게 이동(lerp)
+        const smoothing = 0.2;
+        const camX = cameraPosRef.current.x;
+        const camY = cameraPosRef.current.y;
+        const newCamX = camX + (targetCameraX - camX) * smoothing;
+        const newCamY = camY + (targetCameraY - camY) * smoothing;
+        cameraPosRef.current.x = newCamX;
+        cameraPosRef.current.y = newCamY;
 
-        // (D) 배경
+        ctx.translate(-cameraPosRef.current.x, -cameraPosRef.current.y);
+
+        // (C) 배경
         if (backgroundImage) {
           ctx.drawImage(
             backgroundImage,
@@ -138,7 +169,7 @@ export function useLobbyRenderer({
           );
         }
 
-        // (E) 포탈 그리기
+        // (D) 포탈
         if (portalImage && portalImage.complete) {
           portals.forEach((p) => {
             ctx.drawImage(portalImage, p.x, p.y, p.width, p.height);
@@ -148,7 +179,7 @@ export function useLobbyRenderer({
             ctx.fillText(p.name, p.x + p.width / 2, p.y + p.height + 12);
           });
         } else {
-          // 포탈 이미지가 없거나 로딩 전이라면, 임시 사각형 표시
+          // 로딩 전 임시 표시
           portals.forEach((p) => {
             ctx.fillStyle = "rgba(0,255,255,0.3)";
             ctx.fillRect(p.x, p.y, p.width, p.height);
@@ -159,7 +190,7 @@ export function useLobbyRenderer({
           });
         }
 
-        // (F) NPC
+        // (E) NPC
         npcs.forEach((npc) => {
           const img = npcImages[npc.image];
           if (!img) return;
@@ -175,47 +206,32 @@ export function useLobbyRenderer({
           );
         });
 
-        // ------------------ 충돌 영역 화면 표시 (디버깅) ------------------
-        // LOBBY_COLLISION_ZONES.forEach((zone) => {
-        //   ctx.fillStyle = "rgba(255, 0, 0, 0.3)"; // Semi-transparent red
-        //   ctx.fillRect(zone.x, zone.y, zone.width, zone.height);
-        //   ctx.strokeStyle = "red";
-        //   ctx.lineWidth = 2;
-        //   ctx.strokeRect(zone.x, zone.y, zone.width, zone.height);
-        // });
-        // --------------------
+        // (F) 캐릭터 스프라이트
+        const storeUsers = usersRef.current;
+        storeUsers.forEach((user) => {
+          const { id, drawX, drawY, direction, isMoving, nickname } = user;
 
-        // (G) 캐릭터(유저) 스프라이트
-        const now = performance.now();
-        const storeUsers = useUsersStore.getState().users;
-
-        // 스프라이트 레이어가 다 로딩됐는지 체크
-        if (Object.keys(spriteImages).length === LAYER_ORDER.length) {
-          storeUsers.forEach((user) => {
-            const { id, x, y, direction, isMoving, nickname } = user;
-
-            if (!userFrameMap[id]) {
-              userFrameMap[id] = { frame: 0, lastFrameTime: now };
-            }
-            const uf = userFrameMap[id];
-
-            // 이동 중이라면 애니메이션 frame 업데이트
-            if (isMoving) {
-              if (now - uf.lastFrameTime > frameInterval) {
-                uf.frame++;
-                if (uf.frame > maxMovingFrame) uf.frame = 1;
-                uf.lastFrameTime = now;
-              }
-            } else {
-              uf.frame = 0;
+          // 스프라이트 애니메이션 frame
+          if (!userFrameMap[id]) {
+            userFrameMap[id] = { frame: 0, lastFrameTime: performance.now() };
+          }
+          const uf = userFrameMap[id];
+          if (isMoving) {
+            if (now - uf.lastFrameTime > frameInterval) {
+              uf.frame++;
+              if (uf.frame > maxMovingFrame) uf.frame = 1;
               uf.lastFrameTime = now;
             }
+          } else {
+            uf.frame = 0;
+            uf.lastFrameTime = now;
+          }
+          const sx = uf.frame * FRAME_WIDTH;
+          const sy = (direction ?? 0) * FRAME_HEIGHT;
 
-            const sx = uf.frame * FRAME_WIDTH;
-            const sy = (direction ?? 0) * FRAME_HEIGHT;
-
-            // 레이어 순서대로 그리기
-            ctx.save();
+          // 레이어 순서대로 그리기 (body, eyes, clothes, hair)
+          ctx.save();
+          if (Object.keys(spriteImages).length === LAYER_ORDER.length) {
             LAYER_ORDER.forEach((layer) => {
               const spr = spriteImages[layer];
               if (!spr) return;
@@ -225,25 +241,33 @@ export function useLobbyRenderer({
                 sy,
                 FRAME_WIDTH,
                 FRAME_HEIGHT,
-                x,
-                y,
+                drawX,
+                drawY,
                 FRAME_WIDTH,
                 FRAME_HEIGHT,
               );
             });
-            ctx.restore();
+          } else {
+            // 혹은 미로딩이면 임시 표시
+            ctx.fillStyle = "blue";
+            ctx.fillRect(drawX, drawY, FRAME_WIDTH, FRAME_HEIGHT);
+          }
+          ctx.restore();
 
-            // 닉네임
-            ctx.font = "bold 12px Arial";
-            ctx.fillStyle = "white";
-            ctx.textAlign = "center";
-            ctx.fillText(nickname, x + FRAME_WIDTH / 2, y + FRAME_HEIGHT + 12);
-          });
-        }
+          // 닉네임
+          ctx.font = "bold 12px Arial";
+          ctx.fillStyle = "white";
+          ctx.textAlign = "center";
+          ctx.fillText(
+            nickname,
+            drawX + FRAME_WIDTH / 2,
+            drawY + FRAME_HEIGHT + 12,
+          );
+        });
 
-        // (H) 스케일/카메라 해제
         ctx.restore();
       }
+
       animationId = requestAnimationFrame(render);
     };
 
@@ -259,6 +283,7 @@ export function useLobbyRenderer({
     npcImages,
     portalImage,
     spriteImages,
+    usersRef,
     localClientId,
     portals,
     npcs,

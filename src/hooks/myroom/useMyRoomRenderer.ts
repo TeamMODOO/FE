@@ -2,7 +2,6 @@
 
 import { RefObject, useEffect, useRef } from "react";
 
-import { MYROOM_COLLISION_ZONES } from "@/app/myroom/[google_id]/_constant";
 import {
   FRAME_HEIGHT,
   FRAME_WIDTH,
@@ -47,6 +46,8 @@ interface MyRoomRendererProps {
 
 /**
  * rAF로 배경 + (내 캐릭터만) + (가구/포탈/방명록) 카메라/스크롤 적용하여 그리는 훅
+ * [변경됨/추가됨]
+ * - 카메라를 부드럽게 따라오도록 lerp 보간 로직 추가
  */
 export function useMyRoomRenderer({
   canvasRef,
@@ -67,6 +68,9 @@ export function useMyRoomRenderer({
     frame: 0,
     lastFrameTime: performance.now(),
   });
+
+  // [추가됨] 카메라 위치 보관용 ref
+  const cameraPosRef = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -99,22 +103,36 @@ export function useMyRoomRenderer({
 
         // 뷰포트 크기 (월드 좌표계)
         const viewWidth = canvas.width / scale;
-        let cameraX = 0;
-        const cameraY = 0;
+        const viewHeight = canvas.height / scale; // [추가] 필요 시 사용
 
-        // 캐릭터 중심
+        // 캐릭터 중심 (목표 카메라 위치)
         const centerX = myUser.x + FRAME_WIDTH * charScale * 0.5;
-        cameraX = centerX - viewWidth / 2;
+        const centerY = myUser.y + FRAME_HEIGHT * charScale * 0.5;
+
+        // 목표 카메라
+        let targetCameraX = centerX - viewWidth / 2;
+        let targetCameraY = centerY - viewHeight / 2;
 
         // 맵 경계 보정
         const maxCamX = MAP_WIDTH - viewWidth;
-        if (cameraX < 0) cameraX = 0;
-        if (cameraX > maxCamX) cameraX = maxCamX;
+        const maxCamY = MAP_HEIGHT - viewHeight;
+        if (targetCameraX < 0) targetCameraX = 0;
+        if (targetCameraX > maxCamX) targetCameraX = maxCamX;
+        if (targetCameraY < 0) targetCameraY = 0;
+        if (targetCameraY > maxCamY) targetCameraY = maxCamY;
+
+        // [추가됨] 카메라 보간(lerp)
+        const smoothing = 0.2; // 0에 가까울수록 천천히, 1에 가까울수록 즉시 따라감
+        const camX = cameraPosRef.current.x;
+        const camY = cameraPosRef.current.y;
+        const newCamX = camX + (targetCameraX - camX) * smoothing;
+        const newCamY = camY + (targetCameraY - camY) * smoothing;
+        cameraPosRef.current = { x: newCamX, y: newCamY };
 
         // (3) transform
         ctx.save();
         ctx.scale(scale, scale);
-        ctx.translate(-cameraX, -cameraY);
+        ctx.translate(-cameraPosRef.current.x, -cameraPosRef.current.y);
 
         // (4) 배경
         if (backgroundImage) {
