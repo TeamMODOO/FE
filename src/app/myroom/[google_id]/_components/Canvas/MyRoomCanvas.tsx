@@ -75,7 +75,7 @@ const MyRoomCanvas: React.FC = () => {
     id: "me",
     x: 500,
     y: 700,
-    nickname: userName, // <-- 세션이 undefined면 "김희원" 사용
+    nickname: userName,
     characterType: "sprite1",
     direction: 0,
     isMoving: false,
