@@ -275,7 +275,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     return null;
   }
 
-  const throttledPressedKeys = useThrottle(pressedKeys, 100);
+  const throttledPressedKeys = useThrottle(pressedKeys, 50);
   useEffect(() => {
     if (chatOpen || isAnyModalOpen) return;
     if (!clientId) return;
