@@ -1,7 +1,7 @@
 // hooks/lobby/useLobbyRenderer.ts
 "use client";
 
-import { RefObject, useEffect } from "react";
+import { RefObject, useEffect, useRef } from "react";
 
 import { LOBBY_MAP_CONSTANTS } from "@/app/lobby/_constant";
 // import { LOBBY_COLLISION_ZONES } from "@/app/lobby/_constant";
@@ -38,8 +38,11 @@ interface UseLobbyRendererParams {
  * rAF로 배경/포탈/NPC/캐릭터를 그려주는 훅
  * - 고정 뷰포트(FIXED_VIEWPORT_WIDTH × FIXED_VIEWPORT_HEIGHT)
  * - 사용자의 실제 화면에 맞춰 scale
- * - CAMERA_ZOOM으로 추가 확대
  * - NPC & 포탈도 함께 렌더링
+ *
+ * [추가됨/변경됨]
+ * - "카메라( cameraX, cameraY )" 좌표를 유저 위치로 즉시 이동하지 않고,
+ *   매 프레임마다 조금씩 보간(lerp)하여 부드럽게 이동하도록 구현
  */
 export function useLobbyRenderer({
   canvasRef,
@@ -52,6 +55,9 @@ export function useLobbyRenderer({
   portals,
   npcs,
 }: UseLobbyRendererParams) {
+  // [추가됨] 카메라 좌표를 ref로 관리 (re-render 유발 방지)
+  const cameraPosRef = useRef({ x: 0, y: 0 });
+
   useEffect(() => {
     if (!canvasRef.current) return;
     const canvas = canvasRef.current;
@@ -80,7 +86,7 @@ export function useLobbyRenderer({
     const frameInterval = 200;
     const maxMovingFrame = 3;
 
-    // 초기화
+    // 초기화 (현재 users)
     const { users } = useUsersStore.getState();
     users.forEach((u) => {
       userFrameMap[u.id] = { frame: 0, lastFrameTime: performance.now() };
@@ -106,8 +112,9 @@ export function useLobbyRenderer({
         const store = useUsersStore.getState();
         const me = store.users.find((u) => u.id === localClientId);
 
-        let cameraX = 0;
-        let cameraY = 0;
+        // [변경됨] 기존 즉시 이동 -> lerp
+        let targetCameraX = 0;
+        let targetCameraY = 0;
         if (me) {
           const centerX = me.x + LOBBY_MAP_CONSTANTS.IMG_WIDTH / 2;
           const centerY = me.y + LOBBY_MAP_CONSTANTS.IMG_HEIGHT / 2;
@@ -115,17 +122,27 @@ export function useLobbyRenderer({
           const viewWidth = FIXED_VIEWPORT_WIDTH;
           const viewHeight = FIXED_VIEWPORT_HEIGHT;
 
-          cameraX = centerX - viewWidth / 2;
-          cameraY = centerY - viewHeight / 2;
+          targetCameraX = centerX - viewWidth / 2;
+          targetCameraY = centerY - viewHeight / 2;
 
           const maxCamX = LOBBY_MAP_CONSTANTS.MAP_WIDTH - viewWidth;
           const maxCamY = LOBBY_MAP_CONSTANTS.MAP_HEIGHT - viewHeight;
 
-          cameraX = clamp(cameraX, 0, Math.max(0, maxCamX));
-          cameraY = clamp(cameraY, 0, Math.max(0, maxCamY));
+          targetCameraX = clamp(targetCameraX, 0, Math.max(0, maxCamX));
+          targetCameraY = clamp(targetCameraY, 0, Math.max(0, maxCamY));
         }
 
-        ctx.translate(-cameraX, -cameraY);
+        // [추가됨] 카메라를 부드럽게 따라가도록 보간(lerp) 처리
+        const smoothing = 0.2; // 0~1 사이 값 (클수록 더 빨리 따라감)
+        const camX = cameraPosRef.current.x;
+        const camY = cameraPosRef.current.y;
+        const newCamX = camX + (targetCameraX - camX) * smoothing;
+        const newCamY = camY + (targetCameraY - camY) * smoothing;
+
+        cameraPosRef.current = { x: newCamX, y: newCamY };
+
+        // 카메라 이동 반영
+        ctx.translate(-cameraPosRef.current.x, -cameraPosRef.current.y);
 
         // (D) 배경
         if (backgroundImage) {
@@ -174,16 +191,6 @@ export function useLobbyRenderer({
             npc.y + npc.height + 12,
           );
         });
-
-        // ------------------ 충돌 영역 화면 표시 (디버깅) ------------------
-        // LOBBY_COLLISION_ZONES.forEach((zone) => {
-        //   ctx.fillStyle = "rgba(255, 0, 0, 0.3)"; // Semi-transparent red
-        //   ctx.fillRect(zone.x, zone.y, zone.width, zone.height);
-        //   ctx.strokeStyle = "red";
-        //   ctx.lineWidth = 2;
-        //   ctx.strokeRect(zone.x, zone.y, zone.width, zone.height);
-        // });
-        // --------------------
 
         // (G) 캐릭터(유저) 스프라이트
         const now = performance.now();
