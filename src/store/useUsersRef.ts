@@ -2,18 +2,7 @@
 
 import { useRef } from "react";
 
-// 방향 정의
-export type Direction = 0 | 1 | 2 | 3;
-
-// 유저 정보
-export interface User {
-  id: string; // 유일 식별자 (예: user_id)
-  x: number;
-  y: number;
-  nickname: string; // 화면 표시용 이름
-  direction: Direction; // 0=Down,1=Up,2=Right,3=Left
-  isMoving?: boolean;
-}
+import { Direction, User } from "@/model/User";
 
 /**
  * "ref"를 이용해 유저 배열을 관리하는 커스텀 훅

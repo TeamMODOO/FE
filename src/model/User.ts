@@ -2,7 +2,7 @@ export interface User {
   id: string;
   x: number;
   y: number;
-  characterType: string;
+  characterType?: string;
   nickname: string;
 
   direction: Direction; // 0=Down,1=Up,2=Right,3=Left
