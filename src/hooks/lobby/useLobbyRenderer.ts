@@ -1,10 +1,8 @@
-// hooks/lobby/useLobbyRenderer.ts
 "use client";
 
 import { RefObject, useEffect, useRef } from "react";
 
 import { LOBBY_MAP_CONSTANTS } from "@/app/lobby/_constant";
-// import { LOBBY_COLLISION_ZONES } from "@/app/lobby/_constant";
 import {
   FRAME_HEIGHT,
   FRAME_WIDTH,
@@ -12,37 +10,35 @@ import {
 } from "@/hooks/performance/useLoadSprites";
 import { NpcInfo } from "@/model/Npc";
 import { PortalInfo } from "@/model/Portal";
-import useUsersStore from "@/store/useUsersStore";
+import { User } from "@/store/useUsersRef";
 
 /** 11:6 비율 (550×301) 고정 뷰포트 예시 */
 const FIXED_VIEWPORT_WIDTH = 605;
 const FIXED_VIEWPORT_HEIGHT = 330;
 
+/**
+ * 이 훅의 params
+ */
 interface UseLobbyRendererParams {
   canvasRef: RefObject<HTMLCanvasElement | null>;
   canvasSize: { w: number; h: number };
   backgroundImage: HTMLImageElement | null;
-
-  /** NPC & 포탈 이미지를 이미 로딩해둔 상태로 넘김 */
   npcImages: Record<string, HTMLImageElement>;
-  /** 단일 포탈 이미지 (예: portal.png) */
   portalImage?: HTMLImageElement | null;
-
   spriteImages: Record<string, HTMLImageElement>;
+
+  // [중요] usersRef를 인자로 직접 받아옴
+  usersRef: React.MutableRefObject<User[]>;
+
   localClientId: string;
   portals: PortalInfo[];
   npcs: NpcInfo[];
 }
 
 /**
- * rAF로 배경/포탈/NPC/캐릭터를 그려주는 훅
- * - 고정 뷰포트(FIXED_VIEWPORT_WIDTH × FIXED_VIEWPORT_HEIGHT)
- * - 사용자의 실제 화면에 맞춰 scale
- * - NPC & 포탈도 함께 렌더링
- *
- * [추가됨/변경됨]
- * - "카메라( cameraX, cameraY )" 좌표를 유저 위치로 즉시 이동하지 않고,
- *   매 프레임마다 조금씩 보간(lerp)하여 부드럽게 이동하도록 구현
+ * (1) 30fps 고정
+ * (2) usersRef.current로부터 유저 정보를 가져와 그리기
+ * (3) ref 기반으로 렌더링하므로, usersRef가 변경되어도 React는 리렌더링되지 않음
  */
 export function useLobbyRenderer({
   canvasRef,
@@ -51,11 +47,12 @@ export function useLobbyRenderer({
   npcImages,
   portalImage,
   spriteImages,
+  usersRef, // ★ 추가
   localClientId,
   portals,
   npcs,
 }: UseLobbyRendererParams) {
-  // [추가됨] 카메라 좌표를 ref로 관리 (re-render 유발 방지)
+  // 카메라 좌표를 ref로 저장 (매 프레임 보간)
   const cameraPosRef = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
@@ -64,7 +61,7 @@ export function useLobbyRenderer({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // 1) 캔버스 픽셀 사이즈 설정
+    // 캔버스 픽셀 사이즈
     canvas.width = canvasSize.w;
     canvas.height = canvasSize.h;
 
@@ -73,12 +70,13 @@ export function useLobbyRenderer({
       return Math.max(min, Math.min(max, value));
     }
 
+    // 30fps 고정
     const fps = 30;
     const frameDuration = 1000 / fps;
     let lastTime = 0;
     let animationId = 0;
 
-    // 캐릭터 frame 관리
+    // 캐릭터 frame 관리용
     const userFrameMap: Record<
       string,
       { frame: number; lastFrameTime: number }
@@ -86,12 +84,14 @@ export function useLobbyRenderer({
     const frameInterval = 200;
     const maxMovingFrame = 3;
 
-    // 초기화 (현재 users)
-    const { users } = useUsersStore.getState();
-    users.forEach((u) => {
+    // 초기화: 현재 usersRef
+    usersRef.current.forEach((u) => {
       userFrameMap[u.id] = { frame: 0, lastFrameTime: performance.now() };
     });
 
+    /**
+     * 실제 렌더 함수 (rAF)
+     */
     const render = (time: number) => {
       const delta = time - lastTime;
       if (delta >= frameDuration) {
@@ -108,11 +108,9 @@ export function useLobbyRenderer({
         ctx.save();
         ctx.scale(baseScale, baseScale);
 
-        // (C) 카메라 위치 결정
-        const store = useUsersStore.getState();
-        const me = store.users.find((u) => u.id === localClientId);
+        // (C) 현재 유저(나) 찾아서 카메라 중앙에 맞추기
+        const me = usersRef.current.find((u) => u.id === localClientId);
 
-        // [변경됨] 기존 즉시 이동 -> lerp
         let targetCameraX = 0;
         let targetCameraY = 0;
         if (me) {
@@ -132,16 +130,16 @@ export function useLobbyRenderer({
           targetCameraY = clamp(targetCameraY, 0, Math.max(0, maxCamY));
         }
 
-        // [추가됨] 카메라를 부드럽게 따라가도록 보간(lerp) 처리
-        const smoothing = 0.2; // 0~1 사이 값 (클수록 더 빨리 따라감)
+        // 보간 (lerp) 로 카메라 부드럽게 이동
+        const smoothing = 0.2;
         const camX = cameraPosRef.current.x;
         const camY = cameraPosRef.current.y;
         const newCamX = camX + (targetCameraX - camX) * smoothing;
         const newCamY = camY + (targetCameraY - camY) * smoothing;
 
-        cameraPosRef.current = { x: newCamX, y: newCamY };
+        cameraPosRef.current.x = newCamX;
+        cameraPosRef.current.y = newCamY;
 
-        // 카메라 이동 반영
         ctx.translate(-cameraPosRef.current.x, -cameraPosRef.current.y);
 
         // (D) 배경
@@ -155,7 +153,7 @@ export function useLobbyRenderer({
           );
         }
 
-        // (E) 포탈 그리기
+        // (E) 포탈
         if (portalImage && portalImage.complete) {
           portals.forEach((p) => {
             ctx.drawImage(portalImage, p.x, p.y, p.width, p.height);
@@ -165,7 +163,7 @@ export function useLobbyRenderer({
             ctx.fillText(p.name, p.x + p.width / 2, p.y + p.height + 12);
           });
         } else {
-          // 포탈 이미지가 없거나 로딩 전이라면, 임시 사각형 표시
+          // 포탈 이미지 없거나 로딩 전
           portals.forEach((p) => {
             ctx.fillStyle = "rgba(0,255,255,0.3)";
             ctx.fillRect(p.x, p.y, p.width, p.height);
@@ -192,9 +190,9 @@ export function useLobbyRenderer({
           );
         });
 
-        // (G) 캐릭터(유저) 스프라이트
+        // (G) 캐릭터들
         const now = performance.now();
-        const storeUsers = useUsersStore.getState().users;
+        const storeUsers = usersRef.current;
 
         // 스프라이트 레이어가 다 로딩됐는지 체크
         if (Object.keys(spriteImages).length === LAYER_ORDER.length) {
@@ -206,7 +204,7 @@ export function useLobbyRenderer({
             }
             const uf = userFrameMap[id];
 
-            // 이동 중이라면 애니메이션 frame 업데이트
+            // 움직이는 중이라면 프레임 애니메이션
             if (isMoving) {
               if (now - uf.lastFrameTime > frameInterval) {
                 uf.frame++;
@@ -248,9 +246,11 @@ export function useLobbyRenderer({
           });
         }
 
-        // (H) 스케일/카메라 해제
+        // (H) restore
         ctx.restore();
       }
+
+      // 다음 프레임
       animationId = requestAnimationFrame(render);
     };
 
@@ -266,6 +266,7 @@ export function useLobbyRenderer({
     npcImages,
     portalImage,
     spriteImages,
+    usersRef, // ref 객체
     localClientId,
     portals,
     npcs,
