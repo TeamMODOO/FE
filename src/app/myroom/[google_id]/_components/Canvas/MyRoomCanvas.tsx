@@ -8,6 +8,8 @@ import { useSession } from "next-auth/react";
 
 // (추가) AlertModal import
 import AlertModal from "@/components/alertModal/AlertModal";
+import { BgMusicButton } from "@/components/bgMusic/BgMusicButton";
+import { BgMusicGlobal } from "@/components/bgMusic/BgMusicGlobal";
 import { Button } from "@/components/ui/button";
 // ---- Hooks
 import { useMyRoomKeyboard } from "@/hooks/myroom/useMyRoomKeyboard";
@@ -44,6 +46,51 @@ import TechStackModal from "../TechStackModal/TechStackModal";
 import Style from "./Canvas.style";
 
 const MyRoomCanvas: React.FC = () => {
+  // 걷기 효과음 재생 위해 추가
+  const walkAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  const footstepSounds = ["/sounds/walk01.wav", "/sounds/walk02.wav"];
+
+  const stepIndexRef = useRef(0);
+
+  function getNextFootstepSound() {
+    const idx = stepIndexRef.current;
+    const src = footstepSounds[idx];
+    stepIndexRef.current = (idx + 1) % footstepSounds.length;
+    return src;
+  }
+
+  // 최소 발소리 간격 (ms)
+  const FOOTSTEP_INTERVAL = 250;
+  // 마지막 발소리 시점 기록 (렌더링 간 보존 위해 useRef)
+  const lastFootstepTime = useRef(0);
+
+  /** 한 걸음(이동)마다 발소리를 재생하는 함수 */
+  function playFootstepSound() {
+    if (!walkAudioRef.current) return;
+
+    // 1) 쿨다운 체크
+    const now = Date.now();
+    if (now - lastFootstepTime.current < FOOTSTEP_INTERVAL) {
+      // 아직 (예: 400ms) 안 지났으면 재생 안 함
+      return;
+    }
+    // 쿨다운 갱신
+    lastFootstepTime.current = now;
+
+    // 2) 다음 음원 결정
+    const nextSrc = getNextFootstepSound();
+
+    // 3) <audio>에 src 할당하고 재생
+    walkAudioRef.current.src = nextSrc;
+    walkAudioRef.current.currentTime = 0;
+
+    walkAudioRef.current.play();
+    // .catch((err) => console.log("Footstep sound blocked:", err));
+  }
+
+  /////////////////////////////////////////
+
   /** 1) session 훅 */
   const { data: session, status } = useSession();
   const isLoadingSession = status === "loading";
@@ -305,6 +352,8 @@ const MyRoomCanvas: React.FC = () => {
           x = prevX;
           y = prevY;
           moved = false;
+        } else {
+          playFootstepSound();
         }
       }
 
@@ -550,6 +599,8 @@ const MyRoomCanvas: React.FC = () => {
    */
   return (
     <>
+      <BgMusicGlobal src="/sounds/myroomBGM.wav" />
+      <BgMusicButton />
       {isLoadingSession ? (
         <div>Loading...</div>
       ) : (
@@ -562,6 +613,8 @@ const MyRoomCanvas: React.FC = () => {
             position: "relative",
           }}
         >
+          {/* 발소리 재생 위한 오디오 태그 */}
+          <audio ref={walkAudioRef} src="" />
           {/* (1) Canvas */}
           <canvas ref={canvasRef} className={Style.absoluteCanvasClass} />
 
