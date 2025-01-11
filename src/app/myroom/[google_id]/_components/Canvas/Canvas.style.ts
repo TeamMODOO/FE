@@ -38,13 +38,40 @@ const Style = {
   `,
 
   bottomButtonsClass: `
+    [font-family:var(--font-noto-serif-kr),serif]
     absolute
     bottom-[20px]
     right-[20px]
     flex
     flex-col
+    rounded-xl
+    border-2
+    border-[rgba(111,99,98,1)]
+    bg-gradient-to-b 
+    from-black/50
+    to-black/80 
     gap-[10px]
-    z-[3]
+    z-[990]
+    p-[2dvw]
+    pt-[0.7dvw]
+  `,
+
+  bottomTitle: `
+    text-fuchsia-600
+    font-bold
+    text-center
+    text-2xl
+
+  `,
+
+  bottomButton: `
+    text-xl
+    p-[2dvw]
+    bg-[rgba(55,55,55,0.6)]
+    hover:bg-[rgba(155,155,155,0.6)]
+    rounded-xl
+    border-2
+    border-[rgba(111,99,98,1)]
   `,
 };
 

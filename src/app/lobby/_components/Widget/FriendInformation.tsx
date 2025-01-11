@@ -94,14 +94,36 @@ export const FriendInformation = () => {
               }
             `}
           >
-            <Card className="flex h-[calc(100vh-2rem)] flex-col">
+            <Card
+              className="
+              bg-color-none 
+              flex h-[calc(100vh-2rem)]
+              flex-col
+              rounded-xl
+              border-2 
+              border-[rgba(111,99,98,1)]
+              bg-gradient-to-b
+              from-black/60
+              to-black/95
+              [backdrop-filter:blur(2px)]
+              [font-family:var(--font-noto-serif-kr),serif]
+            "
+            >
               <CardHeader className="flex flex-row items-center justify-between">
-                <h3 className="font-semibold">친구 목록</h3>
+                <h3
+                  className="
+                text-3xl
+                font-bold
+                text-fuchsia-600
+                "
+                >
+                  친구 목록
+                </h3>
                 <Button variant="ghost" size="icon" onClick={toggleWidget}>
-                  <X className="size-4" />
+                  <X className="text-2xl text-white" />
                 </Button>
               </CardHeader>
-              <CardContent className="grow overflow-auto">
+              <CardContent className="custom-scrollbar grow overflow-auto">
                 <div className="grid grid-cols-3 gap-2">
                   {sortedUsers.map((user) => (
                     <FriendDoor
@@ -123,9 +145,25 @@ export const FriendInformation = () => {
         <Button
           onClick={toggleWidget}
           size="icon"
-          className="fixed right-20 top-4 z-50 size-12 rounded-full"
+          title="친구 목록"
+          className="
+          bg-color-none 
+          fixed 
+          right-60 
+          top-6 
+          z-50 
+          size-20
+          rounded-full
+          border-2
+          border-[rgba(111,99,98,1)] 
+          bg-gradient-to-b
+          from-black/70 
+          to-black/90
+          text-[rgba(171,159,158,1)]
+          hover:bg-[rgba(255,255,255,0.9)]
+          "
         >
-          <Users className="size-6" />
+          <Users className="min-h-8 min-w-8" />
         </Button>
       )}
     </>

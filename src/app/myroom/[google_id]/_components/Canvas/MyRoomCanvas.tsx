@@ -6,6 +6,10 @@ import { useParams } from "next/navigation";
 
 import { useSession } from "next-auth/react";
 
+// (추가) AlertModal import
+import AlertModal from "@/components/alertModal/AlertModal";
+import { BgMusicButton } from "@/components/bgMusic/BgMusicButton";
+import { BgMusicGlobal } from "@/components/bgMusic/BgMusicGlobal";
 import { Button } from "@/components/ui/button";
 // ---- Hooks
 import { useMyRoomKeyboard } from "@/hooks/myroom/useMyRoomKeyboard";
@@ -42,6 +46,89 @@ import TechStackModal from "../TechStackModal/TechStackModal";
 import Style from "./Canvas.style";
 
 const MyRoomCanvas: React.FC = () => {
+  // 걷기 효과음 재생 위해 추가
+  const walkAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  const footstepSounds = ["/sounds/walk01.wav", "/sounds/walk02.wav"];
+
+  const stepIndexRef = useRef(0);
+
+  function getNextFootstepSound() {
+    const idx = stepIndexRef.current;
+    const src = footstepSounds[idx];
+    stepIndexRef.current = (idx + 1) % footstepSounds.length;
+    return src;
+  }
+  // 모달 이벤트 효과음
+  const modalEventAudioRef = useRef<HTMLAudioElement | null>(null);
+  // 포탈 이동 음향 처리
+  // 1) 오디오 ref
+  const portalAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  function playModalEventSound() {
+    if (!modalEventAudioRef.current) return;
+    modalEventAudioRef.current.currentTime = 0;
+    modalEventAudioRef.current.play().catch(() => {});
+  }
+
+  // 2) 사운드 재생 함수
+  function playPortalSound() {
+    if (!portalAudioRef.current) return;
+    portalAudioRef.current.currentTime = 0;
+    portalAudioRef.current.play().catch(() => {
+      // 브라우저 정책으로 막힐 수 있음
+    });
+  }
+
+  // 3) 페이드 아웃 상태
+  const [isFadingOut, setIsFadingOut] = useState(false);
+
+  // 4) 실제 "/lobby" 이동 함수
+  function goLobby() {
+    // 사운드 재생
+    playPortalSound();
+    // 페이드 아웃 시작
+    setIsFadingOut(true);
+    // 2초 후 이동
+    setTimeout(() => {
+      window.location.href = "/lobby";
+      // 또는 router.push("/lobby") 사용 가능
+    }, 700);
+  }
+  //////////////////////////////////////////
+
+  // 발소리 관련
+  // 최소 발소리 간격 (ms)
+  const FOOTSTEP_INTERVAL = 250;
+  // 마지막 발소리 시점 기록 (렌더링 간 보존 위해 useRef)
+  const lastFootstepTime = useRef(0);
+
+  /** 한 걸음(이동)마다 발소리를 재생하는 함수 */
+  function playFootstepSound() {
+    if (!walkAudioRef.current) return;
+
+    // 1) 쿨다운 체크
+    const now = Date.now();
+    if (now - lastFootstepTime.current < FOOTSTEP_INTERVAL) {
+      // 아직 (예: 400ms) 안 지났으면 재생 안 함
+      return;
+    }
+    // 쿨다운 갱신
+    lastFootstepTime.current = now;
+
+    // 2) 다음 음원 결정
+    const nextSrc = getNextFootstepSound();
+
+    // 3) <audio>에 src 할당하고 재생
+    walkAudioRef.current.src = nextSrc;
+    walkAudioRef.current.currentTime = 0;
+
+    walkAudioRef.current.play();
+    // .catch((err) => console.log("Footstep sound blocked:", err));
+  }
+
+  /////////////////////////////////////////
+
   /** 1) session 훅 */
   const { data: session, status } = useSession();
   const isLoadingSession = status === "loading";
@@ -67,8 +154,8 @@ const MyRoomCanvas: React.FC = () => {
     bg.onload = () => setBackgroundImage(bg);
   }, []);
 
-  /** 4) 닉네임: session?.user?.name 없으면 "김희원" */
-  const userName = session?.user?.name ?? "김희원";
+  /** 4) 닉네임: session?.user?.name 없으면 "GuestUser" */
+  const userName = session?.user?.name ?? "GuestUser";
 
   /** 5) 내 캐릭터 state */
   const [myUser, setMyUser] = useState<User>({
@@ -158,6 +245,7 @@ const MyRoomCanvas: React.FC = () => {
     myUserId: "me",
     isAnyModalOpen,
     portal,
+    onPortalEnter: goLobby,
   });
 
   /** 9) 캐릭터 스프라이트 로딩 */
@@ -303,6 +391,8 @@ const MyRoomCanvas: React.FC = () => {
           x = prevX;
           y = prevY;
           moved = false;
+        } else {
+          playFootstepSound();
         }
       }
 
@@ -442,6 +532,7 @@ const MyRoomCanvas: React.FC = () => {
           worldY >= b.y &&
           worldY <= b.y + FURNITURE_HEIGHT
         ) {
+          playModalEventSound();
           setIsBoardOpen(true);
           return;
         }
@@ -454,7 +545,8 @@ const MyRoomCanvas: React.FC = () => {
         worldY >= portal.y &&
         worldY <= portal.y + PORTAL_HEIGHT
       ) {
-        window.location.href = portal.route;
+        // window.location.href = portal.route;
+        goLobby();
         return;
       }
 
@@ -467,6 +559,7 @@ const MyRoomCanvas: React.FC = () => {
           worldY >= f.y &&
           worldY <= f.y + FURNITURE_HEIGHT
         ) {
+          playModalEventSound();
           handleFurnitureClickCustom(f);
           return;
         }
@@ -489,16 +582,27 @@ const MyRoomCanvas: React.FC = () => {
     canvasSize,
   ]);
 
+  // (추가) AlertModal 관련 상태
+  const [alertModalOpen, setAlertModalOpen] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
+
+  const openAlertModal = (message: string) => {
+    setAlertMessage(message);
+    setAlertModalOpen(true);
+  };
+
   /** (C) 가구 클릭 로직 */
   const handleFurnitureClickCustom = (item: Funiture) => {
     if (item.funitureType === "none") {
-      alert("아직 등록되지 않은 항목입니다.");
+      // alert("아직 등록되지 않은 항목입니다."); → AlertModal로 교체
+      openAlertModal("아직 등록되지 않은 항목입니다.");
       return;
     }
     if (item.funitureType.startsWith("resume/")) {
       const pdf = item.data?.resumeLink;
       if (!pdf) {
-        alert("PDF 링크가 없습니다.");
+        // alert("PDF 링크가 없습니다."); → AlertModal로 교체
+        openAlertModal("PDF 링크가 없습니다.");
         return;
       }
       setPdfUrl(pdf);
@@ -514,27 +618,40 @@ const MyRoomCanvas: React.FC = () => {
 
   const handleSaveResume = async () => {
     // ...
-    // (생략 없이, 기존 로직 동일)
+    // 원래 사용하던 로직. alert()가 있으면 openAlertModal로 교체
   };
 
   const handleSavePortfolio = () => {
     // ...
+    // 원래 사용하던 로직. alert()가 있으면 openAlertModal로 교체
   };
 
   const handleSaveTechStack = () => {
     // ...
+    // 원래 사용하던 로직. alert()가 있으면 openAlertModal로 교체
   };
 
   /** (E) 이력서/포트폴리오/기술스택 모달 열기 버튼 */
-  const handleOpenResumeModal = () => setResumeModalOpen(true);
-  const handleOpenPortfolioModal = () => setPortfolioModalOpen(true);
-  const handleOpenTechStackModal = () => setTechStackModalOpen(true);
+  const handleOpenResumeModal = () => {
+    playModalEventSound();
+    setResumeModalOpen(true);
+  };
+  const handleOpenPortfolioModal = () => {
+    playModalEventSound();
+    setPortfolioModalOpen(true);
+  };
+  const handleOpenTechStackModal = () => {
+    playModalEventSound();
+    setTechStackModalOpen(true);
+  };
 
   /**
    * 최종 JSX
    */
   return (
     <>
+      <BgMusicGlobal src="/sounds/myroomBGM.wav" />
+      <BgMusicButton />
       {isLoadingSession ? (
         <div>Loading...</div>
       ) : (
@@ -547,18 +664,46 @@ const MyRoomCanvas: React.FC = () => {
             position: "relative",
           }}
         >
+          {/* 발소리 재생 위한 오디오 태그 */}
+          <audio ref={walkAudioRef} src="" />
+          {/* 모달 이벤트 사운드용 <audio> */}
+          <audio
+            ref={modalEventAudioRef}
+            src="/sounds/modalEvent.wav"
+            style={{ display: "none" }}
+          />
+          {/* 포탈 사운드 재생을 위한 태그 */}
+          <audio
+            ref={portalAudioRef}
+            src="/sounds/portalEvent.wav"
+            style={{ display: "none" }}
+          />
+
           {/* (1) Canvas */}
           <canvas ref={canvasRef} className={Style.absoluteCanvasClass} />
 
           {/* (2) 하단 버튼들 */}
           <div className={Style.bottomButtonsClass}>
-            <Button onClick={handleOpenResumeModal} disabled={false}>
+            <p className={Style.bottomTitle}>마이룸 꾸미기</p>
+            <Button
+              onClick={handleOpenResumeModal}
+              disabled={false}
+              className={Style.bottomButton}
+            >
               이력서(PDF) 추가
             </Button>
-            <Button onClick={handleOpenPortfolioModal} disabled={false}>
+            <Button
+              onClick={handleOpenPortfolioModal}
+              disabled={false}
+              className={Style.bottomButton}
+            >
               포트폴리오(링크) 추가
             </Button>
-            <Button onClick={handleOpenTechStackModal} disabled={false}>
+            <Button
+              onClick={handleOpenTechStackModal}
+              disabled={false}
+              className={Style.bottomButton}
+            >
               기술 스택 추가
             </Button>
           </div>
@@ -625,8 +770,27 @@ const MyRoomCanvas: React.FC = () => {
             onClose={setPortfolioLinkViewModalOpen}
             link={clickedPortfolioLink}
           />
+
+          {/* (추가) AlertModal (대체된 alert) */}
+          {alertModalOpen && (
+            <AlertModal title="알림" onClose={() => setAlertModalOpen(false)}>
+              {alertMessage}
+            </AlertModal>
+          )}
         </div>
       )}
+      <div
+        className={`
+          duration-[2000ms] 
+          pointer-events-none 
+          fixed 
+          inset-0 
+          z-[9999]
+          bg-black
+          transition-opacity
+          ${isFadingOut ? "opacity-100" : "opacity-0"}
+        `}
+      />
     </>
   );
 };

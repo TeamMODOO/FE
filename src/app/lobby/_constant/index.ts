@@ -64,6 +64,15 @@ export const LOBBY_NPCS: NpcInfo[] = [
     name: "게시판",
   },
   {
+    x: 420,
+    y: 170,
+    width: 40,
+    height: 40,
+    image: "/character/npc3.png",
+    modalTitle: "정글의 원장",
+    name: "정글의 원장",
+  },
+  {
     x: 135,
     y: 350,
     width: 120,
@@ -80,15 +89,6 @@ export const LOBBY_NPCS: NpcInfo[] = [
     image: "/character/npc5.png",
     modalTitle: "---",
     name: "미니 게임기",
-  },
-  {
-    x: 420,
-    y: 170,
-    width: 40,
-    height: 40,
-    image: "/character/npc3.png",
-    modalTitle: "---",
-    name: "정글의 원장",
   },
 ];
 

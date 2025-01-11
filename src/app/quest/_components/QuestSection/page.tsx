@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -14,7 +14,6 @@ import { EditorView } from "@codemirror/view";
 import CodeMirror from "@uiw/react-codemirror";
 
 import AlertModal from "@/components/alertModal/AlertModal"; // ← 추가
-import NeedSignInModal from "@/components/modal/NeedSignIn/NeedSignInModal"; // (기존)
 import { Button } from "@/components/ui/button";
 import { useQuestGet } from "@/hooks/quest/useQuestGet";
 import { useQuestPost } from "@/hooks/quest/useQuestPost";
@@ -71,6 +70,7 @@ export default function QuestSection() {
   const [onConfirm, setOnConfirm] = useState<() => void>(() => () => {});
 
   const handleLockedClick = () => {
+    playDragonEventSound();
     setIsStart(true);
   };
 
@@ -187,6 +187,7 @@ export default function QuestSection() {
 
   const handleStartOrStop = () => {
     if (!isStart) {
+      playDragonEventSound();
       setIsStart(true);
     } else {
       // 기존 window.confirm 대신 → ConfirmModal 열기
@@ -224,8 +225,21 @@ export default function QuestSection() {
     router.push("/lobby");
   };
 
+  const dragonAudioRef = useRef<HTMLAudioElement>(null);
+
+  function playDragonEventSound() {
+    if (!dragonAudioRef.current) return;
+    dragonAudioRef.current.currentTime = 0;
+    dragonAudioRef.current.play().catch(() => {});
+  }
+
   return (
     <div className={styles.container}>
+      <audio
+        ref={dragonAudioRef}
+        src="/sounds/dragonGrowl.wav"
+        style={{ display: "none" }}
+      />
       <div className={styles.questHeader}>
         <h1 className={styles.title}>오늘의 문제</h1>
         <h1 className={styles.timer}>{isStart ? formattedTime : "00:00:00"}</h1>

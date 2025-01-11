@@ -1,4 +1,5 @@
-// components/LobbyCanvas.tsx
+// src/app/lobby/_components/Canvas/LobbyCanvas.tsx
+
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
@@ -15,6 +16,9 @@ import {
   LOBBY_PORTALS,
   QNA_LIST,
 } from "@/app/lobby/_constant";
+import RankingModal from "@/app/questmap/_components/RankingModal/RankingModal";
+import MiniGameModal from "@/components/modal/MiniGame/MiniGameModal";
+// AlertModal 불러오기
 import NeedSignInModal from "@/components/modal/NeedSignIn/NeedSignInModal";
 import { useLobbyRenderer } from "@/hooks/lobby/useLobbyRenderer";
 import useLobbySocketEvents from "@/hooks/lobby/useLobbySocketEvents";
@@ -41,8 +45,81 @@ interface LobbyCanvasProps {
 }
 
 const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
+  // [1] 걷기 효과음 ----------------------
+  const walkAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  const footstepSounds = ["/sounds/walk01.wav", "/sounds/walk02.wav"];
+  const stepIndexRef = useRef(0);
+
+  function getNextFootstepSound() {
+    const idx = stepIndexRef.current;
+    const src = footstepSounds[idx];
+    stepIndexRef.current = (idx + 1) % footstepSounds.length;
+    return src;
+  }
+
+  // 최소 발소리 간격 (ms)
+  const FOOTSTEP_INTERVAL = 250;
+  const lastFootstepTime = useRef(0);
+
+  function playFootstepSound() {
+    if (!walkAudioRef.current) return;
+
+    const now = Date.now();
+    if (now - lastFootstepTime.current < FOOTSTEP_INTERVAL) {
+      return;
+    }
+    lastFootstepTime.current = now;
+
+    const nextSrc = getNextFootstepSound();
+    walkAudioRef.current.src = nextSrc;
+    walkAudioRef.current.currentTime = 0;
+
+    walkAudioRef.current.play().catch(() => {
+      /* 브라우저 정책 등에 의해 블록될 수 있음 */
+    });
+  }
+  // --------------------------------------
+
+  // 모달 이벤트 효과음 ----------------
+  const modalEventAudioRef = useRef<HTMLAudioElement | null>(null);
+  const portalEventAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  function playModalEventSound() {
+    if (!modalEventAudioRef.current) return;
+    modalEventAudioRef.current.currentTime = 0;
+    modalEventAudioRef.current.play().catch(() => {});
+  }
+
+  // 포탈 이벤트 효과음 ----------------
+  function playPortalEventSound() {
+    if (!portalEventAudioRef.current) return;
+    portalEventAudioRef.current.currentTime = 0;
+    portalEventAudioRef.current.play().catch(() => {});
+  }
+
+  // 페이드아웃 상태
+  const [isFadingOut, setIsFadingOut] = useState(false);
+
+  // 실제로 “마이룸” 이동을 수행하는 함수
+  function goMyRoom(userId: string) {
+    // 1) 사운드 재생
+    playPortalEventSound();
+
+    // 2) 페이드아웃 트리거
+    setIsFadingOut(true);
+
+    // 3) 2초 뒤 router.push()
+    setTimeout(() => {
+      router.push(`/myroom/${userId}`);
+    }, 800);
+  }
+  // ---------------------------------------
+
   const router = useRouter();
   const [signInModalOpen, setSignInModalOpen] = useState(false);
+  const [rankingModalOpen, setRankingModalOpen] = useState(false);
+  const [minigameModalOpen, setMinigameModalOpen] = useState(false);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const { data: session, status } = useSession();
@@ -55,12 +132,11 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
   // 클라이언트 아이디
   const { clientId } = useClientIdStore();
 
-  // 이동 소켓 (로직 안에서 useUsersRef의 메서드를 사용하도록 수정)
+  // 이동 소켓
   const { emitMovement } = useLobbySocketEvents({
     userId: clientId ?? "",
     userNickname: session?.user?.name ?? "Guest",
 
-    // 소켓 이벤트 안에서도 ref 업데이트
     onAddUser: addUser,
     onUpdateUserPosition: updateUserPosition,
     onRemoveUser: removeUser,
@@ -70,7 +146,6 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     if (!clientId) return;
     if (status === "loading") return;
     if (!socket || !isConnected) return;
-
     socket.emit("CS_USER_POSITION_INFO", {});
   }, [clientId, status, socket, isConnected]);
 
@@ -129,9 +204,10 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     });
   }, []);
 
-  // ------------------ 모달들 ------------------
+  // 모달들...
   const [npc1ModalOpen, setNpc1ModalOpen] = useState(false);
   const [npc2ModalOpen, setNpc2ModalOpen] = useState(false);
+  const [npc3ModalOpen, setNpc3ModalOpen] = useState(false);
   const [noticeModalOpen, setNoticeModalOpen] = useState(false);
   const [meetingModalOpen, setMeetingModalOpen] = useState(false);
 
@@ -158,13 +234,27 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     setSelectedQnaIndex((prev) => (prev === index ? null : index));
   };
 
-  // 어떤 모달이라도 열려있는지
-  const isAnyModalOpen =
-    npc1ModalOpen || npc2ModalOpen || noticeModalOpen || meetingModalOpen;
+  // 모달 오픈 여부
+  const [alertModalOpen, setAlertModalOpen] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
 
-  // ------------------ 스페이스바 상호작용 ------------------
+  const openAlertModal = (message: string) => {
+    setAlertMessage(message);
+    setAlertModalOpen(true);
+  };
+
+  // "어떤 모달이라도 열려있는지"
+  const isAnyModalOpen =
+    npc1ModalOpen ||
+    npc2ModalOpen ||
+    npc3ModalOpen ||
+    noticeModalOpen ||
+    meetingModalOpen ||
+    rankingModalOpen ||
+    minigameModalOpen;
+
+  // 스페이스바 상호작용
   function handleSpacebarInteraction() {
-    // ref에서 현재 유저 목록 읽어오기
     const me = usersRef.current.find((u) => u.id === clientId);
     if (!me) return;
 
@@ -176,19 +266,24 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
       const overlap = cr > pl && cl < pr && cb > pt && ct < pb;
       if (overlap) {
         if (p.name === "회의실") {
+          // 모달 사운드 재생
+          playPortalEventSound();
           setMeetingModalOpen(true);
           return;
         }
         if (p.name === "마이룸") {
           if (status === "loading") {
-            alert("세션 로딩중");
+            // 모달 사운드 재생
+            playPortalEventSound();
+            openAlertModal("세션 로딩중");
             return;
           }
           if (!session?.user?.id) {
             setSignInModalOpen(true);
             return;
           }
-          router.push(`/myroom/${session.user.id}`);
+          // router.push(`/myroom/${session.user.id}`);
+          goMyRoom(session.user.id);
           return;
         }
       }
@@ -205,15 +300,19 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
       ];
       const overlap = cr > nl && cl < nr && cb > nt && ct < nb;
       if (overlap) {
+        playModalEventSound();
         if (i === 0) setNpc1ModalOpen(true);
         if (i === 1) setNpc2ModalOpen(true);
         if (i === 2) setNoticeModalOpen(true);
+        if (i == 3) setNpc3ModalOpen(true);
+        if (i == 4) setRankingModalOpen(true);
+        if (i == 5) setMinigameModalOpen(true);
         return;
       }
     }
   }
 
-  // ------------------ 키보드 입력 처리 ------------------
+  // 키 입력 처리
   const [pressedKeys, setPressedKeys] = useState<Record<string, boolean>>({});
   useEffect(() => {
     if (isAnyModalOpen) setPressedKeys({});
@@ -222,6 +321,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (chatOpen || isAnyModalOpen) return;
+
       if (
         ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " "].includes(e.key)
       ) {
@@ -275,12 +375,11 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     return null;
   }
 
-  const throttledPressedKeys = useThrottle(pressedKeys, 50);
+  const throttledPressedKeys = useThrottle(pressedKeys, 100);
   useEffect(() => {
     if (chatOpen || isAnyModalOpen) return;
     if (!clientId) return;
 
-    // ref에서 내 정보
     const me = usersRef.current.find((u) => u.id === clientId);
     if (!me) return;
 
@@ -296,7 +395,6 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     let newX = x;
     let newY = y;
 
-    // 이동
     if (newDir === 1 && y > 0) {
       newY -= LOBBY_MAP_CONSTANTS.SPEED;
     } else if (
@@ -313,7 +411,6 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
       newX -= LOBBY_MAP_CONSTANTS.SPEED;
     }
 
-    // 충돌
     const newBoundingBox = {
       x: newX,
       y: newY,
@@ -338,6 +435,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     if (moved) {
       updateUserPosition(clientId, x, y, newDir, true);
       emitMovement(x, y, newDir);
+      playFootstepSound();
     } else {
       updateUserPosition(clientId, x, y, newDir, false);
     }
@@ -350,7 +448,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     updateUserPosition,
   ]);
 
-  // ------------------ 30fps로 캔버스에 렌더링 ------------------
+  // 캔버스 렌더링 (30fps)
   useLobbyRenderer({
     canvasRef,
     canvasSize,
@@ -358,9 +456,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     npcImages,
     portalImage,
     spriteImages,
-    // [중요] ref 넘김
     usersRef,
-
     localClientId: clientId ?? "",
     portals: LOBBY_PORTALS,
     npcs: LOBBY_NPCS,
@@ -368,6 +464,24 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
 
   return (
     <>
+      {/* (1) 걷기 효과음용 <audio> */}
+      <audio ref={walkAudioRef} src="" />
+
+      {/* (2) 모달 이벤트 사운드용 <audio> */}
+      <audio
+        ref={modalEventAudioRef}
+        src="/sounds/modalEvent.wav"
+        style={{ display: "none" }}
+      />
+
+      {/* (3) 포탈 이벤트 사운드용 <audio> */}
+      <audio
+        ref={portalEventAudioRef}
+        src="/sounds/portalEvent.wav"
+        style={{ display: "none" }}
+      />
+
+      {/* 로그인 모달 */}
       {signInModalOpen && (
         <NeedSignInModal
           onClose={() => {
@@ -376,6 +490,17 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
         />
       )}
 
+      {/* 랭킹 모달 */}
+      {rankingModalOpen && (
+        <RankingModal onClose={() => setRankingModalOpen(false)} />
+      )}
+
+      {/* 미니게임 모달 */}
+      {minigameModalOpen && (
+        <MiniGameModal onClose={() => setMinigameModalOpen(false)} />
+      )}
+
+      {/* 숨겨진 포탈 이미지를 미리 로드 */}
       <NextImage
         src="/furniture/portal.png"
         alt="portal"
@@ -385,7 +510,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
         priority
       />
 
-      {/* NPC1 모달 */}
+      {/* NPC 모달들 */}
       <NpcModal
         isOpen={npc1ModalOpen}
         onClose={() => setNpc1ModalOpen(false)}
@@ -394,8 +519,6 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
       >
         <DailyProblemContent />
       </NpcModal>
-
-      {/* NPC2 모달 */}
       <NpcModal
         isOpen={npc2ModalOpen}
         onClose={() => setNpc2ModalOpen(false)}
@@ -408,8 +531,6 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
           handleQnaClick={handleQnaClick}
         />
       </NpcModal>
-
-      {/* 공지사항 모달 */}
       {noticeModalOpen && (
         <NoticeBoardModal
           open={noticeModalOpen}
@@ -424,8 +545,14 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
           handleAddNotice={handleAddNotice}
         />
       )}
-
-      {/* 회의실 모달 */}
+      <NpcModal
+        isOpen={npc3ModalOpen}
+        onClose={() => setNpc3ModalOpen(false)}
+        imgSrc="/npc_event/npc3.png"
+        title="정글의 원장"
+      >
+        <div>어떻게, 좀 잘 되어가나요?</div>
+      </NpcModal>
       {meetingModalOpen && (
         <EnterMeetingRoom
           open={meetingModalOpen}
@@ -433,7 +560,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
         />
       )}
 
-      {/* Canvas */}
+      {/* Canvas 영역 */}
       <div
         className={Style.canvasContainerClass}
         style={{
@@ -447,6 +574,13 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
 
         <canvas ref={canvasRef} />
       </div>
+
+      {/* 포탈 이동 시를 위한 검은색 페이드 오버레이 */}
+      <div
+        className={`fade-overlay duration-2000 pointer-events-none fixed inset-0 bg-black transition-opacity
+            ${isFadingOut ? "opacity-100" : "opacity-0"}
+          `}
+      />
     </>
   );
 };

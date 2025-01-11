@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 
+import { BgMusicButton } from "@/components/bgMusic/BgMusicButton";
+import { BgMusicGlobal } from "@/components/bgMusic/BgMusicGlobal";
 import { ChatWidget } from "@/components/chat/ChatWidget";
 import useClientIdStore from "@/store/useClientIdStore";
 import useSocketStore from "@/store/useSocketStore";
@@ -53,6 +55,8 @@ export default function Page() {
       <LobbyCanvas chatOpen={chatOpen} />
       <ChatWidget isOpen={chatOpen} setIsOpen={setChatOpen} position="right" />
       <FriendInformation />
+      <BgMusicGlobal src="/sounds/lobbyBGM.wav" />
+      <BgMusicButton />
     </>
   );
 }

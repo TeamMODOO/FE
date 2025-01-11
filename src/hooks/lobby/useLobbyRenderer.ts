@@ -77,7 +77,7 @@ export function useLobbyRenderer({
       string,
       { frame: number; lastFrameTime: number }
     > = {};
-    const frameInterval = 200;
+    const frameInterval = 100;
     const maxMovingFrame = 3;
 
     // 초기화(이미 있는 유저들에 대해)

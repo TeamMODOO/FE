@@ -34,7 +34,9 @@ const PortfolioModal: React.FC<PortfolioModalProps> = ({
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className={Style.dialogContent}>
         <DialogHeader>
-          <DialogTitle>포트폴리오 링크 추가</DialogTitle>
+          <DialogTitle className={Style.modalTitle}>
+            포트폴리오 링크 추가
+          </DialogTitle>
         </DialogHeader>
 
         <div className={Style.formContainer}>
@@ -44,8 +46,11 @@ const PortfolioModal: React.FC<PortfolioModalProps> = ({
             placeholder="예: https://github.com/my-portfolio ..."
             value={portfolioLink}
             onChange={(e) => setPortfolioLink(e.target.value)}
+            className={Style.linkInput}
           />
-          <Button onClick={onSave}>저장하기</Button>
+          <Button onClick={onSave} className={Style.saveButton}>
+            저장하기
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

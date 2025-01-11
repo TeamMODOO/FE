@@ -4,6 +4,9 @@ import { useEffect, useState } from "react";
 
 import Image from "next/image";
 
+import { BgMusicButton } from "@/components/bgMusic/BgMusicButton";
+import { BgMusicGlobal } from "@/components/bgMusic/BgMusicGlobal";
+
 import QuestSection from "./_components/QuestSection/page";
 
 import styles from "./Quest.module.css";
@@ -40,6 +43,9 @@ export default function Quest() {
 
   return (
     <div className={styles.container}>
+      <BgMusicGlobal src="/sounds/questBGM.wav" />
+      <BgMusicButton position="left" />
+
       {Array.from({ length: 10 }).map((_, index) => (
         <div key={index} className={styles.floatingSquare}></div>
       ))}
