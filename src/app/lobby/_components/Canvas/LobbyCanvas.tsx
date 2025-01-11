@@ -81,16 +81,38 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
   }
   // --------------------------------------
 
-  // [2] 모달 이벤트 효과음 ----------------
-  // SpaceBar 눌렀을 때 재생할 오디오
+  // 모달 이벤트 효과음 ----------------
   const modalEventAudioRef = useRef<HTMLAudioElement | null>(null);
+  const portalEventAudioRef = useRef<HTMLAudioElement | null>(null);
 
   function playModalEventSound() {
     if (!modalEventAudioRef.current) return;
     modalEventAudioRef.current.currentTime = 0;
-    modalEventAudioRef.current.play().catch(() => {
-      /* 브라우저 정책 등에 의해 블록될 수 있음 */
-    });
+    modalEventAudioRef.current.play().catch(() => {});
+  }
+
+  // 포탈 이벤트 효과음 ----------------
+  function playPortalEventSound() {
+    if (!portalEventAudioRef.current) return;
+    portalEventAudioRef.current.currentTime = 0;
+    portalEventAudioRef.current.play().catch(() => {});
+  }
+
+  // 페이드아웃 상태
+  const [isFadingOut, setIsFadingOut] = useState(false);
+
+  // 실제로 “마이룸” 이동을 수행하는 함수
+  function goMyRoom(userId: string) {
+    // 1) 사운드 재생
+    playPortalEventSound();
+
+    // 2) 페이드아웃 트리거
+    setIsFadingOut(true);
+
+    // 3) 2초 뒤 router.push()
+    setTimeout(() => {
+      router.push(`/myroom/${userId}`);
+    }, 800);
   }
   // ---------------------------------------
 
@@ -233,9 +255,6 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
 
   // 스페이스바 상호작용
   function handleSpacebarInteraction() {
-    // [!!!] 모달 사운드 재생
-    playModalEventSound();
-
     const me = usersRef.current.find((u) => u.id === clientId);
     if (!me) return;
 
@@ -247,11 +266,15 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
       const overlap = cr > pl && cl < pr && cb > pt && ct < pb;
       if (overlap) {
         if (p.name === "회의실") {
+          // 모달 사운드 재생
+          playPortalEventSound();
           setMeetingModalOpen(true);
           return;
         }
         if (p.name === "마이룸") {
           if (status === "loading") {
+            // 모달 사운드 재생
+            playPortalEventSound();
             openAlertModal("세션 로딩중");
             return;
           }
@@ -259,7 +282,8 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
             setSignInModalOpen(true);
             return;
           }
-          router.push(`/myroom/${session.user.id}`);
+          // router.push(`/myroom/${session.user.id}`);
+          goMyRoom(session.user.id);
           return;
         }
       }
@@ -276,6 +300,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
       ];
       const overlap = cr > nl && cl < nr && cb > nt && ct < nb;
       if (overlap) {
+        playModalEventSound();
         if (i === 0) setNpc1ModalOpen(true);
         if (i === 1) setNpc2ModalOpen(true);
         if (i === 2) setNoticeModalOpen(true);
@@ -296,6 +321,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (chatOpen || isAnyModalOpen) return;
+
       if (
         ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " "].includes(e.key)
       ) {
@@ -448,6 +474,13 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
         style={{ display: "none" }}
       />
 
+      {/* (3) 포탈 이벤트 사운드용 <audio> */}
+      <audio
+        ref={portalEventAudioRef}
+        src="/sounds/portalEvent.wav"
+        style={{ display: "none" }}
+      />
+
       {/* 로그인 모달 */}
       {signInModalOpen && (
         <NeedSignInModal
@@ -541,6 +574,13 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
 
         <canvas ref={canvasRef} />
       </div>
+
+      {/* 포탈 이동 시를 위한 검은색 페이드 오버레이 */}
+      <div
+        className={`fade-overlay duration-2000 pointer-events-none fixed inset-0 bg-black transition-opacity
+            ${isFadingOut ? "opacity-100" : "opacity-0"}
+          `}
+      />
     </>
   );
 };
