@@ -51,7 +51,7 @@ export default function MiniGameModal({ onClose }: MiniGameModalProps) {
 
         {/* 타이틀 영역 */}
         <div className={styles.modalHeader}>
-          <p className={styles.modalTitle}>미니게임</p>
+          <p className={styles.modalTitle}>미니게임 🚀 </p>
         </div>
 
         {/* 본문 영역 */}
