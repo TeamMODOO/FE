@@ -1,3 +1,5 @@
+// src/app/lobby/_components/Canvas/LobbyCanvas.tsx
+
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
@@ -14,6 +16,8 @@ import {
   LOBBY_PORTALS,
   QNA_LIST,
 } from "@/app/lobby/_constant";
+import RankingModal from "@/app/questmap/_components/RankingModal/RankingModal";
+import MiniGameModal from "@/components/modal/MiniGame/MiniGameModal";
 // AlertModal 불러오기
 import NeedSignInModal from "@/components/modal/NeedSignIn/NeedSignInModal";
 import { useLobbyRenderer } from "@/hooks/lobby/useLobbyRenderer";
@@ -41,11 +45,10 @@ interface LobbyCanvasProps {
 }
 
 const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
-  // 걷기 효과음 재생 위해 추가
+  // [1] 걷기 효과음 ----------------------
   const walkAudioRef = useRef<HTMLAudioElement | null>(null);
 
   const footstepSounds = ["/sounds/walk01.wav", "/sounds/walk02.wav"];
-
   const stepIndexRef = useRef(0);
 
   function getNextFootstepSound() {
@@ -57,34 +60,39 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
 
   // 최소 발소리 간격 (ms)
   const FOOTSTEP_INTERVAL = 250;
-  // 마지막 발소리 시점 기록 (렌더링 간 보존 위해 useRef)
   const lastFootstepTime = useRef(0);
 
-  /** 한 걸음(이동)마다 발소리를 재생하는 함수 */
   function playFootstepSound() {
     if (!walkAudioRef.current) return;
 
-    // 1) 쿨다운 체크
     const now = Date.now();
     if (now - lastFootstepTime.current < FOOTSTEP_INTERVAL) {
-      // 아직 (예: 400ms) 안 지났으면 재생 안 함
       return;
     }
-    // 쿨다운 갱신
     lastFootstepTime.current = now;
 
-    // 2) 다음 음원 결정
     const nextSrc = getNextFootstepSound();
-
-    // 3) <audio>에 src 할당하고 재생
     walkAudioRef.current.src = nextSrc;
     walkAudioRef.current.currentTime = 0;
 
-    walkAudioRef.current.play();
-    // .catch((err) => console.log("Footstep sound blocked:", err));
+    walkAudioRef.current.play().catch(() => {
+      /* 브라우저 정책 등에 의해 블록될 수 있음 */
+    });
   }
+  // --------------------------------------
 
-  /////////////////////////////////////////
+  // [2] 모달 이벤트 효과음 ----------------
+  // SpaceBar 눌렀을 때 재생할 오디오
+  const modalEventAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  function playModalEventSound() {
+    if (!modalEventAudioRef.current) return;
+    modalEventAudioRef.current.currentTime = 0;
+    modalEventAudioRef.current.play().catch(() => {
+      /* 브라우저 정책 등에 의해 블록될 수 있음 */
+    });
+  }
+  // ---------------------------------------
 
   const router = useRouter();
   const [signInModalOpen, setSignInModalOpen] = useState(false);
@@ -102,12 +110,11 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
   // 클라이언트 아이디
   const { clientId } = useClientIdStore();
 
-  // 이동 소켓 (로직 안에서 useUsersRef의 메서드를 사용하도록 수정)
+  // 이동 소켓
   const { emitMovement } = useLobbySocketEvents({
     userId: clientId ?? "",
     userNickname: session?.user?.name ?? "Guest",
 
-    // 소켓 이벤트 안에서도 ref 업데이트
     onAddUser: addUser,
     onUpdateUserPosition: updateUserPosition,
     onRemoveUser: removeUser,
@@ -117,7 +124,6 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     if (!clientId) return;
     if (status === "loading") return;
     if (!socket || !isConnected) return;
-    // 아무 내용 없이 "CS_USER_POSTION_INFO" 보냄
     socket.emit("CS_USER_POSITION_INFO", {});
   }, [clientId, status, socket, isConnected]);
 
@@ -176,7 +182,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     });
   }, []);
 
-  // ------------------ 모달들 ------------------
+  // 모달들...
   const [npc1ModalOpen, setNpc1ModalOpen] = useState(false);
   const [npc2ModalOpen, setNpc2ModalOpen] = useState(false);
   const [npc3ModalOpen, setNpc3ModalOpen] = useState(false);
@@ -206,29 +212,30 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     setSelectedQnaIndex((prev) => (prev === index ? null : index));
   };
 
-  // 어떤 모달이라도 열려있는지
+  // 모달 오픈 여부
+  const [alertModalOpen, setAlertModalOpen] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
+
+  const openAlertModal = (message: string) => {
+    setAlertMessage(message);
+    setAlertModalOpen(true);
+  };
+
+  // "어떤 모달이라도 열려있는지"
   const isAnyModalOpen =
     npc1ModalOpen ||
-    npc2ModalOpen ||
     npc2ModalOpen ||
     npc3ModalOpen ||
     noticeModalOpen ||
     meetingModalOpen ||
     rankingModalOpen ||
     minigameModalOpen;
-  // ------------------ AlertModal 관련 상태 추가 ------------------
-  const [alertModalOpen, setAlertModalOpen] = useState(false);
-  const [alertMessage, setAlertMessage] = useState("");
 
-  // 알림 모달을 띄워주는 헬퍼
-  const openAlertModal = (message: string) => {
-    setAlertMessage(message);
-    setAlertModalOpen(true);
-  };
-
-  // ------------------ 스페이스바 상호작용 ------------------
+  // 스페이스바 상호작용
   function handleSpacebarInteraction() {
-    // ref에서 현재 유저 목록 읽어오기
+    // [!!!] 모달 사운드 재생
+    playModalEventSound();
+
     const me = usersRef.current.find((u) => u.id === clientId);
     if (!me) return;
 
@@ -245,7 +252,6 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
         }
         if (p.name === "마이룸") {
           if (status === "loading") {
-            // alert("세션 로딩중"); -> AlertModal로 교체
             openAlertModal("세션 로딩중");
             return;
           }
@@ -281,7 +287,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     }
   }
 
-  // ------------------ 키보드 입력 처리 ------------------
+  // 키 입력 처리
   const [pressedKeys, setPressedKeys] = useState<Record<string, boolean>>({});
   useEffect(() => {
     if (isAnyModalOpen) setPressedKeys({});
@@ -348,7 +354,6 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     if (chatOpen || isAnyModalOpen) return;
     if (!clientId) return;
 
-    // ref에서 내 정보
     const me = usersRef.current.find((u) => u.id === clientId);
     if (!me) return;
 
@@ -364,7 +369,6 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     let newX = x;
     let newY = y;
 
-    // 이동
     if (newDir === 1 && y > 0) {
       newY -= LOBBY_MAP_CONSTANTS.SPEED;
     } else if (
@@ -381,7 +385,6 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
       newX -= LOBBY_MAP_CONSTANTS.SPEED;
     }
 
-    // 충돌
     const newBoundingBox = {
       x: newX,
       y: newY,
@@ -419,17 +422,15 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     updateUserPosition,
   ]);
 
-  // ------------------ 30fps로 캔버스에 렌더링 ------------------
+  // 캔버스 렌더링 (30fps)
   useLobbyRenderer({
     canvasRef,
     canvasSize,
     backgroundImage,
     npcImages,
-    portalImage, // (추가됨) 여기에 넘김!
+    portalImage,
     spriteImages,
-    // [중요] ref 넘김
     usersRef,
-
     localClientId: clientId ?? "",
     portals: LOBBY_PORTALS,
     npcs: LOBBY_NPCS,
@@ -437,7 +438,16 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
 
   return (
     <>
+      {/* (1) 걷기 효과음용 <audio> */}
       <audio ref={walkAudioRef} src="" />
+
+      {/* (2) 모달 이벤트 사운드용 <audio> */}
+      <audio
+        ref={modalEventAudioRef}
+        src="/sounds/modalEvent.wav"
+        style={{ display: "none" }}
+      />
+
       {/* 로그인 모달 */}
       {signInModalOpen && (
         <NeedSignInModal
@@ -447,8 +457,17 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
         />
       )}
 
-      {/* (기존) 포탈 GIF 미리 로드용 NextImage: 꼭 필요한 건 아니지만, 
-          아래처럼 숨겨서 함께 로딩하는 예시라면 유지해도 됨 */}
+      {/* 랭킹 모달 */}
+      {rankingModalOpen && (
+        <RankingModal onClose={() => setRankingModalOpen(false)} />
+      )}
+
+      {/* 미니게임 모달 */}
+      {minigameModalOpen && (
+        <MiniGameModal onClose={() => setMinigameModalOpen(false)} />
+      )}
+
+      {/* 숨겨진 포탈 이미지를 미리 로드 */}
       <NextImage
         src="/furniture/portal.png"
         alt="portal"
@@ -457,7 +476,8 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
         style={{ display: "none" }}
         priority
       />
-      {/* NPC1 모달 */}
+
+      {/* NPC 모달들 */}
       <NpcModal
         isOpen={npc1ModalOpen}
         onClose={() => setNpc1ModalOpen(false)}
@@ -466,7 +486,6 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
       >
         <DailyProblemContent />
       </NpcModal>
-      {/* NPC2 모달 */}
       <NpcModal
         isOpen={npc2ModalOpen}
         onClose={() => setNpc2ModalOpen(false)}
@@ -479,7 +498,6 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
           handleQnaClick={handleQnaClick}
         />
       </NpcModal>
-      {/* 공지사항 모달 */}
       {noticeModalOpen && (
         <NoticeBoardModal
           open={noticeModalOpen}
@@ -494,7 +512,6 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
           handleAddNotice={handleAddNotice}
         />
       )}
-      {/* NPC3 모달 */}
       <NpcModal
         isOpen={npc3ModalOpen}
         onClose={() => setNpc3ModalOpen(false)}
@@ -503,7 +520,6 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
       >
         <div>어떻게, 좀 잘 되어가나요?</div>
       </NpcModal>
-      {/* 회의실 모달 */}
       {meetingModalOpen && (
         <EnterMeetingRoom
           open={meetingModalOpen}
