@@ -55,6 +55,11 @@ export function SocketProvider({ children }: PropsWithChildren) {
       window.addEventListener("beforeunload", handleBeforeUnload);
     });
 
+    socket.on("SC_DUPLICATE_CONNECTION", () => {
+      // eslint-disable-next-line no-console
+      console.log("상대방 나가면 콘솔이 찍혀야 하는데...");
+    });
+
     socket.on("disconnect", () => {
       setIsConnected(false);
 
