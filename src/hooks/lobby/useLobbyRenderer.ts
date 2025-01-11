@@ -10,7 +10,7 @@ import {
 } from "@/hooks/performance/useLoadSprites";
 import { NpcInfo } from "@/model/Npc";
 import { PortalInfo } from "@/model/Portal";
-import { User } from "@/store/useUsersRef";
+import { User } from "@/model/User";
 
 /** 11:6 비율 (550×301) 고정 뷰포트 예시 */
 const FIXED_VIEWPORT_WIDTH = 605;

@@ -1,15 +1,30 @@
+// hooks/lobby/useMyRoomSocketEvents.ts
 "use client";
 
 import { useCallback, useEffect } from "react";
 
+import { User } from "@/model/User";
 import useSocketStore from "@/store/useSocketStore";
-import useUsersStore from "@/store/useUsersStore";
 
 type MyRoomSocketEventsProps = {
   roomId: string;
   userId: string;
+
+  // [추가] ref와 관련 메서드들을 주입
+  usersRef: React.MutableRefObject<User[]>;
+
+  // addUser, updateUserPosition
+  onAddUser: (id: string, nickname: string, x?: number, y?: number) => void;
+  onUpdateUserPosition: (
+    userId: string,
+    x: number,
+    y: number,
+    direction: number,
+    isMoving: boolean,
+  ) => void;
 };
 
+// 서버에서 오는 MovementInfo 예시
 interface MovementInfo {
   user_id: string;
   room_id: string;
@@ -18,6 +33,7 @@ interface MovementInfo {
   direction: number;
 }
 
+// 서버에서 오는 EnterMyRoomData 예시
 interface EnterMyRoomData {
   user_id: string;
   nickname: string;
@@ -32,13 +48,15 @@ interface EnterMyRoomData {
 export default function useMyRoomSocketEvents({
   roomId,
   userId,
+
+  // [추가]
+  usersRef,
+  onAddUser,
+  onUpdateUserPosition,
 }: MyRoomSocketEventsProps) {
-  const { users, updateUserPosition, addUser } = useUsersStore();
   const { socket, isConnected } = useSocketStore();
 
-  // -----------------------------
   // (1) 내 캐릭터 이동 emit
-  // -----------------------------
   const emitMovement = useCallback(
     (x: number, y: number, direction: number) => {
       if (!socket || !isConnected) return;
@@ -51,23 +69,24 @@ export default function useMyRoomSocketEvents({
       };
       socket.emit("CS_MYROOM_MOVEMENT_INFO", data);
     },
-    [socket, roomId, userId],
+    [socket, isConnected, userId, roomId],
   );
 
-  // -----------------------------
-  // (2) 다른 사용자 이동 수신 (SC_MYROOM_MOVEMENT_INFO)
-  // -----------------------------
+  // (2) 다른 사용자 이동 수신
   useEffect(() => {
     if (!socket || !isConnected) return;
 
     const onMovement = (data: MovementInfo) => {
       // data = { user_id, room_id, position_x, position_y, direction }
-      // 내 화면에서 해당 user 정보 업데이트
-      const movingUser = users.find((u) => u.id === data.user_id);
-      if (!movingUser) return;
+      // 1) 유저가 usersRef.current에 없으면 새로 add
+      const movingUser = usersRef.current.find((u) => u.id === data.user_id);
+      if (!movingUser) {
+        // 닉네임이 없다면 서버에서 별도 값이 올 수도 있으니, 샘플로 "Guest"라고 처리
+        onAddUser(data.user_id, "Guest", data.position_x, data.position_y);
+      }
 
-      // 이미 Store에 있는 사용자라면, 위치/방향 업데이트
-      updateUserPosition(
+      // 2) 위치/방향 업데이트
+      onUpdateUserPosition(
         data.user_id,
         data.position_x,
         data.position_y,
@@ -75,53 +94,48 @@ export default function useMyRoomSocketEvents({
         true,
       );
 
-      // 약간의 지연 후 isMoving=false 처리는 여기서 해도 되고
-      // 혹은 로비처럼 타이머 로직을 둬도 됩니다.
+      // 3) 잠시 뒤 isMoving = false 처리
       setTimeout(() => {
-        const stillExists = useUsersStore
-          .getState()
-          .users.find((u) => u.id === data.user_id);
+        // 여전히 존재한다면, isMoving = false
+        const stillExists = usersRef.current.find((u) => u.id === data.user_id);
         if (stillExists) {
-          useUsersStore
-            .getState()
-            .updateUserPosition(
-              data.user_id,
-              data.position_x,
-              data.position_y,
-              data.direction,
-              false,
-            );
+          onUpdateUserPosition(
+            data.user_id,
+            data.position_x,
+            data.position_y,
+            data.direction,
+            false,
+          );
         }
       }, 200);
     };
 
     socket.on("SC_MYROOM_MOVEMENT_INFO", onMovement);
+
     return () => {
       socket.off("SC_MYROOM_MOVEMENT_INFO", onMovement);
     };
-  }, [socket, users, updateUserPosition]);
+  }, [socket, isConnected, usersRef, onAddUser, onUpdateUserPosition]);
 
-  // -----------------------------
-  // (3) 새 유저 입장 or 기타 이벤트도 가능
-  // -----------------------------
+  // (3) 새 유저 입장 (예: SC_ENTER_MYROOM)
   useEffect(() => {
     if (!socket || !isConnected) return;
 
     const onEnterMyRoom = (newUserData: EnterMyRoomData) => {
-      // 예) { user_id, nickname, x, y, ... }
-      addUser(
+      onAddUser(
         newUserData.user_id,
         newUserData.nickname,
         newUserData.x,
         newUserData.y,
       );
     };
+
     socket.on("SC_ENTER_MYROOM", onEnterMyRoom);
 
     return () => {
       socket.off("SC_ENTER_MYROOM", onEnterMyRoom);
     };
-  }, [socket, addUser]);
+  }, [socket, isConnected, onAddUser]);
 
   return { emitMovement };
 }
