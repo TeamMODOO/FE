@@ -45,6 +45,7 @@ export const FriendInformation = () => {
 
     const handleUserConnect = (data: SCUserPositionInfo) => {
       const { client_id } = data;
+
       setOnlineUsersId((prev) => [...prev, client_id]);
     };
 
@@ -53,11 +54,9 @@ export const FriendInformation = () => {
     };
 
     socket.on("SC_USER_POSITION_INFO", handleUserConnect);
-    socket.on("user_disconnect", handleUserDisconnect);
 
     return () => {
       socket.off("SC_USER_POSITION_INFO", handleUserConnect);
-      socket.off("user_disconnect", handleUserDisconnect);
     };
   }, [socket]);
 
