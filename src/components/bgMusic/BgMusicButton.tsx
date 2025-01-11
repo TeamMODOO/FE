@@ -35,9 +35,9 @@ export function BgMusicButton({ position = "right" }: BgMusicButtonProps) {
       `}
     >
       {isPlaying ? (
-        <VolumeOff className="min-h-8 min-w-8" />
-      ) : (
         <Volume2 className="min-h-8 min-w-8" />
+      ) : (
+        <VolumeOff className="min-h-8 min-w-8" />
       )}
     </Button>
   );
