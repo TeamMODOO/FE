@@ -26,8 +26,9 @@ export function BgMusicButton({ position = "right" }: BgMusicButtonProps) {
       onClick={handleToggleMusic}
       title="배경음악 ON/OFF"
       className={`
-        fixed top-6 z-50
-        size-20 rounded-full border-2
+        bg-color-none fixed top-6
+        z-50 size-20 rounded-full
+        border-2
         border-[rgba(111,99,98,1)]
         bg-gradient-to-b from-black/70 to-black/90
         text-[rgba(171,159,158,1)]
