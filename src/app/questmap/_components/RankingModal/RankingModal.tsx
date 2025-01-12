@@ -39,7 +39,12 @@ export default function RankingModal({ onClose }: RankingModalProps) {
 
           {/* 2. 로딩 상태 표시 */}
           {loading && (
-            <div className={styles.rankingItem}>
+            <div
+              className="
+            flex-col 
+            justify-center
+            text-center"
+            >
               <p>로딩 중...</p>
             </div>
           )}

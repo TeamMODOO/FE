@@ -14,12 +14,14 @@
 }
 
 .modal {
+  font-family: var(--font-noto-serif-kr), serif;
   background-image: url("/background/sheet.png");
   aspect-ratio: 308 / 345;
   /* 디버깅 용 */
   /* border: 2px solid red; */
 
-  width: 27dvw;
+  /* width: 30dvw; */
+  height: 40rem;
 
   padding: 60px;
   padding-top: 70px;
@@ -30,6 +32,20 @@
   background-repeat: no-repeat;
   background-size: contain;
   background-position: center;
+  overflow: auto;
+}
+
+.modal::-webkit-scrollbar {
+  width: 5px;
+}
+
+.modal::-webkit-scrollbar-track {
+  background: none;
+}
+
+.modal::-webkit-scrollbar-thumb {
+  background: red;
+  border-radius: 5px;
 }
 
 .closeBtn {
@@ -63,8 +79,8 @@
   min-height: 28dvh;
   overflow: auto;
   border-radius: 5px;
-  background-color: rgba(50, 50, 50, 0.6);
-  border: 1px solid rgba(111, 99, 98, 1);
+  /* background-color: rgba(50, 50, 50, 0.6); */
+  /* border: 1px solid rgba(111, 99, 98, 1); */
 }
 
 .modalContent::-webkit-scrollbar {
@@ -90,18 +106,26 @@
 }
 
 .rankingItem {
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.6),
+    rgba(0, 0, 0, 0.9)
+  );
+  color: white;
   display: flex;
   justify-content: space-between;
   text-align: center;
   align-items: center;
   justify-items: center;
   font-size: 1.1rem;
+  border: 2px solid rgba(111, 99, 98, 1);
+  border-radius: 8px;
+  padding: 1rem;
 }
 
 .modalSub {
   font-size: 1.5rem;
   color: red;
-  font-family: var(--font-noto-serif-kr), serif;
   font-weight: bold;
 }
 
