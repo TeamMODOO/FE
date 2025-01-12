@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 // ---- Hooks
 import { useMyRoomKeyboard } from "@/hooks/myroom/useMyRoomKeyboard";
 import { useMyRoomRenderer } from "@/hooks/myroom/useMyRoomRenderer";
-import useLoadSprites from "@/hooks/performance/useLoadSprites";
+import { useLoadSprites } from "@/hooks/performance/useLoadSprites";
 // ---- Models & Types
 import { Funiture } from "@/model/Funiture";
 import { Direction, User } from "@/model/User";
