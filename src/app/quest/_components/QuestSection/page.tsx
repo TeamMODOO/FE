@@ -70,7 +70,7 @@ export default function QuestSection() {
   const [onConfirm, setOnConfirm] = useState<() => void>(() => () => {});
 
   const handleLockedClick = () => {
-    playDragonEventSound();
+    playSwordSound();
     setIsStart(true);
   };
 
@@ -187,7 +187,7 @@ export default function QuestSection() {
 
   const handleStartOrStop = () => {
     if (!isStart) {
-      playDragonEventSound();
+      playSwordSound();
       setIsStart(true);
     } else {
       // 기존 window.confirm 대신 → ConfirmModal 열기
@@ -225,19 +225,19 @@ export default function QuestSection() {
     router.push("/lobby");
   };
 
-  const dragonAudioRef = useRef<HTMLAudioElement>(null);
+  const swordAudioRef = useRef<HTMLAudioElement>(null);
 
-  function playDragonEventSound() {
-    if (!dragonAudioRef.current) return;
-    dragonAudioRef.current.currentTime = 0;
-    dragonAudioRef.current.play().catch(() => {});
+  function playSwordSound() {
+    if (!swordAudioRef.current) return;
+    swordAudioRef.current.currentTime = 0;
+    swordAudioRef.current.play().catch(() => {});
   }
 
   return (
     <div className={styles.container}>
       <audio
-        ref={dragonAudioRef}
-        src="/sounds/dragonGrowl.wav"
+        ref={swordAudioRef}
+        src="/sounds/swordSFX.wav"
         style={{ display: "none" }}
       />
       <div className={styles.questHeader}>
