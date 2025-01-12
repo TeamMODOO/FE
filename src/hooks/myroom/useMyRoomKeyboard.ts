@@ -54,7 +54,7 @@ export function useMyRoomKeyboard({
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (isAnyModalOpen) return;
-      if (e.key === " ") {
+      if (e.key === " " || e.key === "Space") {
         e.preventDefault();
         handleSpaceInteraction();
       }

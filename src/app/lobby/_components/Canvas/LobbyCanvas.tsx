@@ -303,7 +303,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
       if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) {
         e.preventDefault();
       }
-      if (e.key === " ") {
+      if (e.key === " " || e.key === "Space") {
         handleSpacebarInteraction();
       }
       setPressedKeys((prev) => ({ ...prev, [e.key]: true }));
