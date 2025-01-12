@@ -16,10 +16,13 @@ export function SocketProvider({ children }: PropsWithChildren) {
 
   useEffect(() => {
     if (status === "loading") return;
-    if (session?.user?.id || session?.user?.guest_id) {
+
+    if (session?.user?.id) {
       initializeClientId(session.user.id);
+    } else if (session?.user?.guest_id) {
+      initializeClientId(session.user.guest_id);
     }
-  }, [session]);
+  }, [session?.user.id, session?.user.guest_id]);
 
   useEffect(() => {
     if (status === "loading" || !clientId) return;

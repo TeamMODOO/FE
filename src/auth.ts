@@ -3,6 +3,8 @@ import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 
+import { v4 as uuid } from "uuid";
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
     GoogleProvider({
@@ -15,7 +17,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       async authorize(credentials, req) {
         // 게스트 로그인: guest_id, name, role 등을 리턴
         return {
-          guest_id: "guest_" + Math.random().toString(36).slice(2),
+          guest_id: uuid(),
           name: "GuestUser",
           role: "guest",
         };
