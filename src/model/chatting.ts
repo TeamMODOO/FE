@@ -10,10 +10,6 @@ export interface ChattingType extends ChattingResponse {
   create_at: Date;
 }
 
-export interface Position {
-  position: "left" | "right";
-}
-
 export interface ChatMessage {
   user_name: string;
   message: string;

@@ -1,7 +1,7 @@
 import { CardContent } from "@/components/ui/card";
 import type { ChatMessage as ChatMessageType } from "@/model/chatting";
 
-import { ChatMessage } from "./ChatMessage";
+import { ChatMessage } from "./RightChatMessage";
 
 interface ChatMessageListProps {
   messages: ChatMessageType[];

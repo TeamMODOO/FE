@@ -4,20 +4,18 @@ import { ScrollNotification } from "@/app/lobby/_components/Widget/ScrollNotific
 import { CardFooter } from "@/components/ui/card";
 import { useChatScroll } from "@/hooks/chat/useChatScroll";
 import { useChatSocket } from "@/hooks/chat/useChatSocket";
-import { Position } from "@/model/chatting";
 
-import { ChatButton } from "./ChatButton";
-import { ChatContainer } from "./ChatContainer";
-import { ChatInputArea } from "./ChatInputArea";
-import { ChatMessageList } from "./ChatMessageList";
+import { ChatButton } from "./LeftChatButton";
+import { ChatContainer } from "./LeftChatContainer";
+import { ChatInputArea } from "./LeftChatInputArea";
+import { ChatMessageList } from "./LeftChatMessageList";
 
-interface ChatWidgetProps extends Position {
+interface ChatWidgetProps {
   isOpen?: boolean;
   setIsOpen?: (open: boolean) => void;
 }
 
 export function ChatWidget({
-  position,
   isOpen: propIsOpen,
   setIsOpen: propSetIsOpen,
 }: ChatWidgetProps) {
@@ -73,11 +71,7 @@ export function ChatWidget({
   return (
     <>
       {(isOpen || isAnimating) && (
-        <ChatContainer
-          position={position}
-          isAnimating={isAnimating}
-          onClose={toggleChat}
-        >
+        <ChatContainer isAnimating={isAnimating} onClose={toggleChat}>
           <ChatMessageList
             messages={messageList}
             scrollRef={scrollRef}
@@ -85,7 +79,6 @@ export function ChatWidget({
           />
           <CardFooter>
             <ChatInputArea
-              position={position}
               value={messageValue}
               onChange={setMessageValue}
               onSubmit={sendMessage}
@@ -100,11 +93,7 @@ export function ChatWidget({
         </ChatContainer>
       )}
       {!isOpen && (
-        <ChatButton
-          position={position}
-          onClick={toggleChat}
-          notification={notification}
-        />
+        <ChatButton onClick={toggleChat} notification={notification} />
       )}
     </>
   );

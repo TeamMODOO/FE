@@ -2,11 +2,8 @@ import { Send } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Position } from "@/model/chatting";
 
-import { ChatInput } from "./ChatInput";
-
-interface ChatInputAreaProps extends Position {
+interface ChatInputAreaProps {
   value: string;
   onChange: (value: string) => void;
   onSubmit: (e: React.FormEvent) => void;
@@ -14,16 +11,11 @@ interface ChatInputAreaProps extends Position {
 }
 
 export function ChatInputArea({
-  position,
   value,
   onChange,
   onSubmit,
   onKeyDown,
 }: ChatInputAreaProps) {
-  if (position === "right") {
-    return <ChatInput value={value} onChange={onChange} onSubmit={onSubmit} />;
-  }
-
   return (
     <form onSubmit={onSubmit} className="flex w-[286px] justify-between gap-2">
       <Textarea
