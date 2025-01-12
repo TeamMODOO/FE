@@ -201,10 +201,12 @@ export default function TypingPage() {
             setFileLink(item.html_url);
           } else {
             // console.log("파일에 코드 조각이 없습니다. 다시 시도합니다.");
-            setTimeout(() => {
-              setIsFetching(false);
-              fetchJSFilesFromGithub();
-            }, fetchDelay);
+            if (!codeToType) {
+              setTimeout(() => {
+                setIsFetching(false);
+                fetchJSFilesFromGithub();
+              }, fetchDelay);
+            }
           }
         } catch (decodeError: unknown) {
           if (decodeError instanceof Error) {
@@ -469,87 +471,103 @@ export default function TypingPage() {
           </p>
         </GameRuleModal>
       )}
-      <BgMusicGlobal src="" />
+      <BgMusicGlobal src="/sounds/typing.wav" />
       <BgMusicButton />
       <OutButton />
       <div className={styles.container}>
-        <div className={styles.typingarea}>
-          <h2>타자 연습</h2>
-          <div className={styles.refreshCodeSnippet}>
-            {fileLink && (
-              <span>
-                <a href={fileLink} target="_blank" rel="noopener noreferrer">
-                  코드 출처
-                </a>
-              </span>
-            )}
-            <button onClick={refreshCodeSnippet}>새로고침</button>
-          </div>
-
-          <div className={styles.codecontainer}>
-            {isFetching ? (
-              <div className={styles.loadingtext}>
-                <div className={styles.spinner}></div>
-                <span>코드 가져오는 중...</span>
-              </div>
-            ) : (
-              renderCode()
-            )}
-          </div>
-
-          <textarea
-            placeholder="이곳을 클릭하고 텍스트를 입력하면 타자 연습이 시작됩니다."
-            value={userInput}
-            onChange={handleInputChange}
-            onKeyDown={handleKeyDown}
-            autoComplete="off"
-            spellCheck="false"
-            disabled={isPaused || isFinished || isDisabled}
-            ref={textareaRef}
-            className={styles.textareaSection}
-          />
-
-          <div className={styles.footer}>
-            {!isFinished && currentTime > 0 && (
-              <>
-                <div>
-                  <p>소요 시간: {currentTime} 초</p>
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* 저장된 기록 표시 */}
-        {typingRecords.length > 0 && (
-          <div className={styles.typingRecords}>
-            <h3>타자 연습 기록</h3>
+        {/* 배경 반딧불이 애니메이션 */}
+        {Array.from({ length: 5 }).map((_, index) => (
+          <div key={index} className={styles.floatingSquare}></div>
+        ))}
+        <div className="max-h-[80%]">
+          <div className="align-center flex justify-center">
             <div>
-              {typingRecords.map((record, index) => (
-                <div key={index} className={styles.typingRecordsItem}>
-                  <p>완료 시간: {record.completedAt}</p>
-                  <span>소요 시간: {record.time} 초</span>
-                  &nbsp;&nbsp;&nbsp;||&nbsp;&nbsp;&nbsp;
-                  <span>정확도: {record.accuracy}%</span>
-                  &nbsp;&nbsp;&nbsp;||&nbsp;&nbsp;&nbsp;
-                  <span>속도: {record.wpm} WPM</span>
-                </div>
-              ))}
+              <img
+                src="/logo/typing_logo.png"
+                alt="타자 연습 로고"
+                width={800}
+                className="flex-0.5 max-h-[10dvh] w-auto"
+              />
             </div>
           </div>
-        )}
-        {isModalOpen && (
-          <TypingCompleteModal
-            currentTime={currentTime}
-            accuracy={accuracy}
-            wpm={wpm}
-            onClose={closeModal}
-            onNext={() => {
-              refreshCodeSnippet();
-              closeModal();
-            }}
-          />
-        )}
+          <div className={styles.typingarea}>
+            <h2>타자 연습</h2>
+            <div className={styles.refreshCodeSnippet}>
+              {fileLink && (
+                <span>
+                  <a href={fileLink} target="_blank" rel="noopener noreferrer">
+                    코드 출처
+                  </a>
+                </span>
+              )}
+              <button onClick={refreshCodeSnippet}>새로고침</button>
+            </div>
+
+            <div className={styles.codecontainer}>
+              {isFetching ? (
+                <div className={styles.loadingtext}>
+                  <div className={styles.spinner}></div>
+                  <span>코드 가져오는 중...</span>
+                </div>
+              ) : (
+                renderCode()
+              )}
+            </div>
+
+            <textarea
+              placeholder="이곳을 클릭하고 텍스트를 입력하면 타자 연습이 시작됩니다."
+              value={userInput}
+              onChange={handleInputChange}
+              onKeyDown={handleKeyDown}
+              autoComplete="off"
+              spellCheck="false"
+              disabled={isPaused || isFinished || isDisabled}
+              ref={textareaRef}
+              className={styles.textareaSection}
+            />
+
+            <div className={styles.footer}>
+              {!isFinished && currentTime > 0 && (
+                <>
+                  <div>
+                    <p>소요 시간: {currentTime} 초</p>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* 저장된 기록 표시 */}
+          {typingRecords.length > 0 && (
+            <div className={styles.typingRecords}>
+              <h3>타자 연습 기록</h3>
+              <div>
+                {typingRecords.map((record, index) => (
+                  <div key={index} className={styles.typingRecordsItem}>
+                    <p>완료 시간: {record.completedAt}</p>
+                    <span>소요 시간: {record.time} 초</span>
+                    &nbsp;&nbsp;&nbsp;||&nbsp;&nbsp;&nbsp;
+                    <span>정확도: {record.accuracy}%</span>
+                    &nbsp;&nbsp;&nbsp;||&nbsp;&nbsp;&nbsp;
+                    <span>속도: {record.wpm} WPM</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {isModalOpen && (
+            <TypingCompleteModal
+              currentTime={currentTime}
+              accuracy={accuracy}
+              wpm={wpm}
+              onClose={closeModal}
+              onNext={() => {
+                refreshCodeSnippet();
+                closeModal();
+              }}
+            />
+          )}
+        </div>
       </div>
     </>
   );

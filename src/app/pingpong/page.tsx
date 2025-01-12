@@ -1,12 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+
 import { useRouter } from "next/navigation";
-import styles from "./Pingpong.module.css";
-import GameRuleModal from "@/components/gameRuleModal/GameRuleModal";
-import { BgMusicGlobal } from "@/components/bgMusic/BgMusicGlobal";
+
 import { BgMusicButton } from "@/components/bgMusic/BgMusicButton";
+import { BgMusicGlobal } from "@/components/bgMusic/BgMusicGlobal";
+import GameRuleModal from "@/components/gameRuleModal/GameRuleModal";
 import { OutButton } from "@/components/outButton/OutButton";
+
+import styles from "./Pingpong.module.css";
 
 export default function Game() {
   const router = useRouter();
