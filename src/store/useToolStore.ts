@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-type ToolType = "select" | "pen" | "eraser" | "hand";
+type ToolType = "" | "select" | "pen" | "eraser" | "hand";
 
 interface ToolState {
   activeTool: ToolType;
@@ -8,7 +8,7 @@ interface ToolState {
 }
 
 const useToolStore = create<ToolState>((set) => ({
-  activeTool: "pen",
+  activeTool: "",
   setActiveTool: (tool) => set({ activeTool: tool }),
 }));
 

@@ -55,13 +55,17 @@ export function SocketProvider({ children }: PropsWithChildren) {
       window.addEventListener("beforeunload", handleBeforeUnload);
     });
 
+    socket.on("SC_DUPLICATE_CONNECTION", () => {
+      // 여기서 중복 접속 모달 키면 됨
+    });
+
     socket.on("disconnect", () => {
       setIsConnected(false);
 
       window.removeEventListener("beforeunload", handleBeforeUnload);
     });
 
-    socket.on("connect_error", (error) => {
+    socket.on("connect_error", () => {
       setIsConnected(false);
     });
 

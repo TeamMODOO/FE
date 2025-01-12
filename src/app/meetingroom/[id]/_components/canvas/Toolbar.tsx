@@ -27,29 +27,19 @@ const Toolbar = () => {
   const [isLocked, setIsLocked] = useState(false);
   const [history, setHistory] = useState<fabric.Object[]>([]);
 
-  /**
-   * @description 화이트 보드에 그려져 있는 요소들을 클릭을 통해 선택 가능한지 여부를 제어하기 위한 함수입니다.
-   */
   const setIsObjectSelectable = (isSelectable: boolean) => {
     if (!(canvas instanceof fabric.Canvas)) return;
     canvas.forEachObject((object) => (object.selectable = isSelectable));
   };
 
-  /**
-   * @description 캔버스의 옵션을 리셋하는 함수입니다.
-   * @description 그래픽 요소 선택 기능: off, 드로잉 모드: off, 드래그 블럭지정모드: off, 커서: 디폴트 포인터
-   */
   const resetCanvasOption = () => {
     if (!(canvas instanceof fabric.Canvas)) return;
     setIsObjectSelectable(false);
     canvas.isDrawingMode = false;
     canvas.selection = false;
-    canvas.defaultCursor = "default";
+    //canvas.defaultCursor = "default";
   };
 
-  /**
-   * @description 캔버스 변경사항을 추적하고 히스토리를 관리하는 함수입니다.
-   */
   const saveHistory = () => {
     if (!isLocked) {
       setHistory([]);
@@ -59,9 +49,9 @@ const Toolbar = () => {
 
   const handlePen = () => {
     if (!(canvas instanceof fabric.Canvas)) return;
-
     canvas.freeDrawingBrush.width = 10;
     canvas.isDrawingMode = true;
+    canvas.freeDrawingCursor = `url('/svg/pen.svg') 2.5 12.5, auto`;
   };
 
   const handleEraser = () => {
@@ -69,9 +59,8 @@ const Toolbar = () => {
 
     setIsObjectSelectable(true);
     canvas.selection = true;
-
-    canvas.defaultCursor = "crosshair";
-
+    // 커서 변경
+    canvas.defaultCursor = `url('/svg/eraser.svg') 8 11, auto`;
     const handleMouseUp = (target: fabric.Object | undefined) => {
       if (!target) return;
       canvas.remove(target);
@@ -126,6 +115,7 @@ const Toolbar = () => {
     }
   };
 
+  // 데이터 보내야함
   const handleRedoClick = () => {
     if (canvas && history) {
       if (history.length > 0) {
@@ -174,6 +164,10 @@ const Toolbar = () => {
       };
     }
   }, [canvas]);
+
+  useEffect(() => {
+    if (!activeTool) setActiveTool("pen");
+  }, []);
 
   return (
     <TooltipProvider>

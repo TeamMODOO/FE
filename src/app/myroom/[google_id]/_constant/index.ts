@@ -210,7 +210,6 @@ export const MYROOM_COLLISION_ZONES: CollisionZone[] = [
   // 상단 벽
   { x: 0, y: 0, width: 2000, height: 580 },
 ];
-
 export const interiorImages: Record<string, string> = {
   none: "/interior/none.gif",
   "resume/resume1": "/interior/resume/resume1.gif",

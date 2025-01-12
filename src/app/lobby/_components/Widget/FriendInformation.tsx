@@ -48,16 +48,15 @@ export const FriendInformation = () => {
       setOnlineUsersId((prev) => [...prev, client_id]);
     };
 
-    const handleUserDisconnect = (clientId: string) => {
-      setOnlineUsersId((prev) => prev.filter((id) => id !== clientId));
+    const handleUserDisconnect = ({ client_id }: { client_id: string }) => {
+      setOnlineUsersId((prev) => prev.filter((id) => id !== client_id));
     };
 
     socket.on("SC_USER_POSITION_INFO", handleUserConnect);
-    socket.on("user_disconnect", handleUserDisconnect);
-
+    socket.on("SC_LEAVE_USER", handleUserDisconnect);
     return () => {
       socket.off("SC_USER_POSITION_INFO", handleUserConnect);
-      socket.off("user_disconnect", handleUserDisconnect);
+      socket.off("SC_LEAVE_USER", handleUserDisconnect);
     };
   }, [socket]);
 
