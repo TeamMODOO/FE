@@ -4,10 +4,6 @@ import { useRef } from "react";
 
 import { Direction } from "@/model/User";
 
-/**
- * 로컬 유저 상태 (보간용) 관리 훅
- */
-
 export interface LobbyUser {
   id: string;
   nickname: string;
@@ -29,6 +25,11 @@ export interface LobbyUser {
 
 export default function useUsersRef() {
   const usersRef = useRef<LobbyUser[]>([]);
+
+  /** 특정 유저 정보 가져오기 */
+  function getUser(id: string) {
+    return usersRef.current.find((u) => u.id === id);
+  }
 
   /** 유저 추가 */
   function addUser(id: string, nickname: string, x = 500, y = 500) {
@@ -103,6 +104,7 @@ export default function useUsersRef() {
 
   return {
     usersRef,
+    getUser,
     addUser,
     removeUser,
     updateUserPosition,

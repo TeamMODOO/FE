@@ -4,20 +4,14 @@ import { useCallback, useEffect } from "react";
 
 import { Direction } from "@/model/LobbyUser";
 import useSocketStore from "@/store/useSocketStore";
+import { LobbyUser } from "@/store/useUsersRef";
 
-/**
- * 클라이언트 → 서버로 보낼 이동 정보 (CS_MOVEMENT_INFO)
- */
 interface MovementInfoToServer {
   position_x: number;
   position_y: number;
   direction: number; // 0=Down,1=Up,2=Right,3=Left
 }
 
-/**
- * 서버 → 클라이언트 (SC_MOVEMENT_INFO)
- * : 다른 사용자의 이동 패킷
- */
 export interface MovementInfoFromServer {
   client_id: string;
   position_x: number;
@@ -26,9 +20,6 @@ export interface MovementInfoFromServer {
   user_name: string;
 }
 
-/**
- * 새 유저가 "처음 방에 들어왔을 때" (SC_ENTER_ROOM)
- */
 interface SCEnterRoomData {
   client_id: string;
   position_x: number;
@@ -37,17 +28,10 @@ interface SCEnterRoomData {
   user_name: string;
 }
 
-/**
- * 유저 퇴장 (SC_LEAVE_USER)
- */
 interface SCLeaveUserData {
   client_id: string;
 }
 
-/**
- * 새로 추가된 프로토콜: SC_USER_POSITION_INFO
- * : 서버가 "현재 접속해있는 모든 유저 정보"를 개별적으로 내려줌
- */
 export interface SCUserPositionInfo {
   client_id: string;
   position_x: number;
@@ -57,10 +41,12 @@ export interface SCUserPositionInfo {
 }
 
 type LobbySocketEventsProps = {
-  userId: string; // 내 클라이언트 ID
-  userNickname: string; // 내 닉네임
+  userId: string;
+  userNickname: string;
 
-  // ★ ref 업데이트용 콜백
+  // [중요] 기존 사용자 정보를 가져오는 함수
+  getUser: (id: string) => LobbyUser | undefined;
+
   onAddUser: (id: string, nickname: string, x?: number, y?: number) => void;
   onUpdateUserPosition: (
     userId: string,
@@ -72,11 +58,13 @@ type LobbySocketEventsProps = {
   onRemoveUser: (id: string) => void;
 };
 
+// 이 타이머는 "움직임 발생 후 약간의 시간" 후에 isMoving=false로 바꿔주는 역할
 const moveStopTimers: Record<string, NodeJS.Timeout> = {};
 
 export default function useLobbySocketEvents({
   userId,
   userNickname,
+  getUser,
   onAddUser,
   onUpdateUserPosition,
   onRemoveUser,
@@ -91,7 +79,7 @@ export default function useLobbySocketEvents({
         position_x: x,
         position_y: y,
         direction,
-      });
+      } satisfies MovementInfoToServer);
     },
     [socket, isConnected],
   );
@@ -101,29 +89,18 @@ export default function useLobbySocketEvents({
     if (!socket || !isConnected) return;
 
     const onMovement = (data: MovementInfoFromServer) => {
-      // data: MovementInfoFromServer
-      // 1) 유저 추가 (이미 있으면 내부에서 위치만 갱신)
-      onAddUser(
-        data.client_id,
-        data.user_name,
-        data.position_x,
-        data.position_y,
-      );
+      // [수정1] 우선 기존 유저 정보(이전 좌표/방향)를 가져온다
+      const existing = getUser(data.client_id);
 
-      // 2) 이동 업데이트
-      onUpdateUserPosition(
-        data.client_id,
-        data.position_x,
-        data.position_y,
-        data.direction,
-        true,
-      );
-
-      // 3) 잠시 뒤 isMoving=false
-      if (moveStopTimers[data.client_id]) {
-        clearTimeout(moveStopTimers[data.client_id]);
-      }
-      moveStopTimers[data.client_id] = setTimeout(() => {
+      // [수정2] 기존 유저가 없다면(=새 유저다) → onAddUser로 등록
+      if (!existing) {
+        onAddUser(
+          data.client_id,
+          data.user_name,
+          data.position_x,
+          data.position_y,
+        );
+        // 새 유저는 "처음 등장"이므로 굳이 움직임으로 볼 필요는 없다고 가정
         onUpdateUserPosition(
           data.client_id,
           data.position_x,
@@ -131,21 +108,74 @@ export default function useLobbySocketEvents({
           data.direction,
           false,
         );
-      }, 200);
+        return;
+      }
+
+      // [수정3] 기존 유저가 있다면, 이전 위치&방향과 비교하여 실제로 움직였는지 판단
+      // 예) x 혹은 y 혹은 direction 중 하나라도 바뀌면 "움직임"으로 본다
+      let isActuallyMoving = false;
+
+      const sameX = existing.x === data.position_x;
+      const sameY = existing.y === data.position_y;
+      const sameDir = existing.direction === data.direction;
+
+      if (!sameX || !sameY) {
+        // x나 y 중 하나가 달라지면 -> 실제 이동
+        isActuallyMoving = true;
+      } else {
+        // x,y가 동일하더라도, "방향만 바뀌었는데 제자리에서 돌고 있다" 라면
+        // 그걸 "이동"으로 볼지 여부는 상황에 따라 다릅니다.
+        // 여기서는 "회전"도 움직임으로 처리하고 싶다면:
+        if (!sameDir) {
+          isActuallyMoving = true;
+        }
+      }
+
+      // [수정4] 이동 업데이트
+      onUpdateUserPosition(
+        data.client_id,
+        data.position_x,
+        data.position_y,
+        data.direction,
+        isActuallyMoving,
+      );
+
+      // [수정5] 실제로 움직임이 있었다면, 잠시 뒤 isMoving=false로 만드는 타이머
+      if (isActuallyMoving) {
+        if (moveStopTimers[data.client_id]) {
+          clearTimeout(moveStopTimers[data.client_id]);
+        }
+        moveStopTimers[data.client_id] = setTimeout(() => {
+          // 혹시 그 사이에 새 좌표가 또 들어오면, 그때 다시 움직임이 true로 될테니 괜찮음
+          onUpdateUserPosition(
+            data.client_id,
+            data.position_x,
+            data.position_y,
+            data.direction,
+            false,
+          );
+        }, 200);
+      }
     };
 
     socket.on("SC_MOVEMENT_INFO", onMovement);
     return () => {
       socket.off("SC_MOVEMENT_INFO", onMovement);
     };
-  }, [socket, isConnected, onAddUser, onUpdateUserPosition]);
+  }, [
+    socket,
+    isConnected,
+    onAddUser,
+    onUpdateUserPosition,
+    onRemoveUser,
+    getUser,
+  ]);
 
   // (C) SC_ENTER_ROOM
   useEffect(() => {
     if (!socket || !isConnected) return;
 
     const onEnterRoom = (data: SCEnterRoomData) => {
-      // console.log("SC_ENTER_ROOM", data);
       onAddUser(
         data.client_id,
         data.user_name,
@@ -186,7 +216,8 @@ export default function useLobbySocketEvents({
     if (!socket || !isConnected) return;
 
     const onUserPositionInfo = (data: SCUserPositionInfo) => {
-      // console.log("SC_USER_POSITION_INFO", data);
+      // "현재 접속 중인 모든 유저" 정보를 한 번에 내려줄 때
+      // 어차피 "처음"으로 받는 정보이므로 → isMoving=false
       onAddUser(
         data.client_id,
         data.user_name,
