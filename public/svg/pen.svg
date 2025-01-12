@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <!-- 펜의 그립(손잡이) 부분 -->
+    <path d="M11 2L13 4L8 9L7 8L11 2Z" 
+          fill="#2D3748" 
+          stroke="#1A202C" 
+          stroke-width="0.5"/>
+    
+    <!-- 펜의 중간 연결 부분 -->
+    <path d="M7 8L8 9L5 12L4 11L7 8Z" 
+          fill="#4A5568" 
+          stroke="#2D3748" 
+          stroke-width="0.5"/>
+          
+    <!-- 펜촉 부분 -->
+    <path d="M4 11L5 12L3.5 13.5L2.5 12.5L4 11Z" 
+          fill="#718096" 
+          stroke="#4A5568" 
+          stroke-width="0.5"/>
+    
+    <!-- 정확한 포인팅을 위한 점 -->
+    <circle cx="2.5" cy="12.5" r="0.3" fill="#E53E3E"/>
+</svg>
