@@ -1,12 +1,13 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useTypewriter } from "react-simple-typewriter";
 
 import { useRouter } from "next/navigation";
 
 // import { Typewriter } from "@/components/Typewriter";
 import styles from "@/components/modalAnimation/ModalAnimation.module.css";
+import AlertModal from "@/components/alertModal/AlertModal";
 
 const DailyProblemContent: React.FC = () => {
   const router = useRouter();
@@ -21,6 +22,46 @@ const DailyProblemContent: React.FC = () => {
     deleteSpeed: 0,
   });
 
+  // 오늘 이미 문제를 풀었는지 여부
+  const [isAlreadyDone, setIsAlreadyDone] = useState(false);
+
+  //AlertModal을 띄울지 여부
+  const [showAlertModal, setShowAlertModal] = useState(false);
+
+  useEffect(() => {
+    // 컴포넌트 마운트 시 localStorage에 저장된 날짜 확인
+    const doneDate = localStorage.getItem("dailyQuestDone");
+    if (doneDate) {
+      // 오늘 날짜 계산
+      const todayString = new Date().toISOString().slice(0, 10);
+      if (doneDate === todayString) {
+        // 이미 오늘 완료된 기록
+        setIsAlreadyDone(true);
+      } else {
+        // 날짜가 다르다면, 어제 기록이므로 초기화
+        localStorage.removeItem("dailyQuestDone");
+        setIsAlreadyDone(false);
+      }
+    } else {
+      setIsAlreadyDone(false);
+    }
+  }, []);
+
+  const handleDailyQuestClick = () => {
+    if (isAlreadyDone) {
+      // 이미 완료라면 AlertModal 띄우기
+      setShowAlertModal(true);
+    } else {
+      // 완료가 아니라면 /quest 페이지로 이동
+      router.push("/quest");
+    }
+  };
+
+  // AlertModal의 닫기 버튼
+  const closeAlert = () => {
+    setShowAlertModal(false);
+  };
+
   return (
     <div>
       <p className="pointer-events-none my-4 whitespace-pre-line">{content}</p>
@@ -28,7 +69,7 @@ const DailyProblemContent: React.FC = () => {
       {/* 버튼을 세로로 배치 (flex-col) */}
       <div className={`flex flex-col gap-2 opacity-0 ${styles.fadeInDelayed}`}>
         <button
-          onClick={() => router.push("/quest")}
+          onClick={() => handleDailyQuestClick()}
           className="
             cursor-pointer 
             py-2 
@@ -40,6 +81,12 @@ const DailyProblemContent: React.FC = () => {
           [일일 퀘스트] 백준 문제를 풀어 용을 처치하자!
         </button>
       </div>
+
+      {showAlertModal && (
+        <AlertModal title="알림" onClose={closeAlert}>
+          <p>오늘은 이미 일일 퀘스트를 완료하셨습니다.</p>
+        </AlertModal>
+      )}
     </div>
   );
 };
