@@ -1,4 +1,3 @@
-// hooks/lobby/useLobbyRenderer.ts
 "use client";
 
 import { RefObject, useEffect, useRef } from "react";
@@ -9,15 +8,14 @@ import {
   FRAME_WIDTH,
   LAYER_ORDER,
 } from "@/hooks/performance/useLoadSprites";
-import { User } from "@/model/LobbyUser";
+import { User } from "@/model/LobbyUser"; // (직접 만든 타입)
 import { NpcInfo } from "@/model/Npc";
 import { PortalInfo } from "@/model/Portal";
 
-/** 11:6 비율 (550×301) 고정 뷰포트 예시 */
+/** 예시: 11:6 비율 (550×301)에 가깝게 */
 const FIXED_VIEWPORT_WIDTH = 605;
 const FIXED_VIEWPORT_HEIGHT = 330;
 
-/** 파라미터 */
 interface UseLobbyRendererParams {
   canvasRef: RefObject<HTMLCanvasElement | null>;
   canvasSize: { w: number; h: number };
@@ -26,20 +24,18 @@ interface UseLobbyRendererParams {
   portalImage?: HTMLImageElement | null;
   spriteImages: Record<string, HTMLImageElement>;
 
-  // [중요] usersRef
   usersRef: React.MutableRefObject<User[]>;
-
   localClientId: string;
   portals: PortalInfo[];
   npcs: NpcInfo[];
 }
 
 /**
- * (1) 30fps 고정 (frameDuration)
- * (2) usersRef.current로부터 유저 정보를 가져와 그리기
- * (3) 각 유저에 대해 drawX, drawY를 보간(lerp) 처리
+ * (1) 30fps로 rAF 반복
+ * (2) usersRef.current에 들어있는 “보간(lerp) 데이터”로 캐릭터 위치 그리기
+ * (3) 카메라(스크롤) 위치도 보간
  */
-export function useLobbyRenderer({
+export default function useLobbyRenderer({
   canvasRef,
   canvasSize,
   backgroundImage,
@@ -51,12 +47,12 @@ export function useLobbyRenderer({
   portals,
   npcs,
 }: UseLobbyRendererParams) {
-  // 카메라 좌표
   const cameraPosRef = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
-    if (!canvasRef.current) return;
     const canvas = canvasRef.current;
+    if (!canvas) return;
+
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
@@ -72,20 +68,18 @@ export function useLobbyRenderer({
     let lastTime = 0;
     let animationId = 0;
 
-    // (캐릭터 애니메이션) frame 관리
+    // 스프라이트 애니메이션 frame
     const userFrameMap: Record<
       string,
       { frame: number; lastFrameTime: number }
     > = {};
-    const frameInterval = 100;
+    const frameInterval = 100; // 100ms마다 프레임 전환
     const maxMovingFrame = 3;
 
-    // 초기화(이미 있는 유저들에 대해)
     usersRef.current.forEach((u) => {
       userFrameMap[u.id] = { frame: 0, lastFrameTime: performance.now() };
     });
 
-    /** rAF 렌더 함수 */
     const render = (time: number) => {
       const delta = time - lastTime;
       if (delta >= frameDuration) {
@@ -101,18 +95,15 @@ export function useLobbyRenderer({
         ctx.save();
         ctx.scale(baseScale, baseScale);
 
-        // (A) 각 유저의 drawX, drawY 보간
+        // (A) 보간(lerp) 적용
         const now = performance.now();
         usersRef.current.forEach((user) => {
-          const { lerpStartTime, lerpDuration } = user;
-          if (lerpDuration > 0) {
-            const progress = (now - lerpStartTime) / lerpDuration;
+          if (user.lerpDuration > 0) {
+            const progress = (now - user.lerpStartTime) / user.lerpDuration;
             if (progress >= 1) {
-              // 목표지점 도달
               user.drawX = user.lerpTargetX;
               user.drawY = user.lerpTargetY;
             } else {
-              // lerp
               user.drawX =
                 user.lerpStartX +
                 (user.lerpTargetX - user.lerpStartX) * progress;
@@ -121,41 +112,33 @@ export function useLobbyRenderer({
                 (user.lerpTargetY - user.lerpStartY) * progress;
             }
           } else {
-            // lerpDuration = 0이면 그냥 x,y
             user.drawX = user.lerpTargetX;
             user.drawY = user.lerpTargetY;
           }
         });
 
-        // (B) 카메라 위치 결정
+        // (B) 카메라
         const me = usersRef.current.find((u) => u.id === localClientId);
-        let targetCameraX = 0;
-        let targetCameraY = 0;
+        let targetX = 0;
+        let targetY = 0;
         if (me) {
-          // 카메라는 drawX, drawY 기준으로 (캐릭터가 보간중이라면 중간지점 따라감)
           const centerX = me.drawX + LOBBY_MAP_CONSTANTS.IMG_WIDTH / 2;
           const centerY = me.drawY + LOBBY_MAP_CONSTANTS.IMG_HEIGHT / 2;
-          const viewW = FIXED_VIEWPORT_WIDTH;
-          const viewH = FIXED_VIEWPORT_HEIGHT;
+          targetX = centerX - FIXED_VIEWPORT_WIDTH / 2;
+          targetY = centerY - FIXED_VIEWPORT_HEIGHT / 2;
 
-          targetCameraX = centerX - viewW / 2;
-          targetCameraY = centerY - viewH / 2;
-
-          const maxCamX = LOBBY_MAP_CONSTANTS.MAP_WIDTH - viewW;
-          const maxCamY = LOBBY_MAP_CONSTANTS.MAP_HEIGHT - viewH;
-          targetCameraX = clamp(targetCameraX, 0, Math.max(0, maxCamX));
-          targetCameraY = clamp(targetCameraY, 0, Math.max(0, maxCamY));
+          const maxCamX = LOBBY_MAP_CONSTANTS.MAP_WIDTH - FIXED_VIEWPORT_WIDTH;
+          const maxCamY =
+            LOBBY_MAP_CONSTANTS.MAP_HEIGHT - FIXED_VIEWPORT_HEIGHT;
+          targetX = clamp(targetX, 0, Math.max(0, maxCamX));
+          targetY = clamp(targetY, 0, Math.max(0, maxCamY));
         }
 
-        // (B-1) 카메라도 부드럽게 이동(lerp)
-        const smoothing = 0.2;
-        const camX = cameraPosRef.current.x;
-        const camY = cameraPosRef.current.y;
-        const newCamX = camX + (targetCameraX - camX) * smoothing;
-        const newCamY = camY + (targetCameraY - camY) * smoothing;
-        cameraPosRef.current.x = newCamX;
-        cameraPosRef.current.y = newCamY;
-
+        const smoothing = 0.3;
+        cameraPosRef.current.x +=
+          (targetX - cameraPosRef.current.x) * smoothing;
+        cameraPosRef.current.y +=
+          (targetY - cameraPosRef.current.y) * smoothing;
         ctx.translate(-cameraPosRef.current.x, -cameraPosRef.current.y);
 
         // (C) 배경
@@ -179,7 +162,6 @@ export function useLobbyRenderer({
             ctx.fillText(p.name, p.x + p.width / 2, p.y + p.height + 12);
           });
         } else {
-          // 로딩 전 임시 표시
           portals.forEach((p) => {
             ctx.fillStyle = "rgba(0,255,255,0.3)";
             ctx.fillRect(p.x, p.y, p.width, p.height);
@@ -193,9 +175,10 @@ export function useLobbyRenderer({
         // (E) NPC
         npcs.forEach((npc) => {
           const img = npcImages[npc.image];
-          if (!img) return;
-          ctx.drawImage(img, npc.x, npc.y, npc.width, npc.height);
-
+          if (img) {
+            ctx.drawImage(img, npc.x, npc.y, npc.width, npc.height);
+          }
+          // 이름
           ctx.font = "bold 12px Arial";
           ctx.fillStyle = "yellow";
           ctx.textAlign = "center";
@@ -206,16 +189,15 @@ export function useLobbyRenderer({
           );
         });
 
-        // (F) 캐릭터 스프라이트
-        const storeUsers = usersRef.current;
-        storeUsers.forEach((user) => {
+        // (F) 캐릭터
+        usersRef.current.forEach((user) => {
           const { id, drawX, drawY, direction, isMoving, nickname } = user;
 
-          // 스프라이트 애니메이션 frame
           if (!userFrameMap[id]) {
-            userFrameMap[id] = { frame: 0, lastFrameTime: performance.now() };
+            userFrameMap[id] = { frame: 0, lastFrameTime: now };
           }
           const uf = userFrameMap[id];
+
           if (isMoving) {
             if (now - uf.lastFrameTime > frameInterval) {
               uf.frame++;
@@ -226,12 +208,13 @@ export function useLobbyRenderer({
             uf.frame = 0;
             uf.lastFrameTime = now;
           }
+
           const sx = uf.frame * FRAME_WIDTH;
           const sy = (direction ?? 0) * FRAME_HEIGHT;
 
-          // 레이어 순서대로 그리기 (body, eyes, clothes, hair)
           ctx.save();
           if (Object.keys(spriteImages).length === LAYER_ORDER.length) {
+            // 레이어 순서대로
             LAYER_ORDER.forEach((layer) => {
               const spr = spriteImages[layer];
               if (!spr) return;
@@ -248,7 +231,7 @@ export function useLobbyRenderer({
               );
             });
           } else {
-            // 혹은 미로딩이면 임시 표시
+            // 미로딩 시 임시
             ctx.fillStyle = "blue";
             ctx.fillRect(drawX, drawY, FRAME_WIDTH, FRAME_HEIGHT);
           }
@@ -271,7 +254,6 @@ export function useLobbyRenderer({
       animationId = requestAnimationFrame(render);
     };
 
-    // rAF 시작
     animationId = requestAnimationFrame(render);
     return () => {
       cancelAnimationFrame(animationId);
