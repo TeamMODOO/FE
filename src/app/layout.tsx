@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import RedundantModal from "@/components/redundantModal/RedundantModal";
 import { Toaster } from "@/components/ui/toaster";
 import { cn } from "@/lib/utils";
 import { AppProviders } from "@/provider";
@@ -31,7 +32,7 @@ export default function RootLayout({
           <AppProviders>
             {children}
             <Toaster />
-            {/* <중복접속모달 추가/> */}
+            <RedundantModal />
           </AppProviders>
         </QueryProvider>
       </body>
