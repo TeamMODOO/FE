@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect } from "react";
 
+import { Direction } from "@/model/LobbyUser";
 import useSocketStore from "@/store/useSocketStore";
 
 /**
@@ -21,7 +22,7 @@ export interface MovementInfoFromServer {
   client_id: string;
   position_x: number;
   position_y: number;
-  direction: number;
+  direction: Direction;
   user_name: string;
 }
 
@@ -32,7 +33,7 @@ interface SCEnterRoomData {
   client_id: string;
   position_x: number;
   position_y: number;
-  direction: number;
+  direction: Direction;
   user_name: string;
 }
 
@@ -51,7 +52,7 @@ export interface SCUserPositionInfo {
   client_id: string;
   position_x: number;
   position_y: number;
-  direction: number;
+  direction: Direction;
   user_name: string;
 }
 
@@ -65,7 +66,7 @@ type LobbySocketEventsProps = {
     userId: string,
     x: number,
     y: number,
-    direction: number,
+    direction: Direction,
     isMoving: boolean,
   ) => void;
   onRemoveUser: (id: string) => void;
@@ -84,7 +85,7 @@ export default function useLobbySocketEvents({
 
   // (A) 내 이동 emit
   const emitMovement = useCallback(
-    (x: number, y: number, direction: number) => {
+    (x: number, y: number, direction: Direction) => {
       if (!socket || !isConnected) return;
       socket.emit("CS_MOVEMENT_INFO", {
         position_x: x,
