@@ -119,7 +119,7 @@ export default function Home() {
 
   return (
     <div className="min-h-dvh bg-black">
-      <BgMusicGlobal src="" />
+      <BgMusicGlobal src="/sounds/tetris.wav" />
       <BgMusicButton />
       <OutButton />
 
@@ -140,7 +140,9 @@ export default function Home() {
       {gameOver && <p>Game Over</p>}
 
       {/* 게임 정보 */}
-      <Score score={score} level={level} linesCleared={linesCleared} />
+      {isGameStarted && (
+        <Score score={score} level={level} linesCleared={linesCleared} />
+      )}
 
       {/* 보드 */}
       <Board board={board} />
