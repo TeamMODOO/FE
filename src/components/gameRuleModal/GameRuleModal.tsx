@@ -1,7 +1,8 @@
-// /src/components/alertModal/AlertModal.tsx
 "use client";
 
 import router from "next/router";
+
+import useEscapeKey from "@/hooks/useEscapeKey";
 
 import styles from "./AlertModal.module.css";
 
@@ -29,6 +30,8 @@ export default function GameRuleModal({
   function goLobby() {
     router.push("/lobby");
   }
+
+  useEscapeKey(onClose, true);
 
   return (
     <div className={styles.overlay}>
