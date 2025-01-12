@@ -60,6 +60,10 @@ export default function QuestSection() {
   const { data: session } = useSession();
   const router = useRouter();
 
+  // 효과음 처리 위한 Ref
+  const correctAudioRef = useRef<HTMLAudioElement>(null);
+  const incorrectAudioRef = useRef<HTMLAudioElement>(null);
+
   /** 문제 풀이 시작 여부 */
   const [isStart, setIsStart] = useState(false);
 
@@ -141,6 +145,17 @@ export default function QuestSection() {
       setIsLoading(false);
     }
   };
+
+  // isCorrect 여부 감지 후 사운드 재생
+  useEffect(() => {
+    if (isCorrect !== null) {
+      if (isCorrect) {
+        correctAudioRef.current?.play().catch(() => {});
+      } else {
+        incorrectAudioRef.current?.play().catch(() => {});
+      }
+    }
+  }, [isCorrect]);
 
   /* 모달 닫기 */
   const handleCloseModal = () => {
@@ -240,6 +255,17 @@ export default function QuestSection() {
         src="/sounds/swordSFX.wav"
         style={{ display: "none" }}
       />
+      <audio
+        ref={correctAudioRef}
+        src="/sounds/correctFx.wav"
+        style={{ display: "none" }}
+      />
+      <audio
+        ref={incorrectAudioRef}
+        src="/sounds/incorrectFx.wav"
+        style={{ display: "none" }}
+      />
+
       <div className={styles.questHeader}>
         <h1 className={styles.title}>오늘의 문제</h1>
         <h1 className={styles.timer}>{isStart ? formattedTime : "00:00:00"}</h1>
