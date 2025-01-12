@@ -4,6 +4,7 @@ import { ChangeEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
 
 import { BgMusicButton } from "@/components/bgMusic/BgMusicButton";
 import { BgMusicGlobal } from "@/components/bgMusic/BgMusicGlobal";
+import GameRuleModal from "@/components/gameRuleModal/GameRuleModal";
 import { OutButton } from "@/components/outButton/OutButton";
 
 // import Swal from "sweetalert2";
@@ -391,11 +392,6 @@ export default function TypingPage() {
     };
   }, [startTime, isFinished, isPaused]);
 
-  /** 타이머 일시 정지 토글 */
-  const togglePause = () => {
-    setIsPaused((prev) => !prev);
-  };
-
   /** 새 코드 스니펫 가져오기 */
   const refreshCodeSnippet = () => {
     setUserInput("");
@@ -441,8 +437,38 @@ export default function TypingPage() {
     setIsModalOpen(false);
   };
 
+  // 게임 룰 설명 모달
+  const [isGameRuleModalOpen, setIsGameRuleModalOpen] = useState<boolean>(true);
+
+  const closeGameRuleModal = () => {
+    setIsGameRuleModalOpen(false);
+  };
+
   return (
     <>
+      {isGameRuleModalOpen && (
+        <GameRuleModal title="타자 연습" onClose={closeGameRuleModal}>
+          <p>
+            코드를 따라 입력하세요. 타자 속도, 정확도를 측정합니다.
+            <br />
+            코드는 랜덤으로 가져오며, 새로고침 버튼을 눌러 새 코드를 가져올 수
+            있습니다.
+          </p>
+          <p>화면 가운데 텍스트 영역을 클릭하면 타자 연습이 시작됩니다.</p>
+          <p>
+            타자 연습을 마치면 정확도, 소요 시간, 분당 타자 수(WPM)를 확인할 수
+            있습니다.
+          </p>
+          <p>
+            타자 연습 기록은 최근 10개까지만 표시됩니다. 더 많은 기록을 보려면
+            페이지를 새로고침하세요.
+          </p>
+          <p>
+            타자 연습 기록을 모두 삭제하려면 브라우저의 로컬 스토리지를
+            초기화하세요.
+          </p>
+        </GameRuleModal>
+      )}
       <BgMusicGlobal src="" />
       <BgMusicButton />
       <OutButton />
@@ -472,7 +498,7 @@ export default function TypingPage() {
           </div>
 
           <textarea
-            placeholder="코드를 따라 입력하세요"
+            placeholder="이곳을 클릭하고 텍스트를 입력하면 타자 연습이 시작됩니다."
             value={userInput}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
@@ -489,9 +515,6 @@ export default function TypingPage() {
                 <div>
                   <p>소요 시간: {currentTime} 초</p>
                 </div>
-                <button onClick={togglePause}>
-                  {isPaused ? "타이머 시작" : "타이머 일시 정지"}
-                </button>
               </>
             )}
           </div>
