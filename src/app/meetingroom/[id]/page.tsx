@@ -10,7 +10,7 @@ import { useSession } from "next-auth/react";
 import * as mediasoupClient from "mediasoup-client";
 import { Socket } from "socket.io-client";
 
-import { ChatWidget } from "@/components/chat/ChatWidget";
+import { ChatWidget } from "@/components/chat/left/LeftChatWidget";
 import useAudioSocketConnect from "@/hooks/socket/useAudioSocketConnect";
 import useAudioSocketStore from "@/store/useAudioSocketStore";
 import useClientIdStore from "@/store/useClientIdStore";
@@ -333,7 +333,7 @@ function Page() {
           userName={session?.user.name ?? ""}
         />
       </div>
-      <ChatWidget isOpen={chatOpen} setIsOpen={setChatOpen} position="left" />
+      <ChatWidget isOpen={chatOpen} setIsOpen={setChatOpen} />
     </div>
   );
 }
