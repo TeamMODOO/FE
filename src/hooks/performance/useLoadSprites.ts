@@ -1,45 +1,36 @@
-// src/hooks/useLoadSprites.ts
-"use client"; // Next.js의 클라이언트 컴포넌트에서 사용한다면
+// hooks/performance/useLoadSprites.ts
+"use client";
 
 import { useEffect, useState } from "react";
 
-const SPRITE_PATHS = {
-  body: "/sprites/body.png",
-  eyes: "/sprites/eyes.png",
-  clothes: "/sprites/clothes.png",
-  hair: "/sprites/hair.png",
-};
-
-export const LAYER_ORDER = ["body", "eyes", "clothes", "hair"] as const;
 export const FRAME_WIDTH = 32;
 export const FRAME_HEIGHT = 32;
+/** 스프라이트 레이어 순서: 예) body → eyes → clothes → hair */
+export const LAYER_ORDER = ["body", "eyes", "clothes", "hair"];
 
 /**
- * 스프라이트 시트 로딩 훅
- * - 로드가 끝나면 { body, eyes, clothes, hair } 키로 Image 객체를 반환
+ * 각 레이어별 스프라이트 시트를 로딩
  */
-export default function useLoadSprites() {
-  const [spriteImages, setSpriteImages] = useState<
-    Record<string, HTMLImageElement>
-  >({});
+export function useLoadSprites() {
+  const [images, setImages] = useState<Record<string, HTMLImageElement>>({});
 
   useEffect(() => {
-    const loaded: Record<string, HTMLImageElement> = {};
-    const entries = Object.entries(SPRITE_PATHS);
-    let count = 0;
+    const layers = LAYER_ORDER;
+    const temp: Record<string, HTMLImageElement> = {};
+    let loadedCount = 0;
 
-    entries.forEach(([layer, path]) => {
+    layers.forEach((layer) => {
       const img = new Image();
-      img.src = path;
+      img.src = `/sprites/${layer}.png`; // 실제 스프라이트 경로
       img.onload = () => {
-        loaded[layer] = img;
-        count++;
-        if (count === entries.length) {
-          setSpriteImages(loaded);
+        temp[layer] = img;
+        loadedCount++;
+        if (loadedCount === layers.length) {
+          setImages({ ...temp });
         }
       };
     });
   }, []);
 
-  return spriteImages;
+  return images;
 }
