@@ -1,9 +1,11 @@
 // src/components/outButton/outButton.tsx
 "use client";
 
-import { LogOut } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+
+import { LogOut } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
 
 export function OutButton() {
   const router = useRouter();
@@ -18,7 +20,7 @@ export function OutButton() {
       onClick={handleClick}
       title="로비로 돌아가기"
       className={`
-        fixed top-6 right-32 z-50
+        fixed right-32 top-6 z-50
         size-20 rounded-full border-2
         border-[rgba(111,99,98,1)]
         bg-gradient-to-b from-black/70 to-black/90

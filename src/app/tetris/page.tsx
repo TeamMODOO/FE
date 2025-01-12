@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from "react";
 
+import { BgMusicButton } from "@/components/bgMusic/BgMusicButton";
+import { BgMusicGlobal } from "@/components/bgMusic/BgMusicGlobal";
+import { OutButton } from "@/components/outButton/OutButton";
 import { Tetris } from "@/utils/tetrisLogic";
 
 import Board from "../../components/tetris/Board";
 import Score from "../../components/tetris/Score";
-import { BgMusicGlobal } from "@/components/bgMusic/BgMusicGlobal";
-import { BgMusicButton } from "@/components/bgMusic/BgMusicButton";
-import { OutButton } from "@/components/outButton/OutButton";
 
 export default function Home() {
   const [game] = useState<Tetris>(new Tetris());

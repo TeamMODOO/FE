@@ -2,13 +2,14 @@
 
 import { ChangeEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
 
+import { BgMusicButton } from "@/components/bgMusic/BgMusicButton";
+import { BgMusicGlobal } from "@/components/bgMusic/BgMusicGlobal";
+import { OutButton } from "@/components/outButton/OutButton";
+
 // import Swal from "sweetalert2";
 import TypingCompleteModal from "./_components/TypingCompleteModal/TypingCompleteModal";
 
 import styles from "./typing.module.css";
-import { BgMusicGlobal } from "@/components/bgMusic/BgMusicGlobal";
-import { BgMusicButton } from "@/components/bgMusic/BgMusicButton";
-import { OutButton } from "@/components/outButton/OutButton";
 
 /** GitHub 코드 검색 결과의 item 타입 정의 */
 interface GitHubCodeSearchItem {

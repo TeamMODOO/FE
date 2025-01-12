@@ -1,9 +1,9 @@
 // /src/components/alertModal/AlertModal.tsx
 "use client";
 
-import styles from "./AlertModal.module.css";
-
 import router from "next/router";
+
+import styles from "./AlertModal.module.css";
 
 interface AlertModalProps {
   /** 모달 제목 */
