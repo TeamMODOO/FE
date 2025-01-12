@@ -18,16 +18,20 @@ import RankingModal from "@/app/questmap/_components/RankingModal/RankingModal";
 import MiniGameModal from "@/components/modal/MiniGame/MiniGameModal";
 import NeedSignInModal from "@/components/modal/NeedSignIn/NeedSignInModal";
 import useLobbyRenderer from "@/hooks/lobby/useLobbyRenderer";
-// [수정] getUser 추가
+// [중요] useLobbySocketEvents (소켓 이벤트)
 import useLobbySocketEvents from "@/hooks/lobby/useLobbySocketEvents";
+// 스프라이트(캐릭터 레이어) 불러오기
 import { useLoadSprites } from "@/hooks/performance/useLoadSprites";
+// 이동 전송 쓰로틀
 import useThrottle from "@/hooks/performance/useThrottle";
+// 모델 및 스토어
 import { NoticeItem } from "@/model/NoticeBoard";
 import { Direction } from "@/model/User";
 import useClientIdStore from "@/store/useClientIdStore";
 import useSocketStore from "@/store/useSocketStore";
 import useUsersRef from "@/store/useUsersRef";
 
+// 기타 컴포넌트
 import DailyProblemContent from "../DailyProblem/DailyProblemContent";
 import { EnterMeetingRoom } from "../EnterMeetingRoom/EnterMeetingRoom";
 import NoticeBoardModal from "../NoticeBoardModal/NoticeBoardModal";
@@ -43,7 +47,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
   const router = useRouter();
   const { data: session, status } = useSession();
 
-  // (A) 소켓, 클라이언트ID
+  // (A) 소켓, 클라이언트 ID
   const { socket, isConnected } = useSocketStore();
   const { clientId } = useClientIdStore();
 
@@ -51,11 +55,11 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
   const { usersRef, getUser, addUser, removeUser, updateUserPosition } =
     useUsersRef();
 
-  // (D) 소켓 이벤트
+  // (C) 소켓 이벤트
+  //  - getUser를 넘겨주어야 “이전 좌표 vs 새 좌표” 비교 가능
   const { emitMovement } = useLobbySocketEvents({
     userId: clientId ?? "",
     userNickname: session?.user?.name ?? "Guest",
-    // [수정] getUser 추가
     getUser,
     onAddUser: addUser,
     onUpdateUserPosition: updateUserPosition,
@@ -115,7 +119,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     });
   }, []);
 
-  // (G) 사운드
+  // (G) 사운드 관련
   const walkAudioRef = useRef<HTMLAudioElement | null>(null);
   const modalEventAudioRef = useRef<HTMLAudioElement | null>(null);
   const portalEventAudioRef = useRef<HTMLAudioElement | null>(null);
@@ -157,7 +161,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     portalEventAudioRef.current.play().catch(() => {});
   }
 
-  // (H) 모달 상태
+  // (H) 모달 상태들
   const [signInModalOpen, setSignInModalOpen] = useState(false);
   const [rankingModalOpen, setRankingModalOpen] = useState(false);
   const [minigameModalOpen, setMinigameModalOpen] = useState(false);
@@ -175,22 +179,8 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     setAlertModalOpen(true);
   }
 
-  const isAnyModalOpen =
-    signInModalOpen ||
-    rankingModalOpen ||
-    minigameModalOpen ||
-    npc1ModalOpen ||
-    npc2ModalOpen ||
-    npc3ModalOpen ||
-    noticeModalOpen ||
-    meetingModalOpen ||
-    alertModalOpen;
-
   // (J) 공지사항 & QnA
-  const [noticeList, setNoticeList] = useState<NoticeItem[]>([
-    { id: 1, name: "운영자", message: "처음 오신 분들 환영합니다!" },
-    { id: 2, name: "Alice", message: "안녕하세요! 반갑습니다." },
-  ]);
+  const [noticeList, setNoticeList] = useState<NoticeItem[]>([]);
   const [writerName, setWriterName] = useState("");
   const [writerMessage, setWriterMessage] = useState("");
 
@@ -217,19 +207,6 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     setTimeout(() => router.push(`/myroom/${userId}`), 800);
   }
 
-  // (L) 충돌 판정 (사용 안 해도 됨: 참고용)
-  function doRectsOverlap(
-    rect1: { x: number; y: number; width: number; height: number },
-    rect2: { x: number; y: number; width: number; height: number },
-  ) {
-    return !(
-      rect1.x + rect1.width <= rect2.x ||
-      rect1.x >= rect2.x + rect2.width ||
-      rect1.y + rect1.height <= rect2.y ||
-      rect1.y >= rect2.y + rect2.height
-    );
-  }
-
   // (M) 방향 계산
   function getDirection(keys: Record<string, boolean>): Direction | null {
     if (keys["w"] || keys["W"] || keys["ㅈ"] || keys["ArrowUp"]) return 1; // Up
@@ -241,6 +218,17 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
 
   // (N) 키보드 입력
   const [pressedKeys, setPressedKeys] = useState<Record<string, boolean>>({});
+  const isAnyModalOpen =
+    signInModalOpen ||
+    rankingModalOpen ||
+    minigameModalOpen ||
+    npc1ModalOpen ||
+    npc2ModalOpen ||
+    npc3ModalOpen ||
+    noticeModalOpen ||
+    meetingModalOpen ||
+    alertModalOpen;
+
   useEffect(() => {
     if (isAnyModalOpen) {
       setPressedKeys({});
@@ -258,8 +246,14 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
 
     // 포탈 충돌
     for (const p of LOBBY_PORTALS) {
-      const [pl, pr, pt, pb] = [p.x, p.x + p.width, p.y, p.y + p.height];
-      const overlap = cr > pt && ct < pb && cr > pt && cl < pr;
+      const pl = p.x;
+      const pr = p.x + p.width;
+      const pt = p.y;
+      const pb = p.y + p.height;
+
+      // 가로 겹침: cl < pr && cr > pl
+      // 세로 겹침: ct < pb && cb > pt
+      const overlap = cl < pr && cr > pl && ct < pb && cb > pt;
       if (overlap) {
         if (p.name === "회의실") {
           playPortalEventSound();
@@ -284,13 +278,12 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     // NPC 충돌
     for (let i = 0; i < LOBBY_NPCS.length; i++) {
       const npc = LOBBY_NPCS[i];
-      const [nl, nr, nt, nb] = [
-        npc.x,
-        npc.x + npc.width,
-        npc.y,
-        npc.y + npc.height,
-      ];
-      const overlap = cr > nt && ct < nb && cl < nr && cr > nt;
+      const nl = npc.x;
+      const nr = npc.x + npc.width;
+      const nt = npc.y;
+      const nb = npc.y + npc.height;
+
+      const overlap = cl < nr && cr > nl && ct < nb && cb > nt;
       if (overlap) {
         playModalEventSound();
         if (i === 0) setNpc1ModalOpen(true);
@@ -347,10 +340,10 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     direction: 0 as Direction,
   });
 
-  // ② 100ms 간격으로만 전송
-  const throttledMovement = useThrottle(rawMovement, 100);
+  // ② 100ms 간격으로만 서버에 전송 (스로틀)
+  const throttledMovement = useThrottle(rawMovement, 50);
 
-  // ③ throttledMovement가 바뀔 때만 서버로 emitMovement
+  // ③ throttledMovement가 바뀔 때만 서버로 emit
   useEffect(() => {
     if (!clientId) return;
     if (!isConnected) return;
@@ -370,7 +363,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     isAnyModalOpen,
   ]);
 
-  // 30fps 이동 처리 (로컬)
+  // (P) 30fps 이동 처리 (로컬)
   useEffect(() => {
     const fps = 30;
     const frameDuration = 1000 / fps;
@@ -418,7 +411,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
           newX -= LOBBY_MAP_CONSTANTS.SPEED;
         }
 
-        // 충돌 체크
+        // (충돌 체크)
         const newBB = {
           x: newX,
           y: newY,
@@ -444,6 +437,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
           moved = true;
         }
 
+        // (로컬 스토어에 내 캐릭터 좌표/방향/이동상태 업데이트)
         updateUserPosition(clientId, x, y, newDir, moved);
 
         // 걸음 소리
@@ -455,6 +449,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
         updateUserPosition(clientId, x, y, me.direction, false);
       }
 
+      // (rawMovement 갱신 → useThrottle에서 처리)
       setRawMovement({
         x,
         y,
@@ -475,7 +470,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     updateUserPosition,
   ]);
 
-  // (P) 모달 열리면 내 캐릭터 idle
+  // (Q) 모달 열리면 내 캐릭터 idle
   useEffect(() => {
     if (!clientId) return;
     if (isAnyModalOpen) {
@@ -486,15 +481,17 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     }
   }, [isAnyModalOpen, clientId, updateUserPosition, usersRef]);
 
-  // (Q) 로비 접속 시 서버에 유저 정보 요청
+  // (R) 로비 접속 시 서버에 유저 정보 요청
   useEffect(() => {
     if (!clientId) return;
     if (status === "loading") return;
     if (!socket || !isConnected) return;
+
+    // 로비에 입장하면 “현재 접속자들의 좌표”를 서버에 물어본다
     socket.emit("CS_USER_POSITION_INFO", {});
   }, [clientId, status, socket, isConnected]);
 
-  // (R) useLobbyRenderer로 캔버스 렌더링
+  // (S) useLobbyRenderer로 캔버스 렌더링
   useLobbyRenderer({
     canvasRef,
     canvasSize,
@@ -508,9 +505,10 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     npcs: LOBBY_NPCS,
   });
 
-  // (S) 최종 렌더
+  // (T) 최종 렌더
   return (
     <>
+      {/* 오디오 태그들 */}
       <audio ref={walkAudioRef} src="" />
       <audio
         ref={modalEventAudioRef}
@@ -523,6 +521,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
         style={{ display: "none" }}
       />
 
+      {/* 미리 로딩용 NextImage */}
       <NextImage
         src="/furniture/portal.png"
         alt="portal"
@@ -532,6 +531,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
         priority
       />
 
+      {/* 모달들 */}
       {signInModalOpen && (
         <NeedSignInModal onClose={() => setSignInModalOpen(false)} />
       )}
@@ -541,7 +541,6 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
       {minigameModalOpen && (
         <MiniGameModal onClose={() => setMinigameModalOpen(false)} />
       )}
-
       <NpcModal
         isOpen={npc1ModalOpen}
         onClose={() => setNpc1ModalOpen(false)}
@@ -550,7 +549,6 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
       >
         <DailyProblemContent />
       </NpcModal>
-
       <NpcModal
         isOpen={npc2ModalOpen}
         onClose={() => setNpc2ModalOpen(false)}
@@ -563,7 +561,6 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
           handleQnaClick={handleQnaClick}
         />
       </NpcModal>
-
       {noticeModalOpen && (
         <NoticeBoardModal
           open={noticeModalOpen}
@@ -592,6 +589,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
         />
       )}
 
+      {/* Canvas 영역 */}
       <div
         className={Style.canvasContainerClass}
         style={{
@@ -603,12 +601,14 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
         <canvas ref={canvasRef} />
       </div>
 
+      {/* 화면 페이드 아웃 (포탈) */}
       <div
         className={`fade-overlay duration-2000 pointer-events-none fixed inset-0 bg-black transition-opacity ${
           isFadingOut ? "opacity-100" : "opacity-0"
         }`}
       />
 
+      {/* Alert 모달 */}
       {alertModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div className="rounded bg-white p-4">

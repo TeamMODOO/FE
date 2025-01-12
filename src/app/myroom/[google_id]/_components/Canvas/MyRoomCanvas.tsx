@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 
 import { useParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 import { useSession } from "next-auth/react";
 
@@ -46,6 +47,7 @@ import TechStackModal from "../TechStackModal/TechStackModal";
 import Style from "./Canvas.style";
 
 const MyRoomCanvas: React.FC = () => {
+  const router = useRouter();
   // 걷기 효과음 재생 위해 추가
   const walkAudioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -91,8 +93,7 @@ const MyRoomCanvas: React.FC = () => {
     setIsFadingOut(true);
     // 2초 후 이동
     setTimeout(() => {
-      window.location.href = "/lobby";
-      // 또는 router.push("/lobby") 사용 가능
+      router.push("/lobby");
     }, 700);
   }
   //////////////////////////////////////////
