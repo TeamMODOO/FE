@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <!-- 지우개 상단 (분홍색 부분) -->
+    <path d="M4 5L12 5L11 7L5 7L4 5Z" 
+          fill="#FED7E2" 
+          stroke="#D53F8C" 
+          stroke-width="0.5"/>
+    
+    <!-- 지우개 본체 (흰색 부분) -->
+    <path d="M5 7L11 7L11 11L5 11L5 7Z" 
+          fill="#2D3748" 
+          stroke="#718096" 
+          stroke-width="0.5"/>
+    
+    <!-- 왼쪽 측면 -->
+    <path d="M4 5L5 7L5 11L4 11L4 5Z" 
+          fill="#2D3748" 
+          stroke="#718096" 
+          stroke-width="0.5"/>
+    
+    <!-- 오른쪽 측면 -->
+    <path d="M11 7L12 5L12 11L11 11L11 7Z" 
+          fill="#2D3748" 
+          stroke="#718096" 
+          stroke-width="0.5"/>
+    
+    <!-- 하단 면 -->
+    <path d="M4 11L12 11L12 12L4 12L4 11Z" 
+          fill="#2D3748" 
+          stroke="#718096" 
+          stroke-width="0.5"/>
+    
+    <!-- 포인팅을 위한 중심선 표시 -->
+    <line x1="8" y1="7" x2="8" y2="11" 
+          stroke="#718096" 
+          stroke-width="0.5" 
+          stroke-dasharray="1,1"/>
+</svg>
