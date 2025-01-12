@@ -5,9 +5,10 @@ import { useTypewriter } from "react-simple-typewriter";
 
 import { useRouter } from "next/navigation";
 
+import AlertModal from "@/components/alertModal/AlertModal";
+
 // import { Typewriter } from "@/components/Typewriter";
 import styles from "@/components/modalAnimation/ModalAnimation.module.css";
-import AlertModal from "@/components/alertModal/AlertModal";
 
 const DailyProblemContent: React.FC = () => {
   const router = useRouter();
