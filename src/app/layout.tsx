@@ -31,6 +31,7 @@ export default function RootLayout({
           <AppProviders>
             {children}
             <Toaster />
+            {/* <중복접속모달 추가/> */}
           </AppProviders>
         </QueryProvider>
       </body>

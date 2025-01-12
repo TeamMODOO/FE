@@ -56,8 +56,7 @@ export function SocketProvider({ children }: PropsWithChildren) {
     });
 
     socket.on("SC_DUPLICATE_CONNECTION", () => {
-      // eslint-disable-next-line no-console
-      console.log("상대방 나가면 콘솔이 찍혀야 하는데...");
+      // 여기서 중복 접속 모달 키면 됨
     });
 
     socket.on("disconnect", () => {
@@ -66,7 +65,7 @@ export function SocketProvider({ children }: PropsWithChildren) {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     });
 
-    socket.on("connect_error", (error) => {
+    socket.on("connect_error", () => {
       setIsConnected(false);
     });
 
