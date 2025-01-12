@@ -1,7 +1,7 @@
 "use client";
+import { useRouter } from "next/navigation";
 
 import useEscapeKey from "@/hooks/useEscapeKey";
-import { useRouter } from "next/navigation";
 
 import styles from "./GameRuleModal.module.css";
 

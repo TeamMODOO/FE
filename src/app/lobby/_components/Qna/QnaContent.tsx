@@ -1,7 +1,6 @@
-// src/app/lobby/_components/Qna/QnaContent.tsx
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Typewriter, useTypewriter } from "react-simple-typewriter";
 
 import { QnaProps } from "@/model/Qna";
@@ -17,24 +16,22 @@ const QnaContent: React.FC<QnaProps> = ({ qnaList }) => {
     deleteSpeed: 0,
   });
 
-  // 선택된 질문의 인덱스 (-1은 초기 상태)
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
-  // 선택된 질문의 현재 답변 인덱스
   const [currentAnswerIndex, setCurrentAnswerIndex] = useState<number>(0);
 
   // 질문 클릭 시
   const handleQuestionClick = (index: number) => {
     setSelectedIndex(index);
-    setCurrentAnswerIndex(0); // 새로운 질문 선택 시 답변 인덱스 초기화
+    setCurrentAnswerIndex(0);
   };
 
-  // [이전] 버튼 클릭 시
+  // [이전] 버튼
   const handleGoBack = () => {
     setSelectedIndex(-1);
     setCurrentAnswerIndex(0);
   };
 
-  // [다음] 버튼 클릭 시
+  // [다음] 버튼
   const handleNext = () => {
     const selectedQna = qnaList[selectedIndex];
     if (currentAnswerIndex < selectedQna.answers.length - 1) {
@@ -42,22 +39,53 @@ const QnaContent: React.FC<QnaProps> = ({ qnaList }) => {
     }
   };
 
-  // [처음으로] 버튼 클릭 시
+  // [처음으로] 버튼
   const handleReset = () => {
     setSelectedIndex(-1);
     setCurrentAnswerIndex(0);
   };
 
+  /**
+   * 스페이스바로 [다음] 또는 [처음으로] 실행
+   * - selectedIndex !== -1 인 상태에서만 동작
+   * - 마지막 답변인 경우(handleReset), 아닌 경우(handleNext)
+   */
+  useEffect(() => {
+    const handleSpaceKey = (e: KeyboardEvent) => {
+      // 질문 하나 이상을 이미 선택한 경우에만 동작
+      if (selectedIndex === -1) return;
+
+      // 스페이스바인지 체크
+      if (e.key === " ") {
+        e.preventDefault(); // 기본 스크롤 막기
+
+        const selectedQna = qnaList[selectedIndex];
+        const isLastAnswer =
+          currentAnswerIndex === selectedQna.answers.length - 1;
+
+        // 마지막 답변이라면 -> handleReset()
+        // 마지막 답변이 아니라면 -> handleNext()
+        if (isLastAnswer) {
+          handleReset();
+        } else {
+          handleNext();
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleSpaceKey);
+    return () => {
+      window.removeEventListener("keydown", handleSpaceKey);
+    };
+  }, [selectedIndex, currentAnswerIndex, qnaList]);
+
   // 초기 상태 (질문 목록 + 안내문)
   if (selectedIndex === -1) {
     return (
       <div>
-        {/* 안내 문구 */}
         <div className={styles.mentSection}>
           <p>{text}</p>
         </div>
-
-        {/* 질문 목록 */}
         {qnaList.map((item, index) => (
           <div
             key={index}
@@ -88,7 +116,7 @@ const QnaContent: React.FC<QnaProps> = ({ qnaList }) => {
         </h2>
         <div className={styles.answerOutput} style={{ whiteSpace: "pre-line" }}>
           <Typewriter
-            key={`${selectedQna.question}-${currentAnswerIndex}`} // 유니크한 키 설정
+            key={`${selectedQna.question}-${currentAnswerIndex}`}
             words={[`A. ${currentAnswer}`]}
             loop={1}
             typeSpeed={10}

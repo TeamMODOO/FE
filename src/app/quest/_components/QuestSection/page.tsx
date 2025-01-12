@@ -13,7 +13,7 @@ import { python } from "@codemirror/lang-python";
 import { EditorView } from "@codemirror/view";
 import CodeMirror from "@uiw/react-codemirror";
 
-import AlertModal from "@/components/alertModal/AlertModal"; // ← 추가
+import AlertModal from "@/components/alertModal/AlertModal";
 import { Button } from "@/components/ui/button";
 import { useQuestGet } from "@/hooks/quest/useQuestGet";
 import { useQuestPost } from "@/hooks/quest/useQuestPost";
