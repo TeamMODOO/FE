@@ -6,6 +6,9 @@ import { ChangeEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
 import TypingCompleteModal from "./_components/TypingCompleteModal/TypingCompleteModal";
 
 import styles from "./typing.module.css";
+import { BgMusicGlobal } from "@/components/bgMusic/BgMusicGlobal";
+import { BgMusicButton } from "@/components/bgMusic/BgMusicButton";
+import { OutButton } from "@/components/outButton/OutButton";
 
 /** GitHub 코드 검색 결과의 item 타입 정의 */
 interface GitHubCodeSearchItem {
@@ -438,87 +441,92 @@ export default function TypingPage() {
   };
 
   return (
-    <div className={styles.container}>
-      <div className={styles.typingarea}>
-        <h2>타자 연습</h2>
-        <div className={styles.refreshCodeSnippet}>
-          {fileLink && (
-            <span>
-              <a href={fileLink} target="_blank" rel="noopener noreferrer">
-                코드 출처
-              </a>
-            </span>
-          )}
-          <button onClick={refreshCodeSnippet}>새로고침</button>
-        </div>
+    <>
+      <BgMusicGlobal src="" />
+      <BgMusicButton />
+      <OutButton />
+      <div className={styles.container}>
+        <div className={styles.typingarea}>
+          <h2>타자 연습</h2>
+          <div className={styles.refreshCodeSnippet}>
+            {fileLink && (
+              <span>
+                <a href={fileLink} target="_blank" rel="noopener noreferrer">
+                  코드 출처
+                </a>
+              </span>
+            )}
+            <button onClick={refreshCodeSnippet}>새로고침</button>
+          </div>
 
-        <div className={styles.codecontainer}>
-          {isFetching ? (
-            <div className={styles.loadingtext}>
-              <div className={styles.spinner}></div>
-              <span>코드 가져오는 중...</span>
-            </div>
-          ) : (
-            renderCode()
-          )}
-        </div>
-
-        <textarea
-          placeholder="코드를 따라 입력하세요"
-          value={userInput}
-          onChange={handleInputChange}
-          onKeyDown={handleKeyDown}
-          autoComplete="off"
-          spellCheck="false"
-          disabled={isPaused || isFinished || isDisabled}
-          ref={textareaRef}
-          className={styles.textareaSection}
-        />
-
-        <div className={styles.footer}>
-          {!isFinished && currentTime > 0 && (
-            <>
-              <div>
-                <p>소요 시간: {currentTime} 초</p>
+          <div className={styles.codecontainer}>
+            {isFetching ? (
+              <div className={styles.loadingtext}>
+                <div className={styles.spinner}></div>
+                <span>코드 가져오는 중...</span>
               </div>
-              <button onClick={togglePause}>
-                {isPaused ? "타이머 시작" : "타이머 일시 정지"}
-              </button>
-            </>
-          )}
-        </div>
-      </div>
+            ) : (
+              renderCode()
+            )}
+          </div>
 
-      {/* 저장된 기록 표시 */}
-      {typingRecords.length > 0 && (
-        <div className={styles.typingRecords}>
-          <h3>타자 연습 기록</h3>
-          <div>
-            {typingRecords.map((record, index) => (
-              <div key={index} className={styles.typingRecordsItem}>
-                <p>완료 시간: {record.completedAt}</p>
-                <span>소요 시간: {record.time} 초</span>
-                &nbsp;&nbsp;&nbsp;||&nbsp;&nbsp;&nbsp;
-                <span>정확도: {record.accuracy}%</span>
-                &nbsp;&nbsp;&nbsp;||&nbsp;&nbsp;&nbsp;
-                <span>속도: {record.wpm} WPM</span>
-              </div>
-            ))}
+          <textarea
+            placeholder="코드를 따라 입력하세요"
+            value={userInput}
+            onChange={handleInputChange}
+            onKeyDown={handleKeyDown}
+            autoComplete="off"
+            spellCheck="false"
+            disabled={isPaused || isFinished || isDisabled}
+            ref={textareaRef}
+            className={styles.textareaSection}
+          />
+
+          <div className={styles.footer}>
+            {!isFinished && currentTime > 0 && (
+              <>
+                <div>
+                  <p>소요 시간: {currentTime} 초</p>
+                </div>
+                <button onClick={togglePause}>
+                  {isPaused ? "타이머 시작" : "타이머 일시 정지"}
+                </button>
+              </>
+            )}
           </div>
         </div>
-      )}
-      {isModalOpen && (
-        <TypingCompleteModal
-          currentTime={currentTime}
-          accuracy={accuracy}
-          wpm={wpm}
-          onClose={closeModal}
-          onNext={() => {
-            refreshCodeSnippet();
-            closeModal();
-          }}
-        />
-      )}
-    </div>
+
+        {/* 저장된 기록 표시 */}
+        {typingRecords.length > 0 && (
+          <div className={styles.typingRecords}>
+            <h3>타자 연습 기록</h3>
+            <div>
+              {typingRecords.map((record, index) => (
+                <div key={index} className={styles.typingRecordsItem}>
+                  <p>완료 시간: {record.completedAt}</p>
+                  <span>소요 시간: {record.time} 초</span>
+                  &nbsp;&nbsp;&nbsp;||&nbsp;&nbsp;&nbsp;
+                  <span>정확도: {record.accuracy}%</span>
+                  &nbsp;&nbsp;&nbsp;||&nbsp;&nbsp;&nbsp;
+                  <span>속도: {record.wpm} WPM</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        {isModalOpen && (
+          <TypingCompleteModal
+            currentTime={currentTime}
+            accuracy={accuracy}
+            wpm={wpm}
+            onClose={closeModal}
+            onNext={() => {
+              refreshCodeSnippet();
+              closeModal();
+            }}
+          />
+        )}
+      </div>
+    </>
   );
 }

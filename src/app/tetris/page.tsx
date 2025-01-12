@@ -6,6 +6,9 @@ import { Tetris } from "@/utils/tetrisLogic";
 
 import Board from "../../components/tetris/Board";
 import Score from "../../components/tetris/Score";
+import { BgMusicGlobal } from "@/components/bgMusic/BgMusicGlobal";
+import { BgMusicButton } from "@/components/bgMusic/BgMusicButton";
+import { OutButton } from "@/components/outButton/OutButton";
 
 export default function Home() {
   const [game] = useState<Tetris>(new Tetris());
@@ -90,6 +93,9 @@ export default function Home() {
 
   return (
     <div className="min-h-dvh bg-black">
+      <BgMusicGlobal src="" />
+      <BgMusicButton />
+      <OutButton />
       {gameOver && <p>Game Over</p>}
       <Score score={score} level={level} linesCleared={linesCleared} />
       <Board board={board} />
