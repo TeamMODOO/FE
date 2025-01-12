@@ -5,6 +5,8 @@ import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
+import useEscapeKey from "@/hooks/useEscapeKey";
+
 import styles from "./MiniGameModal.module.css";
 
 // MiniGameModal 컴포넌트 Props
@@ -40,6 +42,8 @@ export default function MiniGameModal({ onClose }: MiniGameModalProps) {
     const gameRoute = games[currentIndex].route;
     router.push(gameRoute);
   };
+
+  useEscapeKey(onClose, true);
 
   return (
     <div className={styles.overlay}>

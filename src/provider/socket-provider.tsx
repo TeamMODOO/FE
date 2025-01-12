@@ -7,12 +7,14 @@ import { useSession } from "next-auth/react";
 import { io } from "socket.io-client";
 
 import useClientIdStore from "@/store/useClientIdStore";
+import { useIsConnectionsStore } from "@/store/useIsConnectionsStore";
 import useSocketStore from "@/store/useSocketStore";
 
 export function SocketProvider({ children }: PropsWithChildren) {
   const { data: session, status } = useSession();
   const { setSocket, setIsConnected, reset } = useSocketStore();
   const { clientId, initializeClientId } = useClientIdStore();
+  const { setIsConnections } = useIsConnectionsStore();
 
   useEffect(() => {
     if (status === "loading") return;
@@ -60,6 +62,7 @@ export function SocketProvider({ children }: PropsWithChildren) {
 
     socket.on("SC_DUPLICATE_CONNECTION", () => {
       // 여기서 중복 접속 모달 키면 됨
+      setIsConnections(true);
     });
 
     socket.on("disconnect", () => {

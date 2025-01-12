@@ -1,5 +1,6 @@
 "use client";
 
+import useEscapeKey from "@/hooks/useEscapeKey";
 import { useRouter } from "next/navigation";
 
 import styles from "./GameRuleModal.module.css";
@@ -25,6 +26,8 @@ export default function GameRuleModal({
   function goLobby() {
     router.push("/lobby");
   }
+
+  useEscapeKey(onClose, true);
 
   return (
     <div className={styles.overlay}>

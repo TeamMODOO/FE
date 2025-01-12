@@ -116,11 +116,18 @@ export function useLobbyKeyboard({
 
       // 이동키/Space
       if (
-        ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " "].includes(e.key)
+        [
+          "ArrowUp",
+          "ArrowDown",
+          "ArrowLeft",
+          "ArrowRight",
+          " ",
+          "Space",
+        ].includes(e.key)
       ) {
         e.preventDefault();
       }
-      if (e.key === " ") {
+      if (e.key === " " || e.key === "Space") {
         handleSpacebarInteraction();
       }
       setPressedKeys((prev) => ({ ...prev, [e.key]: true }));

@@ -1,10 +1,10 @@
-//src/app/lobby/_components/Npc/NpcModal.tsx
 "use client";
 
 import React from "react";
 
 import Image from "next/image";
 
+import useEscapeKey from "@/hooks/useEscapeKey";
 import { NpcModalProps } from "@/model/NpcModal";
 
 import styles from "./NpcModal.module.css";
@@ -16,6 +16,8 @@ export const NpcModal: React.FC<NpcModalProps> = ({
   imgSrc,
   children,
 }) => {
+  useEscapeKey(onClose, true);
+
   if (imgSrc != "") {
     // imgSrc가 있을 경우 (즉, NPC 이미지가 있을 경우)
     return (
