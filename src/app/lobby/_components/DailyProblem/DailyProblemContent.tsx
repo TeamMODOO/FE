@@ -39,19 +39,6 @@ const DailyProblemContent: React.FC = () => {
         >
           [일일 퀘스트] 백준 문제를 풀어 용을 처치하자!
         </button>
-
-        <button
-          onClick={() => router.push("/questmap")}
-          className="
-            cursor-pointer 
-            py-2 
-            text-left
-            text-[rgb(15,190,135)]
-            hover:text-[rgb(6,209,130,0.7)]
-          "
-        >
-          명예의 전당으로 바로 이동…
-        </button>
       </div>
     </div>
   );

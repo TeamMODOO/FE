@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import Image from "next/image";
 
@@ -12,6 +12,14 @@ import QuestSection from "./_components/QuestSection/page";
 import styles from "./Quest.module.css";
 
 export default function Quest() {
+  const dragonAudioRef = useRef<HTMLAudioElement>(null);
+
+  function playDragonEventSound() {
+    if (!dragonAudioRef.current) return;
+    dragonAudioRef.current.currentTime = 0;
+    dragonAudioRef.current.play().catch(() => {});
+  }
+
   // blackcover 영역 노출 여부
   const [showBlackcover, setShowBlackcover] = useState(false);
   // 드래곤 이미지 로드 완료 여부
@@ -45,11 +53,15 @@ export default function Quest() {
     <div className={styles.container}>
       <BgMusicGlobal src="/sounds/questBGM.wav" />
       <BgMusicButton position="left" />
-
+      <audio
+        ref={dragonAudioRef}
+        src="/sounds/dragonGrowl.wav"
+        style={{ display: "none" }}
+      />
+      ;
       {Array.from({ length: 10 }).map((_, index) => (
         <div key={index} className={styles.floatingSquare}></div>
       ))}
-
       {/**
        * 이미지를 항상 렌더링하되,
        * 애니메이션은 dragonImgLoaded가 true일 때만 발동.
@@ -67,6 +79,7 @@ export default function Quest() {
           // 이미지 로딩이 끝나면 dragonImgLoaded = true
           onLoadingComplete={() => {
             setDragonImgLoaded(true);
+            playDragonEventSound();
           }}
           // 우선 로딩
           priority
@@ -78,7 +91,6 @@ export default function Quest() {
           // }
         />
       </div>
-
       {showBlackcover && (
         <div className={styles.blackcover}>
           <div className={styles.leftsection}>

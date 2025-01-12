@@ -60,6 +60,10 @@ export default function QuestSection() {
   const { data: session } = useSession();
   const router = useRouter();
 
+  // 효과음 처리 위한 Ref
+  const correctAudioRef = useRef<HTMLAudioElement>(null);
+  const incorrectAudioRef = useRef<HTMLAudioElement>(null);
+
   /** 문제 풀이 시작 여부 */
   const [isStart, setIsStart] = useState(false);
 
@@ -70,7 +74,7 @@ export default function QuestSection() {
   const [onConfirm, setOnConfirm] = useState<() => void>(() => () => {});
 
   const handleLockedClick = () => {
-    playDragonEventSound();
+    playSwordSound();
     setIsStart(true);
   };
 
@@ -142,6 +146,17 @@ export default function QuestSection() {
     }
   };
 
+  // isCorrect 여부 감지 후 사운드 재생
+  useEffect(() => {
+    if (isCorrect !== null) {
+      if (isCorrect) {
+        correctAudioRef.current?.play().catch(() => {});
+      } else {
+        incorrectAudioRef.current?.play().catch(() => {});
+      }
+    }
+  }, [isCorrect]);
+
   /* 모달 닫기 */
   const handleCloseModal = () => {
     setShowModal(false);
@@ -187,7 +202,7 @@ export default function QuestSection() {
 
   const handleStartOrStop = () => {
     if (!isStart) {
-      playDragonEventSound();
+      playSwordSound();
       setIsStart(true);
     } else {
       // 기존 window.confirm 대신 → ConfirmModal 열기
@@ -225,21 +240,32 @@ export default function QuestSection() {
     router.push("/lobby");
   };
 
-  const dragonAudioRef = useRef<HTMLAudioElement>(null);
+  const swordAudioRef = useRef<HTMLAudioElement>(null);
 
-  function playDragonEventSound() {
-    if (!dragonAudioRef.current) return;
-    dragonAudioRef.current.currentTime = 0;
-    dragonAudioRef.current.play().catch(() => {});
+  function playSwordSound() {
+    if (!swordAudioRef.current) return;
+    swordAudioRef.current.currentTime = 0;
+    swordAudioRef.current.play().catch(() => {});
   }
 
   return (
     <div className={styles.container}>
       <audio
-        ref={dragonAudioRef}
-        src="/sounds/dragonGrowl.wav"
+        ref={swordAudioRef}
+        src="/sounds/swordSFX.wav"
         style={{ display: "none" }}
       />
+      <audio
+        ref={correctAudioRef}
+        src="/sounds/correctFx.wav"
+        style={{ display: "none" }}
+      />
+      <audio
+        ref={incorrectAudioRef}
+        src="/sounds/incorrectFx.wav"
+        style={{ display: "none" }}
+      />
+
       <div className={styles.questHeader}>
         <h1 className={styles.title}>오늘의 문제</h1>
         <h1 className={styles.timer}>{isStart ? formattedTime : "00:00:00"}</h1>

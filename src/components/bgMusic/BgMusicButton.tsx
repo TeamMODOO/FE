@@ -24,6 +24,7 @@ export function BgMusicButton({ position = "right" }: BgMusicButtonProps) {
   return (
     <Button
       onClick={handleToggleMusic}
+      title="배경음악 ON/OFF"
       className={`
         fixed top-6 z-50
         size-20 rounded-full border-2
@@ -35,9 +36,9 @@ export function BgMusicButton({ position = "right" }: BgMusicButtonProps) {
       `}
     >
       {isPlaying ? (
-        <VolumeOff className="min-h-8 min-w-8" />
-      ) : (
         <Volume2 className="min-h-8 min-w-8" />
+      ) : (
+        <VolumeOff className="min-h-8 min-w-8" />
       )}
     </Button>
   );
