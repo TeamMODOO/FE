@@ -32,7 +32,7 @@ export const useChatSocket = (
     if (!socket || !isConnected || !messageValue.trim()) return;
 
     const messageInfo = {
-      message: `${messageValue} `,
+      message: messageValue.trim(),
     };
 
     socket.emit("CS_CHAT", messageInfo);
