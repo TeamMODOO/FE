@@ -8,11 +8,11 @@ import {
   FRAME_WIDTH,
   LAYER_ORDER,
 } from "@/hooks/performance/useLoadSprites";
-import { User } from "@/model/LobbyUser"; // (직접 만든 타입)
 import { NpcInfo } from "@/model/Npc";
 import { PortalInfo } from "@/model/Portal";
+import { LobbyUser } from "@/store/useUsersRef";
 
-/** 예시: 11:6 비율 (550×301)에 가깝게 */
+/** 예: 11:6 비율 (550×301)에 가깝게 가정 */
 const FIXED_VIEWPORT_WIDTH = 605;
 const FIXED_VIEWPORT_HEIGHT = 330;
 
@@ -24,17 +24,12 @@ interface UseLobbyRendererParams {
   portalImage?: HTMLImageElement | null;
   spriteImages: Record<string, HTMLImageElement>;
 
-  usersRef: React.MutableRefObject<User[]>;
+  usersRef: React.MutableRefObject<LobbyUser[]>;
   localClientId: string;
   portals: PortalInfo[];
   npcs: NpcInfo[];
 }
 
-/**
- * (1) 30fps로 rAF 반복
- * (2) usersRef.current에 들어있는 “보간(lerp) 데이터”로 캐릭터 위치 그리기
- * (3) 카메라(스크롤) 위치도 보간
- */
 export default function useLobbyRenderer({
   canvasRef,
   canvasSize,
@@ -68,14 +63,15 @@ export default function useLobbyRenderer({
     let lastTime = 0;
     let animationId = 0;
 
-    // 스프라이트 애니메이션 frame
+    // 스프라이트 애니메이션 프레임 관리
     const userFrameMap: Record<
       string,
       { frame: number; lastFrameTime: number }
     > = {};
     const frameInterval = 100; // 100ms마다 프레임 전환
-    const maxMovingFrame = 3;
+    const maxMovingFrame = 3; // 이동시 1~3 프레임
 
+    // 초기 설정
     usersRef.current.forEach((u) => {
       userFrameMap[u.id] = { frame: 0, lastFrameTime: performance.now() };
     });
@@ -95,7 +91,7 @@ export default function useLobbyRenderer({
         ctx.save();
         ctx.scale(baseScale, baseScale);
 
-        // (A) 보간(lerp) 적용
+        // (A) 보간
         const now = performance.now();
         usersRef.current.forEach((user) => {
           if (user.lerpDuration > 0) {
@@ -134,7 +130,7 @@ export default function useLobbyRenderer({
           targetY = clamp(targetY, 0, Math.max(0, maxCamY));
         }
 
-        const smoothing = 0.3;
+        const smoothing = 0.3; // 카메라 부드럽게
         cameraPosRef.current.x +=
           (targetX - cameraPosRef.current.x) * smoothing;
         cameraPosRef.current.y +=
@@ -198,6 +194,7 @@ export default function useLobbyRenderer({
           }
           const uf = userFrameMap[id];
 
+          // 이동중이라면 애니메이션 재생, 멈춰있다면 frame=0
           if (isMoving) {
             if (now - uf.lastFrameTime > frameInterval) {
               uf.frame++;
@@ -209,12 +206,13 @@ export default function useLobbyRenderer({
             uf.lastFrameTime = now;
           }
 
+          // 스프라이트 시트에서 잘라낼 위치
           const sx = uf.frame * FRAME_WIDTH;
           const sy = (direction ?? 0) * FRAME_HEIGHT;
 
           ctx.save();
+          // LAYER_ORDER 순서대로 그리기
           if (Object.keys(spriteImages).length === LAYER_ORDER.length) {
-            // 레이어 순서대로
             LAYER_ORDER.forEach((layer) => {
               const spr = spriteImages[layer];
               if (!spr) return;
