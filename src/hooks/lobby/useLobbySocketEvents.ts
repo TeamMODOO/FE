@@ -216,9 +216,9 @@ export default function useLobbySocketEvents({
       onRemoveUser(data.client_id);
     };
 
-    socket.on("SC_LEAVE_USER", onLeaveUser);
+    socket.on("SC_LEAVE_ROOM", onLeaveUser);
     return () => {
-      socket.off("SC_LEAVE_USER", onLeaveUser);
+      socket.off("SC_LEAVE_ROOM", onLeaveUser);
     };
   }, [socket, isConnected, onRemoveUser]);
 
