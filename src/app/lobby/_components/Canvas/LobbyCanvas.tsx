@@ -64,13 +64,13 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen, isJoin }) => {
 
   // (E) Canvas 크기
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  // 캔버스를 감싸는 div에 포커스를 주기 위한 ref
   const canvasWrapperRef = useRef<HTMLDivElement | null>(null);
 
   const [canvasSize, setCanvasSize] = useState({
     w: LOBBY_MAP_CONSTANTS.CANVAS_WIDTH,
     h: LOBBY_MAP_CONSTANTS.CANVAS_HEIGHT,
   });
+
   useEffect(() => {
     function handleResize() {
       setCanvasSize({ w: window.innerWidth, h: window.innerHeight });
@@ -80,7 +80,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen, isJoin }) => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // 컴포넌트가 마운트되면, div에 포커스를 강제
+  // div에 포커스
   useEffect(() => {
     canvasWrapperRef.current?.focus();
   }, []);
@@ -351,7 +351,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen, isJoin }) => {
   }, [chatOpen, isAnyModalOpen, status, session]);
 
   // (O) 이동 + 쓰로틀 + emit
-  // [CHANGED] 초기값에서 x=500, y=500을 제거하여 null로 둠 (서버에서 위치를 받을 때까지 대기)
+  // SC_USER_POSITION_INFO가 오기 전까지는 null
   const [rawMovement, setRawMovement] = useState<{
     x: number | null;
     y: number | null;
@@ -362,36 +362,61 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen, isJoin }) => {
     direction: 0 as Direction,
   });
 
-  // [CHANGED] 서버 emit시 0.05초 (50ms) 쓰로틀 적용
+  // 0.05초(50ms)마다 좌표/방향만 갱신
   const throttledMovement = useThrottle(rawMovement, 50);
 
+  // (★) 이전에 보낸 throttledMovement를 저장할 ref
+  const prevThrottledRef = useRef<{
+    x: number | null;
+    y: number | null;
+    direction: Direction;
+  }>({
+    x: null,
+    y: null,
+    direction: 0,
+  });
+
   useEffect(() => {
-    // x 혹은 y가 아직 null이면 위치 정보가 없으므로 emit 안 함
+    // 1) 기본 체크
     if (rawMovement.x === null || rawMovement.y === null) return;
-    if (!clientId) return;
-    if (!isConnected) return;
+    if (throttledMovement.x === null || throttledMovement.y === null) return;
+    if (!clientId || !isConnected) return;
     if (chatOpen || isAnyModalOpen) return;
 
-    // throttledMovement.x, y가 null인지 다시 확인
-    if (throttledMovement.x === null || throttledMovement.y === null) return;
+    // 2) throttledMovement가 이전 값이랑 같다면 emit 안 함
+    if (
+      throttledMovement.x === prevThrottledRef.current.x &&
+      throttledMovement.y === prevThrottledRef.current.y &&
+      throttledMovement.direction === prevThrottledRef.current.direction
+    ) {
+      return;
+    }
 
+    // 3) 실제 Emit
     emitMovement(
       throttledMovement.x,
       throttledMovement.y,
       throttledMovement.direction,
     );
+
+    // 4) prev 갱신
+    prevThrottledRef.current = {
+      x: throttledMovement.x,
+      y: throttledMovement.y,
+      direction: throttledMovement.direction,
+    };
   }, [
+    rawMovement.x,
+    rawMovement.y,
     throttledMovement,
     emitMovement,
     clientId,
     isConnected,
     chatOpen,
     isAnyModalOpen,
-    rawMovement.x,
-    rawMovement.y,
   ]);
 
-  // (P) 30fps 이동 (로컬)
+  // (P) 15fps 이동 (로컬)
   useEffect(() => {
     const fps = 15;
     const frameDuration = 1000 / fps;
@@ -411,8 +436,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen, isJoin }) => {
       if (!clientId) return;
       if (chatOpen || isAnyModalOpen) return;
 
-      // [CHANGED] 서버에서 받은 user 객체(me)를 사용.
-      // 처음엔 SC_USER_POSITION_INFO가 오기 전까지 me가 없을 수도 있음
+      // 서버에서 받은 내 정보
       const me = usersRef.current.find((u) => u.id === clientId);
       if (!me) return; // 아직 서버에서 내 정보 안 받았다면 동작X
 
@@ -477,7 +501,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen, isJoin }) => {
         updateUserPosition(clientId, x, y, me.direction, false, me.nickname);
       }
 
-      // [CHANGED] 최종 이동 값을 rawMovement에 세팅 (서버에는 throttledMovement로 emit)
+      // (★) 최종 이동 값을 rawMovement에 세팅 (서버에는 throttledMovement로 emit)
       setRawMovement({
         x,
         y,
@@ -527,7 +551,6 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen, isJoin }) => {
       client_id: clientId,
       room_id: "floor7",
     });
-    // console.log("부르는 중..");
   }, [clientId, status, socket, isConnected, isJoin]);
 
   // (S) Canvas 렌더링
