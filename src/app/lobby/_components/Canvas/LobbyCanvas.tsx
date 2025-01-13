@@ -21,7 +21,7 @@ import NeedSignInModal from "@/components/modal/NeedSignIn/NeedSignInModal";
 import useLobbyRenderer from "@/hooks/lobby/useLobbyRenderer";
 import useLobbySocketEvents from "@/hooks/lobby/useLobbySocketEvents";
 import { useLoadSprites } from "@/hooks/performance/useLoadSprites";
-import useThrottle from "@/hooks/performance/useThrottle";
+import useThrottle from "@/hooks/performance/useThrottle"; // throttle 훅
 import { NoticeItem } from "@/model/NoticeBoard";
 import { Direction } from "@/model/User";
 import useClientIdStore from "@/store/useClientIdStore";
@@ -38,9 +38,10 @@ import Style from "./Canvas.style";
 
 interface LobbyCanvasProps {
   chatOpen: boolean;
+  isJoin: boolean;
 }
 
-const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
+const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen, isJoin }) => {
   const router = useRouter();
   const { data: session, status } = useSession();
 
@@ -308,9 +309,6 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
   // 키다운/업 등록
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // 포커스/포탈 문제를 확인하기 위해 로그 찍어볼 수도 있음
-      // console.log("keydown:", e.key);
-
       if (chatOpen || isAnyModalOpen) return;
 
       // 이동키 or Space
@@ -353,18 +351,29 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
   }, [chatOpen, isAnyModalOpen, status, session]);
 
   // (O) 이동 + 쓰로틀 + emit
-  const [rawMovement, setRawMovement] = useState({
-    x: 500,
-    y: 500,
+  // [CHANGED] 초기값에서 x=500, y=500을 제거하여 null로 둠 (서버에서 위치를 받을 때까지 대기)
+  const [rawMovement, setRawMovement] = useState<{
+    x: number | null;
+    y: number | null;
+    direction: Direction;
+  }>({
+    x: null,
+    y: null,
     direction: 0 as Direction,
   });
 
+  // [CHANGED] 서버 emit시 0.05초 (50ms) 쓰로틀 적용
   const throttledMovement = useThrottle(rawMovement, 50);
 
   useEffect(() => {
+    // x 혹은 y가 아직 null이면 위치 정보가 없으므로 emit 안 함
+    if (rawMovement.x === null || rawMovement.y === null) return;
     if (!clientId) return;
     if (!isConnected) return;
     if (chatOpen || isAnyModalOpen) return;
+
+    // throttledMovement.x, y가 null인지 다시 확인
+    if (throttledMovement.x === null || throttledMovement.y === null) return;
 
     emitMovement(
       throttledMovement.x,
@@ -378,6 +387,8 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     isConnected,
     chatOpen,
     isAnyModalOpen,
+    rawMovement.x,
+    rawMovement.y,
   ]);
 
   // (P) 30fps 이동 (로컬)
@@ -400,13 +411,15 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
       if (!clientId) return;
       if (chatOpen || isAnyModalOpen) return;
 
+      // [CHANGED] 서버에서 받은 user 객체(me)를 사용.
+      // 처음엔 SC_USER_POSITION_INFO가 오기 전까지 me가 없을 수도 있음
       const me = usersRef.current.find((u) => u.id === clientId);
-      if (!me) return;
+      if (!me) return; // 아직 서버에서 내 정보 안 받았다면 동작X
 
       const newDir = getDirection(pressedKeys);
-      let { x, y } = me;
-      let moved = false;
+      let { x, y } = me; // SC_USER_POSITION_INFO에서 세팅된 좌표
 
+      let moved = false;
       if (newDir !== null) {
         let newX = x;
         let newY = y;
@@ -453,6 +466,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
           moved = true;
         }
 
+        // 로컬 렌더링용
         updateUserPosition(clientId, x, y, newDir, moved, me.nickname);
 
         if (moved) {
@@ -463,6 +477,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
         updateUserPosition(clientId, x, y, me.direction, false, me.nickname);
       }
 
+      // [CHANGED] 최종 이동 값을 rawMovement에 세팅 (서버에는 throttledMovement로 emit)
       setRawMovement({
         x,
         y,
@@ -503,12 +518,17 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
 
   // (R) 서버에 유저 정보 요청
   useEffect(() => {
+    if (!isJoin) return;
     if (!clientId) return;
     if (status === "loading") return;
     if (!socket || !isConnected) return;
 
-    socket.emit("CS_USER_POSITION_INFO", {});
-  }, [clientId, status, socket, isConnected]);
+    socket.emit("CS_USER_POSITION", {
+      client_id: clientId,
+      room_id: "floor7",
+    });
+    // console.log("부르는 중..");
+  }, [clientId, status, socket, isConnected, isJoin]);
 
   // (S) Canvas 렌더링
   useLobbyRenderer({
@@ -600,8 +620,8 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
       >
         <TutorialContent
           tutorialList={TUTORIAL_LIST}
-          selectedTutorialIndex={selectedQnaIndex}
-          handleTutorialClick={handleQnaClick}
+          selectedTutorialIndex={selectedTutorialIndex}
+          handleTutorialClick={handleTutorialClick}
         />
       </NpcModal>
 
@@ -615,13 +635,12 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
       {/* Canvas 영역에 tabIndex를 주고 ref 달기 */}
       <div
         ref={canvasWrapperRef}
-        // tabIndex={0}
         className={Style.canvasContainerClass}
         style={{
           width: `${canvasSize.w}px`,
           height: `${canvasSize.h}px`,
           overflow: "hidden",
-          outline: "none", // 포커스 표시 없애고 싶다면
+          outline: "none",
         }}
       >
         <canvas ref={canvasRef} />

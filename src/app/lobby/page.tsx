@@ -18,7 +18,7 @@ export default function Page() {
   const [chatOpen, setChatOpen] = useState(false);
   const { clientId } = useClientIdStore();
   const { socket, isConnected, currentRoom, setCurrentRoom } = useSocketStore();
-
+  const [isJoin, setIsJoin] = useState<boolean>(false);
   useEffect(() => {
     if (!clientId || !socket || !isConnected) return;
 
@@ -42,6 +42,7 @@ export default function Page() {
       room_id: ROOM_ID,
     });
 
+    setIsJoin(true);
     setCurrentRoom(ROOM_ID);
 
     return () => {
@@ -51,13 +52,14 @@ export default function Page() {
           room_id: currentRoom,
         });
         setCurrentRoom(null);
+        setIsJoin(false);
       }
     };
   }, [socket, isConnected]);
 
   return (
     <>
-      <LobbyCanvas chatOpen={chatOpen} />
+      <LobbyCanvas chatOpen={chatOpen} isJoin={isJoin} />
       <ChatWidget isOpen={chatOpen} setIsOpen={setChatOpen} />
       <FriendInformation />
       <BgMusicGlobal src="/sounds/lobbyBGM.wav" />
