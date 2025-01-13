@@ -36,7 +36,7 @@ export default function useUsersRef() {
     const found = usersRef.current.find((u) => u.id === id);
     if (found) {
       // 이미 있으면 위치만 업데이트
-      updateUserPosition(id, x, y, found.direction, false);
+      updateUserPosition(id, x, y, found.direction, false, nickname);
       return;
     }
 
@@ -73,9 +73,11 @@ export default function useUsersRef() {
     y: number,
     direction: Direction,
     isMoving: boolean,
+    nickname: string,
   ) {
     const draft = [...usersRef.current];
     const now = performance.now();
+    // console.log(usersRef.current);
 
     for (let i = 0; i < draft.length; i++) {
       if (draft[i].id === userId) {
