@@ -1,14 +1,76 @@
 .container {
+  padding-top: 5%;
   position: absolute;
   background-color: black;
   color: white;
   min-width: 100%;
-  min-height: 100%;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: start;
+}
+
+@keyframes floatAnimation {
+  0% {
+    transform: translateY(100vh) translateX(0);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(0vh) translateX(calc(10vw - 20vw * random()));
+    opacity: 0;
+  }
+}
+
+.floatingSquare {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background-color: green;
+  opacity: 0;
+  animation: floatAnimation 8s linear infinite;
+  z-index: 1;
+}
+
+.floatingSquare:nth-child(1) {
+  left: 10%;
+  animation-delay: 0s;
+  animation-duration: 6s;
+}
+.floatingSquare:nth-child(2) {
+  left: 13%;
+  animation-delay: 2s;
+  animation-duration: 8s;
+}
+
+.floatingSquare:nth-child(3) {
+  left: 20%;
+  animation-delay: 3s;
+  animation-duration: 7s;
+}
+
+.floatingSquare:nth-child(4) {
+  left: 85%;
+  animation-delay: 4s;
+  animation-duration: 5s;
+}
+.floatingSquare:nth-child(5) {
+  left: 92%;
+  animation-delay: 5s;
+  animation-duration: 5s;
 }
 
 /* 메인 컨테이너 */
 .typingarea {
   background-color: black;
+  flex: 1;
   width: 600px;
   margin: auto;
   border: 2px solid #4caf50;
@@ -17,6 +79,7 @@
   color: #4caf50;
   display: flex;
   flex-direction: column;
+  z-index: 99;
 }
 
 /* 코드 새로고침 섹션 */
@@ -29,7 +92,7 @@
 
 /* 코드 표시 영역 */
 .codecontainer {
-  width: 100%;
+  max-height: 60%;
   margin: 10px 0;
   margin-bottom: 10px;
   white-space: pre-wrap;
@@ -51,7 +114,7 @@
 /* 입력 textarea */
 .textareaSection {
   width: 100%;
-  background-color: black;
+  background-color: rgba(100, 100, 100, 0.5);
   color: white;
   border: 1px solid #4caf50;
   font-size: 15px;
@@ -69,7 +132,8 @@
 /* 기록 목록 래퍼 */
 .typingRecords {
   width: 600px;
-  max-height: 500px;
+  flex: 0.5;
+  max-height: 20dvh;
   overflow: auto;
   margin: auto;
   margin-top: 20px;

@@ -23,6 +23,7 @@ export function ChatWidget({
   const [notification, setNotification] = useState<number>(0);
   const [isAnimating, setIsAnimating] = useState<boolean>(false);
 
+  // 우선순위: prop이 있으면 prop 사용, 없으면 내부 state 사용
   const isOpen = propIsOpen ?? internalIsOpen;
   const setIsOpen = propSetIsOpen ?? setInternalIsOpen;
 
@@ -37,6 +38,29 @@ export function ChatWidget({
     setNotification,
   });
 
+  /**
+   * =========================
+   * 1) Esc 키 눌렀을 때 모달 닫기
+   * =========================
+   */
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (isOpen && e.key === "Escape") {
+        setIsOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleEsc);
+
+    return () => {
+      window.removeEventListener("keydown", handleEsc);
+    };
+  }, [isOpen, setIsOpen]);
+
+  /**
+   * =========================
+   * 2) 모달 열릴 때 배경 스크롤 막기
+   * =========================
+   */
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
@@ -54,8 +78,10 @@ export function ChatWidget({
     };
   }, [isOpen, userScrolled]);
 
+  /** 모달 토글 */
   const toggleChat = () => setIsOpen(!isOpen);
 
+  /** Enter 키 핸들링 */
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key !== "Enter") return;
     if (e.shiftKey) return;
@@ -72,6 +98,7 @@ export function ChatWidget({
 
   return (
     <>
+      {/* 모달(챗) 열림 상태 + 애니메이션 시점에 표시 */}
       {(isOpen || isAnimating) && (
         <ChatContainer isAnimating={isAnimating} onClose={toggleChat}>
           <ChatMessageList
@@ -94,6 +121,8 @@ export function ChatWidget({
           />
         </ChatContainer>
       )}
+
+      {/* 모달이 닫혀 있을 때만 버튼 표시 */}
       {!isOpen && (
         <ChatButton onClick={toggleChat} notification={notification} />
       )}

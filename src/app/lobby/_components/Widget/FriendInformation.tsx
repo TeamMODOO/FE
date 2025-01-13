@@ -54,12 +54,16 @@ export const FriendInformation = () => {
 
     socket.on("SC_USER_POSITION_INFO", handleUserConnect);
     socket.on("SC_LEAVE_USER", handleUserDisconnect);
+
     return () => {
       socket.off("SC_USER_POSITION_INFO", handleUserConnect);
       socket.off("SC_LEAVE_USER", handleUserDisconnect);
     };
-  }, [socket]);
+  }, [socket, isConnected]);
 
+  /**
+   * 1) 모달 열기/닫기 애니메이션 처리
+   */
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
@@ -73,6 +77,21 @@ export const FriendInformation = () => {
     }
     return () => {
       document.body.style.overflow = "unset";
+    };
+  }, [isOpen]);
+
+  /**
+   * 2) [ESC] 키로 모달 닫기
+   */
+  useEffect(() => {
+    const handleEscKey = (e: KeyboardEvent) => {
+      if (isOpen && e.key === "Escape") {
+        setIsOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleEscKey);
+    return () => {
+      window.removeEventListener("keydown", handleEscKey);
     };
   }, [isOpen]);
 
@@ -111,9 +130,9 @@ export const FriendInformation = () => {
               <CardHeader className="flex flex-row items-center justify-between">
                 <h3
                   className="
-                text-3xl
-                font-bold
-                text-fuchsia-600
+                    text-3xl
+                    font-bold
+                    text-fuchsia-600
                 "
                 >
                   친구 목록
@@ -122,6 +141,7 @@ export const FriendInformation = () => {
                   <X className="text-2xl text-white" />
                 </Button>
               </CardHeader>
+
               <CardContent className="custom-scrollbar grow overflow-auto">
                 <div className="grid grid-cols-3 gap-2">
                   {sortedUsers.map((user) => (
@@ -146,20 +166,20 @@ export const FriendInformation = () => {
           size="icon"
           title="친구 목록"
           className="
-          bg-color-none 
-          fixed 
-          right-60 
-          top-6 
-          z-50 
-          size-20
-          rounded-full
-          border-2
-          border-[rgba(111,99,98,1)] 
-          bg-gradient-to-b
-          from-black/70 
-          to-black/90
-          text-[rgba(171,159,158,1)]
-          hover:bg-[rgba(255,255,255,0.9)]
+            bg-color-none 
+            fixed 
+            right-60 
+            top-6 
+            z-50 
+            size-20
+            rounded-full
+            border-2
+            border-[rgba(111,99,98,1)] 
+            bg-gradient-to-b
+            from-black/70 
+            to-black/90
+            text-[rgba(171,159,158,1)]
+            hover:bg-[rgba(255,255,255,0.9)]
           "
         >
           <Users className="min-h-8 min-w-8" />

@@ -1,6 +1,6 @@
-// /src/app/questmap/_components/RankingModal/RankingModal.tsx
-
 "use client";
+
+import { useEffect } from "react";
 
 import { getRandomQuestNumber } from "@/app/quest/utils/getRandomQuestNumber";
 import { useQuestMapModalGet } from "@/hooks/questmap/useQuetMapModalGet";
@@ -16,6 +16,23 @@ export default function RankingModal({ onClose }: RankingModalProps) {
   const { data, loading, error } = useQuestMapModalGet();
   const todaysProblem = getRandomQuestNumber();
 
+  /**
+   * Esc 키를 누르면 모달 닫기
+   */
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [onClose]);
+
   return (
     <div className={styles.overlay}>
       <div className={styles.modal}>
@@ -24,7 +41,6 @@ export default function RankingModal({ onClose }: RankingModalProps) {
         </button>
         <div className={styles.modalHeader}>
           <p className={styles.modalTitle}>오늘의 랭킹 🏆</p>
-          {/* 여기서는 가령 랜덤으로 뽑힌 문제 번호를 표시하거나 원하는 텍스트로 바꿔도 됨 */}
           <div>
             <p className={styles.modalSub}> 오늘의 문제: BOJ {todaysProblem}</p>
           </div>
@@ -35,28 +51,21 @@ export default function RankingModal({ onClose }: RankingModalProps) {
           <p>소요시간</p>
         </div>
         <div className={styles.modalContent}>
-          {/* 헤더 */}
-
-          {/* 2. 로딩 상태 표시 */}
+          {/* 로딩 상태 표시 */}
           {loading && (
-            <div
-              className="
-            flex-col 
-            justify-center
-            text-center"
-            >
+            <div className="flex-col justify-center text-center">
               <p>로딩 중...</p>
             </div>
           )}
 
-          {/* 3. 에러 표시 */}
+          {/* 에러 표시 */}
           {error && (
             <div>
               <p>에러가 발생했습니다: {error}</p>
             </div>
           )}
 
-          {/* 4. 데이터가 있을 때 표시 */}
+          {/* 데이터 표시 */}
           {data &&
             data.map((result, idx) => {
               let extraClass = "";

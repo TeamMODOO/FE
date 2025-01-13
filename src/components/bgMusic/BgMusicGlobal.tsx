@@ -25,8 +25,7 @@ export function BgMusicGlobal({ src }: BgMusicGlobalProps) {
     if (!audio) return;
 
     if (isPlaying) {
-      // 볼륨 1.0 (필요하면 조정)
-      audio.volume = 1.0;
+      audio.volume = 0.7;
       audio.play();
     } else {
       audio.pause();
