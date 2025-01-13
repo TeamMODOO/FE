@@ -155,19 +155,33 @@ const MyRoomCanvas: React.FC = () => {
     bg.onload = () => setBackgroundImage(bg);
   }, []);
 
-  /** 4) 닉네임: session?.user?.name 없으면 "GuestUser" */
-  const userName = session?.user?.name ?? "GuestUser";
-
-  /** 5) 내 캐릭터 state */
+  /**
+   * 4) myUser(내 캐릭터) 초기값은 nickname이 비어있게 두고,
+   *    session 상태가 바뀔 때 useEffect로 nickname을 업데이트
+   */
   const [myUser, setMyUser] = useState<User>({
     id: "me",
-    x: 500,
+    x: 300,
     y: 700,
-    nickname: userName,
+    nickname: "", // 초기값 비우기
     characterType: "sprite1",
     direction: 0,
     isMoving: false,
   });
+
+  /**
+   * 5) session 상태(status)가 'loading'이 끝나면,
+   *    session?.user?.name이 있으면 그대로 사용,
+   *    없으면 GuestUser로 대체
+   */
+  useEffect(() => {
+    if (status === "loading") return; // 아직 로딩 중이면 패스
+
+    setMyUser((prev) => ({
+      ...prev,
+      nickname: session?.user?.name || "GuestUser",
+    }));
+  }, [session, status]);
 
   /** 6) 가구/포탈/방명록 */
   const [resume, setResume] = useState<Funiture[]>(defaultResume);
@@ -306,6 +320,7 @@ const MyRoomCanvas: React.FC = () => {
 
   /** 11) 이동 로직 */
   useEffect(() => {
+    // 모달 열려있으면 캐릭터 이동 막음
     if (isAnyModalOpen) return;
 
     setMyUser((prev) => {
@@ -524,18 +539,13 @@ const MyRoomCanvas: React.FC = () => {
       const worldX = cameraX + clickX / scale;
       const worldY = clickY / scale;
 
-      const FURNITURE_WIDTH = 100;
-      const FURNITURE_HEIGHT = 100;
-      const PORTAL_WIDTH = 200;
-      const PORTAL_HEIGHT = 200;
-
       // 방명록
       for (const b of board) {
         if (
           worldX >= b.x &&
-          worldX <= b.x + FURNITURE_WIDTH &&
+          worldX <= b.x + b.width &&
           worldY >= b.y &&
-          worldY <= b.y + FURNITURE_HEIGHT
+          worldY <= b.y + b.height
         ) {
           playModalEventSound();
           setIsBoardOpen(true);
@@ -546,9 +556,9 @@ const MyRoomCanvas: React.FC = () => {
       // 포탈
       if (
         worldX >= portal.x &&
-        worldX <= portal.x + PORTAL_WIDTH &&
+        worldX <= portal.x + portal.width &&
         worldY >= portal.y &&
-        worldY <= portal.y + PORTAL_HEIGHT
+        worldY <= portal.y + portal.height
       ) {
         goLobby();
         return;
@@ -559,9 +569,9 @@ const MyRoomCanvas: React.FC = () => {
       for (const f of allFurniture) {
         if (
           worldX >= f.x &&
-          worldX <= f.x + FURNITURE_WIDTH &&
+          worldX <= f.x + f.width &&
           worldY >= f.y &&
-          worldY <= f.y + FURNITURE_HEIGHT
+          worldY <= f.y + f.height
         ) {
           playModalEventSound();
           handleFurnitureClickCustom(f);
@@ -740,6 +750,9 @@ const MyRoomCanvas: React.FC = () => {
       <BgMusicGlobal src="/sounds/myroomBGM.wav" />
       <BgMusicButton />
       {isLoadingSession ? (
+        /**
+         * session이 아직 로딩중이라면 "Loading..." 만 표시
+         */
         <div>Loading...</div>
       ) : (
         <div

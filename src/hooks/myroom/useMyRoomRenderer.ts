@@ -144,7 +144,7 @@ export function useMyRoomRenderer({
         const allFurniture = [...resume, ...portfolio, ...technologyStack];
         allFurniture.forEach((f) => {
           const img = furnitureImages[f.funitureType];
-          if (!img) return;
+          if (!img || f.funitureType === "none") return;
 
           const w = f.width ?? 100;
           const h = f.height ?? 100;

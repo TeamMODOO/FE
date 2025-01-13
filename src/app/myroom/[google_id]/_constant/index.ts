@@ -1,41 +1,5 @@
-import {
-  FaConfluence,
-  FaDocker,
-  FaGitAlt,
-  FaJava,
-  FaJira,
-  FaPhp,
-  FaPython,
-  FaReact,
-  FaSwift,
-  FaVuejs,
-} from "react-icons/fa";
-import { FaGolang } from "react-icons/fa6";
-import { PiFileCpp } from "react-icons/pi";
-import {
-  SiCypress,
-  SiDjango,
-  SiFastapi,
-  SiFlutter,
-  SiIos,
-  SiJavascript,
-  SiJest,
-  SiKotlin,
-  SiKubernetes,
-  SiMongodb,
-  SiMysql,
-  SiNestjs,
-  SiNextdotjs,
-  SiPostgresql,
-  SiRuby,
-  SiSpring,
-  SiTailwindcss,
-  SiTypescript,
-} from "react-icons/si";
-
 import { CollisionZone } from "@/model/CollisionZone";
 import { Funiture } from "@/model/Funiture";
-import { User } from "@/model/User";
 
 export const techStackList = [
   "Java",
@@ -80,10 +44,10 @@ export const CHAR_SCALE = 3;
 export const defaultResume: Funiture[] = [
   {
     id: "resume-1",
-    x: 500,
-    y: 300,
-    width: 100,
-    height: 100,
+    x: 820,
+    y: 70,
+    width: 470,
+    height: 140,
     funitureType: "none",
     funiturename: "이력서(PDF)",
   },
@@ -92,27 +56,27 @@ export const defaultResume: Funiture[] = [
 export const defaultPortfolio: Funiture[] = [
   {
     id: "portfolio-1",
-    x: 1450,
-    y: 100,
-    width: 100,
-    height: 100,
+    x: 1170,
+    y: 370,
+    width: 200,
+    height: 80,
     funitureType: "none",
     funiturename: "포트폴리오 링크1",
   },
   {
     id: "portfolio-2",
-    x: 1550,
-    y: 420,
-    width: 100,
-    height: 100,
+    x: 1160,
+    y: 480,
+    width: 220,
+    height: 90,
     funitureType: "none",
     funiturename: "포트폴리오 링크2",
   },
   {
     id: "portfolio-3",
-    x: 1800,
-    y: 90,
-    width: 100,
+    x: 1130,
+    y: 590,
+    width: 280,
     height: 100,
     funitureType: "none",
     funiturename: "포트폴리오 링크3",
@@ -122,8 +86,8 @@ export const defaultPortfolio: Funiture[] = [
 export const defaultTechnologyStack: Funiture[] = [
   {
     id: "technologyStack-1",
-    x: 780,
-    y: 250,
+    x: 180,
+    y: 130,
     width: 70,
     height: 70,
     funitureType: "none",
@@ -131,8 +95,8 @@ export const defaultTechnologyStack: Funiture[] = [
   },
   {
     id: "technologyStack-2",
-    x: 930,
-    y: 250,
+    x: 300,
+    y: 130,
     width: 70,
     height: 70,
     funitureType: "none",
@@ -140,8 +104,8 @@ export const defaultTechnologyStack: Funiture[] = [
   },
   {
     id: "technologyStack-3",
-    x: 1080,
-    y: 250,
+    x: 420,
+    y: 130,
     width: 70,
     height: 70,
     funitureType: "none",
@@ -149,8 +113,8 @@ export const defaultTechnologyStack: Funiture[] = [
   },
   {
     id: "technologyStack-4",
-    x: 1230,
-    y: 250,
+    x: 540,
+    y: 130,
     width: 70,
     height: 70,
     funitureType: "none",
@@ -158,8 +122,8 @@ export const defaultTechnologyStack: Funiture[] = [
   },
   {
     id: "technologyStack-5",
-    x: 780,
-    y: 370,
+    x: 180,
+    y: 260,
     width: 70,
     height: 70,
     funitureType: "none",
@@ -167,8 +131,8 @@ export const defaultTechnologyStack: Funiture[] = [
   },
   {
     id: "technologyStack-6",
-    x: 930,
-    y: 370,
+    x: 300,
+    y: 260,
     width: 70,
     height: 70,
     funitureType: "none",
@@ -176,8 +140,8 @@ export const defaultTechnologyStack: Funiture[] = [
   },
   {
     id: "technologyStack-7",
-    x: 1080,
-    y: 370,
+    x: 420,
+    y: 260,
     width: 70,
     height: 70,
     funitureType: "none",
@@ -185,8 +149,8 @@ export const defaultTechnologyStack: Funiture[] = [
   },
   {
     id: "technologyStack-8",
-    x: 1230,
-    y: 370,
+    x: 540,
+    y: 260,
     width: 70,
     height: 70,
     funitureType: "none",
@@ -197,8 +161,8 @@ export const defaultTechnologyStack: Funiture[] = [
 export const defaultBoard: Funiture[] = [
   {
     id: "board1",
-    x: 190,
-    y: 60,
+    x: 1500,
+    y: 70,
     width: 300,
     height: 100,
     funitureType: "board",
@@ -210,12 +174,13 @@ export const MYROOM_COLLISION_ZONES: CollisionZone[] = [
   // 상단 벽
   { x: 0, y: 0, width: 2000, height: 580 },
 ];
+
 export const interiorImages: Record<string, string> = {
   none: "/interior/none.gif",
-  "resume/resume1": "/interior/resume/resume1.gif",
-  "portfolio/portfolio1": "/interior/portfolio/portfolio1.gif",
-  "portfolio/portfolio2": "/interior/portfolio/portfolio2.gif",
-  "portfolio/portfolio3": "/interior/portfolio/portfolio3.gif",
+  "resume/resume1": "/interior/resume/resume1.png",
+  "portfolio/portfolio1": "/interior/portfolio/portfolio1.png",
+  "portfolio/portfolio2": "/interior/portfolio/portfolio2.png",
+  "portfolio/portfolio3": "/interior/portfolio/portfolio3.png",
   "technologyStack/technologyStack1":
     "/interior/technologyStack/technologyStack1.gif",
   "technologyStack/technologyStack2":
