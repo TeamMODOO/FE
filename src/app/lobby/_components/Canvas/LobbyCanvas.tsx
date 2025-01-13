@@ -382,7 +382,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
 
   // (P) 30fps 이동 (로컬)
   useEffect(() => {
-    const fps = 30;
+    const fps = 15;
     const frameDuration = 1000 / fps;
     let lastTime = 0;
     let moveTimer = 0;
@@ -453,14 +453,14 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
           moved = true;
         }
 
-        updateUserPosition(clientId, x, y, newDir, moved);
+        updateUserPosition(clientId, x, y, newDir, moved, me.nickname);
 
         if (moved) {
           playFootstepSound();
         }
       } else {
         // idle
-        updateUserPosition(clientId, x, y, me.direction, false);
+        updateUserPosition(clientId, x, y, me.direction, false, me.nickname);
       }
 
       setRawMovement({
@@ -489,7 +489,14 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
     if (isAnyModalOpen) {
       const me = usersRef.current.find((u) => u.id === clientId);
       if (me && me.isMoving) {
-        updateUserPosition(clientId, me.x, me.y, me.direction, false);
+        updateUserPosition(
+          clientId,
+          me.x,
+          me.y,
+          me.direction,
+          false,
+          me.nickname,
+        );
       }
     }
   }, [isAnyModalOpen, clientId, updateUserPosition, usersRef]);

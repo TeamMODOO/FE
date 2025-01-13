@@ -56,6 +56,7 @@ type LobbySocketEventsProps = {
     y: number,
     direction: Direction,
     isMoving: boolean,
+    nickname: string,
   ) => void;
   onRemoveUser: (id: string) => void;
 };
@@ -98,6 +99,7 @@ export default function useLobbySocketEvents({
       const existing = getUser(data.client_id);
 
       // [수정2] 기존 유저가 없다면(=새 유저다) → onAddUser로 등록
+      // console.log("소ㅔㅋㅅ : ", data);
       if (!existing) {
         onAddUser(
           data.client_id,
@@ -112,6 +114,7 @@ export default function useLobbySocketEvents({
           data.position_y,
           data.direction,
           false,
+          data.user_name,
         );
         return;
       }
@@ -143,6 +146,7 @@ export default function useLobbySocketEvents({
         data.position_y,
         data.direction,
         isActuallyMoving,
+        data.user_name,
       );
 
       // [수정5] 실제로 움직임이 있었다면, 잠시 뒤 isMoving=false로 만드는 타이머
@@ -158,6 +162,7 @@ export default function useLobbySocketEvents({
             data.position_y,
             data.direction,
             false,
+            data.user_name,
           );
         }, 200);
       }
@@ -193,6 +198,7 @@ export default function useLobbySocketEvents({
         data.position_y,
         data.direction,
         false,
+        data.user_name,
       );
     };
 
@@ -235,6 +241,7 @@ export default function useLobbySocketEvents({
         data.position_y,
         data.direction,
         false,
+        data.user_name,
       );
     };
 
