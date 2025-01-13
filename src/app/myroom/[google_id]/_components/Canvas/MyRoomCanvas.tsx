@@ -595,15 +595,11 @@ const MyRoomCanvas: React.FC = () => {
   /** (C) 가구 클릭 로직 */
   const handleFurnitureClickCustom = (item: Funiture) => {
     if (item.funitureType === "none") {
-      // alert("아직 등록되지 않은 항목입니다."); → AlertModal로 교체
-      openAlertModal("아직 등록되지 않은 항목입니다.");
       return;
     }
     if (item.funitureType.startsWith("resume/")) {
       const pdf = item.data?.resumeLink;
       if (!pdf) {
-        // alert("PDF 링크가 없습니다."); → AlertModal로 교체
-        openAlertModal("PDF 링크가 없습니다.");
         return;
       }
       setPdfUrl(pdf);
@@ -618,18 +614,100 @@ const MyRoomCanvas: React.FC = () => {
   const { mutate: patchProfile } = usePatchMyRoomOwnerProfile();
 
   const handleSaveResume = async () => {
-    // ...
-    // 원래 사용하던 로직. alert()가 있으면 openAlertModal로 교체
+    if (!resumeFile) {
+      setResumeModalOpen(false);
+      return;
+    }
+    try {
+      // S3 업로드
+      const formData = new FormData();
+      formData.append("file", resumeFile);
+      const res = await fetch("/api/resume", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || "Upload failed");
+
+      const s3Url = data.url; // string
+      if (!googleId) {
+        alert("googleId가 없음, 수정 불가");
+        return;
+      }
+      // resume_url => s3Url
+      patchProfile(
+        {
+          googleId,
+          resume_url: s3Url,
+        },
+        {
+          onSuccess: () => {
+            alert("이력서(PDF) 저장 완료");
+            setResumeModalOpen(false);
+            setResumeFile(null);
+          },
+          onError: (err: Error) => {
+            alert("프로필 수정 실패: " + err.message);
+          },
+        },
+      );
+    } catch (error) {
+      alert("파일 업로드 실패: " + error);
+    }
   };
 
   const handleSavePortfolio = () => {
-    // ...
-    // 원래 사용하던 로직. alert()가 있으면 openAlertModal로 교체
+    if (selectedTechList.length === 0) {
+      setTechStackModalOpen(false);
+      return;
+    }
+    if (!googleId) {
+      alert("googleId가 없음, 수정 불가");
+      return;
+    }
+
+    const oldArr = ownerProfile?.tech_stack ?? [];
+    const newArr = [...oldArr, ...selectedTechList];
+    patchProfile(
+      { googleId, tech_stack: newArr },
+      {
+        onSuccess: () => {
+          alert("기술 스택 추가 완료");
+          setTechStackModalOpen(false);
+          setSelectedTechList([]);
+        },
+        onError: (err: Error) => {
+          alert("프로필 수정 실패: " + err.message);
+        },
+      },
+    );
   };
 
   const handleSaveTechStack = () => {
-    // ...
-    // 원래 사용하던 로직. alert()가 있으면 openAlertModal로 교체
+    if (selectedTechList.length === 0) {
+      setTechStackModalOpen(false);
+      return;
+    }
+    if (!googleId) {
+      alert("googleId가 없음, 수정 불가");
+      return;
+    }
+
+    const oldArr = ownerProfile?.tech_stack ?? [];
+    const newArr = [...oldArr, ...selectedTechList];
+    patchProfile(
+      { googleId, tech_stack: newArr },
+      {
+        onSuccess: () => {
+          alert("기술 스택 추가 완료");
+          setTechStackModalOpen(false);
+          setSelectedTechList([]);
+        },
+        onError: (err: Error) => {
+          alert("프로필 수정 실패: " + err.message);
+        },
+      },
+    );
   };
 
   /** (E) 이력서/포트폴리오/기술스택 모달 열기 버튼 */
