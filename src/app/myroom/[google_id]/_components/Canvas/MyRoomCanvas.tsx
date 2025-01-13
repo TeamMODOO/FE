@@ -529,9 +529,9 @@ const MyRoomCanvas: React.FC = () => {
       for (const b of board) {
         if (
           worldX >= b.x &&
-          worldX <= b.x + FURNITURE_WIDTH &&
+          worldX <= b.x + b.width &&
           worldY >= b.y &&
-          worldY <= b.y + FURNITURE_HEIGHT
+          worldY <= b.y + b.height
         ) {
           playModalEventSound();
           setIsBoardOpen(true);
@@ -542,9 +542,9 @@ const MyRoomCanvas: React.FC = () => {
       // 포탈
       if (
         worldX >= portal.x &&
-        worldX <= portal.x + PORTAL_WIDTH &&
+        worldX <= portal.x + portal.width &&
         worldY >= portal.y &&
-        worldY <= portal.y + PORTAL_HEIGHT
+        worldY <= portal.y + portal.height
       ) {
         // window.location.href = portal.route;
         goLobby();
@@ -556,9 +556,9 @@ const MyRoomCanvas: React.FC = () => {
       for (const f of allFurniture) {
         if (
           worldX >= f.x &&
-          worldX <= f.x + FURNITURE_WIDTH &&
+          worldX <= f.x + f.width &&
           worldY >= f.y &&
-          worldY <= f.y + FURNITURE_HEIGHT
+          worldY <= f.y + f.height
         ) {
           playModalEventSound();
           handleFurnitureClickCustom(f);
