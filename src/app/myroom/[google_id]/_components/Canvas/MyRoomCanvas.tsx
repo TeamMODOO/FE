@@ -184,10 +184,7 @@ const MyRoomCanvas: React.FC = () => {
     name: string;
     message: string;
   }
-  const [boardComments, setBoardComments] = useState<BoardComment[]>([
-    { id: 1, name: "WellBeingGuru", message: "방명록 첫 댓글!" },
-    { id: 2, name: "John", message: "안녕하세요 :)" },
-  ]);
+  const [boardComments, setBoardComments] = useState<BoardComment[]>([]);
   const [visitorName, setVisitorName] = useState("");
   const [visitorMessage, setVisitorMessage] = useState("");
 
