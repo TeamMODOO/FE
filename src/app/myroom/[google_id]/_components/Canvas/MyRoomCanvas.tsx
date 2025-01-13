@@ -91,7 +91,7 @@ const MyRoomCanvas: React.FC = () => {
     playPortalSound();
     // 페이드 아웃 시작
     setIsFadingOut(true);
-    // 2초 후 이동
+    // 0.7초 후 이동
     setTimeout(() => {
       router.push("/lobby");
     }, 700);
@@ -429,20 +429,24 @@ const MyRoomCanvas: React.FC = () => {
 
     // 이력서
     const resumeVal = ownerProfile.resume_url;
+    // (resume_url이 string[] 인지 string 인지에 따라 처리 방식 조정)
     setResume((prev) => {
-      if (!resumeVal) {
+      if (!resumeVal || resumeVal.length === 0) {
         return prev.map((item) => ({
           ...item,
           funitureType: "none",
           data: {},
         }));
       }
+      // 단일 PDF만 받는다고 가정하면, 혹은 첫 번째 인덱스 사용
       return prev.map((item, idx) => {
         if (idx === 0) {
           return {
             ...item,
             funitureType: "resume/resume1",
-            data: { resumeLink: resumeVal },
+            data: {
+              resumeLink: Array.isArray(resumeVal) ? resumeVal[0] : resumeVal,
+            },
           };
         }
         return item;
@@ -546,7 +550,6 @@ const MyRoomCanvas: React.FC = () => {
         worldY >= portal.y &&
         worldY <= portal.y + PORTAL_HEIGHT
       ) {
-        // window.location.href = portal.route;
         goLobby();
         return;
       }
@@ -595,14 +598,13 @@ const MyRoomCanvas: React.FC = () => {
   /** (C) 가구 클릭 로직 */
   const handleFurnitureClickCustom = (item: Funiture) => {
     if (item.funitureType === "none") {
-      // alert("아직 등록되지 않은 항목입니다."); → AlertModal로 교체
+      // alert → AlertModal
       openAlertModal("아직 등록되지 않은 항목입니다.");
       return;
     }
     if (item.funitureType.startsWith("resume/")) {
       const pdf = item.data?.resumeLink;
       if (!pdf) {
-        // alert("PDF 링크가 없습니다."); → AlertModal로 교체
         openAlertModal("PDF 링크가 없습니다.");
         return;
       }
@@ -618,18 +620,102 @@ const MyRoomCanvas: React.FC = () => {
   const { mutate: patchProfile } = usePatchMyRoomOwnerProfile();
 
   const handleSaveResume = async () => {
-    // ...
-    // 원래 사용하던 로직. alert()가 있으면 openAlertModal로 교체
+    if (!resumeFile) {
+      setResumeModalOpen(false);
+      return;
+    }
+    try {
+      // 1) S3 업로드 (예시)
+      const formData = new FormData();
+      formData.append("file", resumeFile);
+      const res = await fetch("/api/resume", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || "Upload failed");
+      const s3Url = data.url;
+
+      // 2) PATCH 호출
+      if (!googleId) {
+        openAlertModal("Google 로그인 상태가 아닙니다. 수정이 불가합니다.");
+        return;
+      }
+      patchProfile(
+        {
+          googleId,
+          resume_url: s3Url,
+        },
+        {
+          onSuccess: () => {
+            openAlertModal("이력서(PDF) 저장 완료");
+            setResumeModalOpen(false);
+            setResumeFile(null);
+          },
+          onError: (err: Error) => {
+            openAlertModal("프로필 수정 실패: " + err.message);
+          },
+        },
+      );
+    } catch (error: unknown) {
+      openAlertModal("파일 업로드 실패: " + String(error));
+    }
   };
 
   const handleSavePortfolio = () => {
-    // ...
-    // 원래 사용하던 로직. alert()가 있으면 openAlertModal로 교체
+    if (!portfolioLink.trim()) {
+      setPortfolioModalOpen(false);
+      return;
+    }
+    if (!googleId) {
+      openAlertModal("googleId가 없음, 수정 불가");
+      return;
+    }
+    patchProfile(
+      {
+        googleId,
+        // 마찬가지로, 배열 구조라면 이렇게
+        // 단일 문자열이라면 portfolio_url: portfolioLink
+        portfolio_url: [portfolioLink],
+      },
+      {
+        onSuccess: () => {
+          openAlertModal("포트폴리오(링크) 저장 완료");
+          setPortfolioModalOpen(false);
+          setPortfolioLink("");
+        },
+        onError: (err: Error) => {
+          openAlertModal("프로필 수정 실패: " + err.message);
+        },
+      },
+    );
   };
 
   const handleSaveTechStack = () => {
-    // ...
-    // 원래 사용하던 로직. alert()가 있으면 openAlertModal로 교체
+    if (selectedTechList.length === 0) {
+      setTechStackModalOpen(false);
+      return;
+    }
+    if (!googleId) {
+      openAlertModal("googleId가 없음, 수정 불가");
+      return;
+    }
+    patchProfile(
+      {
+        googleId,
+        tech_stack: [...selectedTechList],
+      },
+      {
+        onSuccess: () => {
+          openAlertModal("기술 스택 저장 완료");
+          setTechStackModalOpen(false);
+          setSelectedTechList([]);
+        },
+        onError: (err: Error) => {
+          openAlertModal("프로필 수정 실패: " + err.message);
+        },
+      },
+    );
   };
 
   /** (E) 이력서/포트폴리오/기술스택 모달 열기 버튼 */
