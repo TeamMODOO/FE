@@ -85,12 +85,13 @@ export function ChatWidget({
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key !== "Enter") return;
     if (e.shiftKey) return;
+    if (e.nativeEvent.isComposing) return;
+
     e.preventDefault();
-    sendMessage(e);
+    handleSendMessage();
   };
 
-  /** 메세지 전송 */
-  const sendMessage = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     handleSendMessage();
   };
@@ -109,7 +110,7 @@ export function ChatWidget({
             <ChatInputArea
               value={messageValue}
               onChange={setMessageValue}
-              onSubmit={sendMessage}
+              onSubmit={handleSubmit}
               onKeyDown={handleKeyDown}
             />
           </CardFooter>
