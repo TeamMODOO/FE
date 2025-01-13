@@ -13,7 +13,7 @@ import { python } from "@codemirror/lang-python";
 import { EditorView } from "@codemirror/view";
 import CodeMirror from "@uiw/react-codemirror";
 
-import AlertModal from "@/components/alertModal/AlertModal"; // ← 추가
+import AlertModal from "@/components/alertModal/AlertModal";
 import { Button } from "@/components/ui/button";
 import { useQuestGet } from "@/hooks/quest/useQuestGet";
 import { useQuestPost } from "@/hooks/quest/useQuestPost";
@@ -234,7 +234,9 @@ export default function QuestSection() {
   }
 
   const handleCompleteQuest = async () => {
+    const todayString = new Date().toISOString().slice(0, 10);
     if (session?.user.role !== "guest") {
+      localStorage.setItem("dailyQuestDone", todayString);
       await submitQuestResult(formatTimeSpent(timeSpent));
     }
     router.push("/lobby");
@@ -378,8 +380,8 @@ export default function QuestSection() {
                       </Button>
                       {session?.user?.role === "guest" && (
                         <p className={styles.guestWarning}>
-                          현재 게스트 로그인 상태입니다! 랭킹에 기록되지
-                          않습니다.
+                          현재 게스트 로그인 상태입니다! 일일 퀘스트 완료로
+                          기록되지 않습니다.
                         </p>
                       )}
                     </div>

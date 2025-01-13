@@ -1,10 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useSession } from "next-auth/react";
 
-// AlertModal 추가 import
 import AlertModal from "@/components/alertModal/AlertModal";
 import NeedSignInModal from "@/components/modal/NeedSignIn/NeedSignInModal";
 import {
@@ -50,18 +49,14 @@ export default function NoticeBoardModal({
 }: NoticeBoardModalProps) {
   const { data: session } = useSession();
 
-  // ----------------------------
   // (1) 목록 조회 쿼리
-  // ----------------------------
   const {
     data: serverNoticesList,
     isError: isListError,
     error: listError,
   } = useNoticesListQuery();
 
-  // ----------------------------
   // (2) 상세 조회 쿼리
-  // ----------------------------
   const [selectedNoticeId, setSelectedNoticeId] = useState<number | null>(null);
   const {
     data: selectedNotice,
@@ -70,14 +65,10 @@ export default function NoticeBoardModal({
     isLoading: isDetailLoading,
   } = useNoticeDetailQuery(selectedNoticeId);
 
-  // ----------------------------
   // (3) 글 작성 모드
-  // ----------------------------
   const [isWriting, setIsWriting] = useState(false);
 
-  // ----------------------------
   // (4) AlertModal 제어용 State
-  // ----------------------------
   const [alertModalOpen, setAlertModalOpen] = useState(false);
   const [alertModalTitle, setAlertModalTitle] = useState("");
   const [alertModalMessage, setAlertModalMessage] = useState("");
@@ -89,18 +80,13 @@ export default function NoticeBoardModal({
     setAlertModalOpen(true);
   }
 
-  // ----------------------------
   // (5) 게시글 작성 훅
-  // ----------------------------
   const { mutate: createNotice, status } = useCreateNoticeQuery();
   const isPosting = status === "pending";
 
-  // ----------------------------
   // (A) "작성하기" 버튼 로직
-  // ----------------------------
   const handleCreate = () => {
     if (!writerName.trim() || !writerMessage.trim()) {
-      // alert("제목과 메세지를 입력하세요.");
       showAlertModal("알림", "제목과 메세지를 입력하세요.");
       return;
     }
@@ -113,7 +99,6 @@ export default function NoticeBoardModal({
 
     createNotice(payload, {
       onSuccess: (res) => {
-        // alert(res.message);
         showAlertModal("안내", res.message); // 예) "게시글 작성 성공"
         // 폼 리셋
         setWriterName("");
@@ -121,15 +106,12 @@ export default function NoticeBoardModal({
         setIsWriting(false);
       },
       onError: (err: unknown) => {
-        // alert("게시글 작성 중 오류가 발생했습니다.");
         showAlertModal("오류 발생", "게시글 작성 중 오류가 발생했습니다.");
       },
     });
   };
 
-  // ----------------------------
   // (6) 비회원/게스트 모달
-  // ----------------------------
   const [signInModalOpen, setSignInModalOpen] = useState(false);
   const handleClickWrite = () => {
     if (!session?.user || session.user.role === "guest") {
@@ -139,9 +121,7 @@ export default function NoticeBoardModal({
     }
   };
 
-  // ----------------------------
   // (7) 화면 모드별 렌더링
-  // ----------------------------
   function renderContent() {
     // 상세 보기
     if (selectedNoticeId) {
@@ -183,9 +163,20 @@ export default function NoticeBoardModal({
     );
   }
 
-  // ----------------------------
-  // (8) 모달 렌더링
-  // ----------------------------
+  /**
+   * (8) Esc 키를 누르면 모달 닫기
+   */
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (open && e.key === "Escape") {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
+  }, [open, onClose]);
+
+  // (9) 모달 렌더링
   return (
     <>
       {open && (
@@ -216,9 +207,7 @@ export default function NoticeBoardModal({
 
       {/* 2) 비회원 → NeedSignInModal */}
       {signInModalOpen && (
-        <NeedSignInModal
-          onClose={() => setSignInModalOpen(false)}
-        ></NeedSignInModal>
+        <NeedSignInModal onClose={() => setSignInModalOpen(false)} />
       )}
     </>
   );

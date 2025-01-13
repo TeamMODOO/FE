@@ -1,0 +1,48 @@
+.qnaItem {
+  color: rgb(15, 190, 135);
+}
+
+.qnaItem:hover {
+  color: rgb(6, 209, 130, 0.7);
+  text-underline-position: below;
+  cursor: pointer;
+}
+
+.mentSection {
+  pointer-events: none;
+}
+
+.answerBox {
+  min-height: 25dvh;
+  overflow-x: auto;
+  padding-right: 5px;
+  margin-bottom: 2dvh;
+  font-size: 1.5rem;
+  pointer-events: none;
+}
+
+.answerBox::-webkit-scrollbar {
+  width: 3px;
+}
+
+.answerBox::-webkit-scrollbar-track {
+  background: none;
+}
+
+.answerBox::-webkit-scrollbar-thumb {
+  background: white;
+  border-radius: 5px;
+}
+
+.asnwerOutput > span {
+  white-space: pre-line;
+}
+
+.btn {
+  font-size: 1.7rem;
+  color: rgba(171, 159, 158, 0.9);
+}
+
+.btn:hover {
+  color: rgba(241, 229, 228, 0.9);
+}

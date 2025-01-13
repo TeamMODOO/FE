@@ -13,6 +13,7 @@ import {
   LOBBY_NPCS,
   LOBBY_PORTALS,
   QNA_LIST,
+  TUTORIAL_LIST,
 } from "@/app/lobby/_constant";
 import RankingModal from "@/app/questmap/_components/RankingModal/RankingModal";
 import MiniGameModal from "@/components/modal/MiniGame/MiniGameModal";
@@ -32,6 +33,7 @@ import { EnterMeetingRoom } from "../EnterMeetingRoom/EnterMeetingRoom";
 import NoticeBoardModal from "../NoticeBoardModal/NoticeBoardModal";
 import { NpcModal } from "../Npc/NpcModal";
 import QnaContent from "../Qna/QnaContent";
+import TutorialContent from "../Tutorial/TutorialContent";
 import Style from "./Canvas.style";
 
 interface LobbyCanvasProps {
@@ -198,6 +200,13 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
   const [selectedQnaIndex, setSelectedQnaIndex] = useState<number | null>(null);
   function handleQnaClick(index: number) {
     setSelectedQnaIndex((prev) => (prev === index ? null : index));
+  }
+
+  const [selectedTutorialIndex, setSelectedTutorialIndex] = useState<
+    number | null
+  >(null);
+  function handleTutorialClick(index: number) {
+    setSelectedTutorialIndex((prev) => (prev === index ? null : index));
   }
 
   // (K) 포탈 이동
@@ -582,7 +591,11 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen }) => {
         imgSrc="/npc_event/npc3.png"
         title="정글의 원장"
       >
-        <div>어떻게, 좀 잘 되어가나요?</div>
+        <TutorialContent
+          tutorialList={TUTORIAL_LIST}
+          selectedTutorialIndex={selectedQnaIndex}
+          handleTutorialClick={handleQnaClick}
+        />
       </NpcModal>
 
       {meetingModalOpen && (

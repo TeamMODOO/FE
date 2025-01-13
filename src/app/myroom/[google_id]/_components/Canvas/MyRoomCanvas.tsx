@@ -91,7 +91,7 @@ const MyRoomCanvas: React.FC = () => {
     playPortalSound();
     // 페이드 아웃 시작
     setIsFadingOut(true);
-    // 2초 후 이동
+    // 0.7초 후 이동
     setTimeout(() => {
       router.push("/lobby");
     }, 700);
@@ -444,20 +444,24 @@ const MyRoomCanvas: React.FC = () => {
 
     // 이력서
     const resumeVal = ownerProfile.resume_url;
+    // (resume_url이 string[] 인지 string 인지에 따라 처리 방식 조정)
     setResume((prev) => {
-      if (!resumeVal) {
+      if (!resumeVal || resumeVal.length === 0) {
         return prev.map((item) => ({
           ...item,
           funitureType: "none",
           data: {},
         }));
       }
+      // 단일 PDF만 받는다고 가정하면, 혹은 첫 번째 인덱스 사용
       return prev.map((item, idx) => {
         if (idx === 0) {
           return {
             ...item,
             funitureType: "resume/resume1",
-            data: { resumeLink: resumeVal },
+            data: {
+              resumeLink: Array.isArray(resumeVal) ? resumeVal[0] : resumeVal,
+            },
           };
         }
         return item;
@@ -556,7 +560,6 @@ const MyRoomCanvas: React.FC = () => {
         worldY >= portal.y &&
         worldY <= portal.y + portal.height
       ) {
-        // window.location.href = portal.route;
         goLobby();
         return;
       }
@@ -605,11 +608,14 @@ const MyRoomCanvas: React.FC = () => {
   /** (C) 가구 클릭 로직 */
   const handleFurnitureClickCustom = (item: Funiture) => {
     if (item.funitureType === "none") {
+      // alert → AlertModal
+      openAlertModal("아직 등록되지 않은 항목입니다.");
       return;
     }
     if (item.funitureType.startsWith("resume/")) {
       const pdf = item.data?.resumeLink;
       if (!pdf) {
+        openAlertModal("PDF 링크가 없습니다.");
         return;
       }
       setPdfUrl(pdf);
@@ -629,7 +635,7 @@ const MyRoomCanvas: React.FC = () => {
       return;
     }
     try {
-      // S3 업로드
+      // 1) S3 업로드 (예시)
       const formData = new FormData();
       formData.append("file", resumeFile);
       const res = await fetch("/api/resume", {
@@ -638,13 +644,13 @@ const MyRoomCanvas: React.FC = () => {
       });
       const data = await res.json();
       if (!data.success) throw new Error(data.error || "Upload failed");
+      const s3Url = data.url;
 
-      const s3Url = data.url; // string
+      // 2) PATCH 호출
       if (!googleId) {
-        alert("googleId가 없음, 수정 불가");
+        openAlertModal("Google 로그인 상태가 아닙니다. 수정이 불가합니다.");
         return;
       }
-      // resume_url => s3Url
       patchProfile(
         {
           googleId,
@@ -652,42 +658,44 @@ const MyRoomCanvas: React.FC = () => {
         },
         {
           onSuccess: () => {
-            alert("이력서(PDF) 저장 완료");
+            openAlertModal("이력서(PDF) 저장 완료");
             setResumeModalOpen(false);
             setResumeFile(null);
           },
           onError: (err: Error) => {
-            alert("프로필 수정 실패: " + err.message);
+            openAlertModal("프로필 수정 실패: " + err.message);
           },
         },
       );
-    } catch (error) {
-      alert("파일 업로드 실패: " + error);
+    } catch (error: unknown) {
+      openAlertModal("파일 업로드 실패: " + String(error));
     }
   };
 
   const handleSavePortfolio = () => {
-    if (selectedTechList.length === 0) {
-      setTechStackModalOpen(false);
+    if (!portfolioLink.trim()) {
+      setPortfolioModalOpen(false);
       return;
     }
     if (!googleId) {
-      alert("googleId가 없음, 수정 불가");
+      openAlertModal("googleId가 없음, 수정 불가");
       return;
     }
-
-    const oldArr = ownerProfile?.tech_stack ?? [];
-    const newArr = [...oldArr, ...selectedTechList];
     patchProfile(
-      { googleId, tech_stack: newArr },
+      {
+        googleId,
+        // 마찬가지로, 배열 구조라면 이렇게
+        // 단일 문자열이라면 portfolio_url: portfolioLink
+        portfolio_url: [portfolioLink],
+      },
       {
         onSuccess: () => {
-          alert("기술 스택 추가 완료");
-          setTechStackModalOpen(false);
-          setSelectedTechList([]);
+          openAlertModal("포트폴리오(링크) 저장 완료");
+          setPortfolioModalOpen(false);
+          setPortfolioLink("");
         },
         onError: (err: Error) => {
-          alert("프로필 수정 실패: " + err.message);
+          openAlertModal("프로필 수정 실패: " + err.message);
         },
       },
     );
@@ -699,22 +707,22 @@ const MyRoomCanvas: React.FC = () => {
       return;
     }
     if (!googleId) {
-      alert("googleId가 없음, 수정 불가");
+      openAlertModal("googleId가 없음, 수정 불가");
       return;
     }
-
-    const oldArr = ownerProfile?.tech_stack ?? [];
-    const newArr = [...oldArr, ...selectedTechList];
     patchProfile(
-      { googleId, tech_stack: newArr },
+      {
+        googleId,
+        tech_stack: [...selectedTechList],
+      },
       {
         onSuccess: () => {
-          alert("기술 스택 추가 완료");
+          openAlertModal("기술 스택 저장 완료");
           setTechStackModalOpen(false);
           setSelectedTechList([]);
         },
         onError: (err: Error) => {
-          alert("프로필 수정 실패: " + err.message);
+          openAlertModal("프로필 수정 실패: " + err.message);
         },
       },
     );

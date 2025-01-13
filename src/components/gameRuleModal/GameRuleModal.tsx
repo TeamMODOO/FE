@@ -1,23 +1,18 @@
 "use client";
-
-import router from "next/router";
+import { useRouter } from "next/navigation";
 
 import useEscapeKey from "@/hooks/useEscapeKey";
 
-import styles from "./AlertModal.module.css";
+import styles from "./GameRuleModal.module.css";
 
-interface AlertModalProps {
-  /** 모달 제목 */
+interface GameRuleModalProps {
   title?: string;
-  /** 모달 닫기 함수 (X 버튼 또는 '아니오' 선택 시) */
   onClose: () => void;
-  /** 자식 노드 (본문 메시지 등) */
   children?: React.ReactNode;
 
-  /** 확인 모달인지(= 두 개의 버튼이 필요한지) 여부 */
+  /** 추가된 부분(이미 선언은 있으나) */
   isConfirm?: boolean;
-  /** '예' 버튼 클릭 시 동작 */
-  onConfirm?: () => void;
+  onConfirm?: () => void; // 게임시작을 누르면 동작
 }
 
 export default function GameRuleModal({
@@ -26,7 +21,8 @@ export default function GameRuleModal({
   children,
   isConfirm = false,
   onConfirm,
-}: AlertModalProps) {
+}: GameRuleModalProps) {
+  const router = useRouter();
   function goLobby() {
     router.push("/lobby");
   }
@@ -49,17 +45,33 @@ export default function GameRuleModal({
         {/* 본문 */}
         <div className={styles.modalContent}>{children}</div>
 
-        {/* isConfirm === true이면 "예/아니오" 버튼 노출 */}
+        {/**
+         * 기본 모달(확인 버튼만) + isConfirm 모달(게임시작/나가기 버튼)
+         *  - 상황에 따라 UI를 다르게 노출
+         */}
+        {!isConfirm && (
+          <div className="mt-8 flex justify-center">
+            <button
+              onClick={onClose}
+              className="min-h-16 w-24 rounded-lg border-2 border-[rgba(111,99,98,0.5)] text-[1.5rem]"
+            >
+              확인
+            </button>
+          </div>
+        )}
+
         {isConfirm && (
           <div className={styles.buttonSection}>
+            {/* [게임시작] 버튼 */}
             <button
               className={styles.yesButton}
               onClick={() => {
                 if (onConfirm) onConfirm();
               }}
             >
-              게임 시작
+              게임시작
             </button>
+            {/* [나가기] 버튼 */}
             <button className={styles.noButton} onClick={goLobby}>
               나가기
             </button>
