@@ -37,6 +37,11 @@ export default function Page() {
       room_id: ROOM_ID,
     });
 
+    socket.emit("CS_USER_POSITION", {
+      client_id: clientId,
+      room_id: ROOM_ID,
+    });
+
     setCurrentRoom(ROOM_ID);
 
     return () => {
