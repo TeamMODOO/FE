@@ -33,6 +33,7 @@
     "clsx": "^2.1.1",
     "dotenv": "^16.4.7",
     "fabric": "^5.5.0",
+    "framer-motion": "^11.17.0",
     "lucide-react": "^0.468.0",
     "mediasoup-client": "^3.8.1",
     "next": "^14",
