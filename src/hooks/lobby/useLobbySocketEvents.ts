@@ -227,6 +227,7 @@ export default function useLobbySocketEvents({
     if (!socket || !isConnected) return;
 
     const onUserPositionInfo = (data: SCUserPositionInfo) => {
+      // console.log(data);
       // "현재 접속 중인 모든 유저" 정보를 한 번에 내려줄 때
       // 어차피 "처음"으로 받는 정보이므로 → isMoving=false
       onAddUser(

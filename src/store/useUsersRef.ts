@@ -33,6 +33,7 @@ export default function useUsersRef() {
 
   /** 유저 추가 */
   function addUser(id: string, nickname: string, x = 500, y = 500) {
+    // console.log(usersRef.current);
     const found = usersRef.current.find((u) => u.id === id);
     if (found) {
       // 이미 있으면 위치만 업데이트
