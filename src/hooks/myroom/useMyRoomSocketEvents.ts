@@ -4,6 +4,7 @@
 import { useCallback, useEffect } from "react";
 
 import { User } from "@/model/User";
+import useClientIdStore from "@/store/useClientIdStore";
 import useSocketStore from "@/store/useSocketStore";
 
 type MyRoomSocketEventsProps = {
@@ -55,6 +56,7 @@ export default function useMyRoomSocketEvents({
   onUpdateUserPosition,
 }: MyRoomSocketEventsProps) {
   const { socket, isConnected } = useSocketStore();
+  const { clientId } = useClientIdStore();
 
   // (1) 내 캐릭터 이동 emit
   const emitMovement = useCallback(
@@ -66,6 +68,7 @@ export default function useMyRoomSocketEvents({
         position_x: x,
         position_y: y,
         direction,
+        client_id: clientId,
       };
       socket.emit("CS_MYROOM_MOVEMENT_INFO", data);
     },

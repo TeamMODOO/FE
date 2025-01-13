@@ -3,6 +3,7 @@
 import { useCallback, useEffect } from "react";
 
 import { Direction } from "@/model/LobbyUser";
+import useClientIdStore from "@/store/useClientIdStore";
 import useSocketStore from "@/store/useSocketStore";
 import { LobbyUser } from "@/store/useUsersRef";
 
@@ -10,6 +11,7 @@ interface MovementInfoToServer {
   position_x: number;
   position_y: number;
   direction: number; // 0=Down,1=Up,2=Right,3=Left
+  client_id: string;
 }
 
 export interface MovementInfoFromServer {
@@ -69,6 +71,8 @@ export default function useLobbySocketEvents({
   onUpdateUserPosition,
   onRemoveUser,
 }: LobbySocketEventsProps) {
+  const { clientId } = useClientIdStore();
+
   const { socket, isConnected } = useSocketStore();
 
   // (A) 내 이동 emit
@@ -79,6 +83,7 @@ export default function useLobbySocketEvents({
         position_x: x,
         position_y: y,
         direction,
+        client_id: clientId!,
       } satisfies MovementInfoToServer);
     },
     [socket, isConnected],
