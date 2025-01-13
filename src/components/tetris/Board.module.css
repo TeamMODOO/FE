@@ -1,6 +1,7 @@
 .board {
+  margin-left: 8%;
   border-spacing: 1px;
-  margin: 0 auto;
+  /* margin: 0 auto; */
   background-color: #333;
 }
 

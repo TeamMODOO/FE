@@ -243,10 +243,17 @@ export default function Game() {
           <p>{getResultMessage()}</p>
         </GameRuleModal>
       )}
-
+      <div className={styles.logoSection}>
+        <img
+          src="/logo/pingpong_logo.png"
+          alt="pingpong logo"
+          width={800}
+          className="max-h-[13dvh] w-auto"
+        />
+      </div>
       {/* 상단: 타이머 & 점수 표시 */}
       <div className={styles.gameTimer}>
-        <p className={styles.timer}>Time: {formatTime(timeRemaining)}</p>
+        <p className={styles.timer}>{formatTime(timeRemaining)}</p>
       </div>
       <div className={styles.recordBoard}>
         <p className={styles.playerRecord}>Player: {score.player}</p>

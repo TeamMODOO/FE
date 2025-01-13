@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from "react";
 
+import { useRouter } from "next/navigation";
+
+import AlertModal from "@/components/alertModal/AlertModal"; // <-- AlertModal 임포트
 import { BgMusicButton } from "@/components/bgMusic/BgMusicButton";
 import { BgMusicGlobal } from "@/components/bgMusic/BgMusicGlobal";
 import GameRuleModal from "@/components/gameRuleModal/GameRuleModal";
@@ -11,7 +14,11 @@ import { Tetris } from "@/utils/tetrisLogic";
 import Board from "../../components/tetris/Board";
 import Score from "../../components/tetris/Score";
 
+import styles from "./Tetris.module.css";
+
 export default function Home() {
+  const router = useRouter();
+
   const [game] = useState<Tetris>(new Tetris());
   const [board, setBoard] = useState<string[][]>([]);
   const [score, setScore] = useState(0);
@@ -41,8 +48,6 @@ export default function Home() {
 
   /**
    * useEffect로 묶는 로직을 isGameStarted === true일 때만 실행.
-   * (이전에 바로 실행되던 game.init(), setInterval 등을
-   *  startGame()을 호출해야 실행되도록 분리)
    */
   useEffect(() => {
     if (!isGameStarted) return;
@@ -66,15 +71,10 @@ export default function Home() {
         case "ArrowUp":
         case "w":
         case "W":
-          game.moveBlock("rotate", 1);
-          break;
-        // ▼ 스페이스바 누르면 회전
         case " ":
-          // 기본적으로 스페이스바가 페이지 스크롤을 내릴 수 있으므로 방지
-          event.preventDefault();
+          event.preventDefault(); // 스페이스바 기본 스크롤 방지
           game.moveBlock("rotate", 1);
           break;
-
         case "s":
         case "S":
           game.moveBlock("n", 1);
@@ -117,35 +117,78 @@ export default function Home() {
     };
   }, [isGameStarted, game]);
 
+  /**
+   * Game Over 시 띄울 AlertModal
+   * - 닫기 버튼 없이(noCloseBtn), ESC로도 안 닫힘
+   * - [나가기] 버튼 누르면 /lobby로
+   */
+  const handleCloseGameOverModal = () => {
+    // 필요하다면 여기서 다른 후처리 로직
+    router.push("/lobby");
+  };
+
   return (
-    <div className="min-h-dvh bg-black">
+    <div className="flex h-full flex-col items-center justify-center overflow-hidden bg-black">
       <BgMusicGlobal src="/sounds/tetris.wav" />
       <BgMusicButton />
       <OutButton />
 
-      {/* 모달 */}
+      {/* 게임 룰 모달 */}
       {isGameRuleModalOpen && (
         <GameRuleModal
           title="테트리스"
           onClose={closeGameRuleModal}
-          /** 추가된 부분 */
           onConfirm={startGame}
           isConfirm
         >
-          <p>블록 회전: ↑ 방향키</p>
-          <p>블록 빠르게 내리기: ↓ 방향키</p>
+          <p>블록 회전: ↑ 방향키 (또는 W / 스페이스바)</p>
+          <p>블록 빠르게 내리기: ↓ 방향키 (또는 S)</p>
         </GameRuleModal>
       )}
 
-      {gameOver && <p>Game Over</p>}
-
-      {/* 게임 정보 */}
-      {isGameStarted && (
-        <Score score={score} level={level} linesCleared={linesCleared} />
+      {/* GameOver 시 AlertModal 표시 */}
+      {gameOver && (
+        <AlertModal
+          title="Game Over"
+          // 닫기 버튼 X, ESC로도 닫기 X
+          noCloseBtn
+          onClose={() => {
+            // 모달 자체를 강제로 닫지는 않지만,
+            // 여기서는 onClose가 결국 [아니오] 버튼이나 ESC에 연동될 수 있음.
+            // noCloseBtn이기 때문에 ESC도 안 먹히고 닫기 버튼도 없음.
+            // 혹시 "확인 모달" 형태가 필요하면 isConfirm={true}를 써도 됩니다.
+          }}
+        >
+          <div className="my-4 text-center text-lg text-white">
+            <p>최종 스코어: {score}</p>
+            <p>레벨: {level}</p>
+            <p>클리어 한 라인: {linesCleared}</p>
+          </div>
+          <div className="flex w-full justify-center">
+            <button
+              onClick={handleCloseGameOverModal}
+              className="rounded-md bg-gray-700 px-4 py-2 text-white"
+            >
+              나가기
+            </button>
+          </div>
+        </AlertModal>
       )}
 
-      {/* 보드 */}
-      <Board board={board} />
+      <div className="flex items-center justify-center gap-3 pt-8">
+        {/* 배경 반딧불이 애니메이션 */}
+        {Array.from({ length: 5 }).map((_, index) => (
+          <div key={index} className={styles.floatingSquare}></div>
+        ))}
+
+        {/* 보드 */}
+        <Board board={board} />
+
+        {/* 게임 정보 */}
+        {isGameStarted && (
+          <Score score={score} level={level} linesCleared={linesCleared} />
+        )}
+      </div>
     </div>
   );
 }

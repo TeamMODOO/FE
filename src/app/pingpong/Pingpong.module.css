@@ -1,4 +1,5 @@
 .container {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -19,4 +20,16 @@
   border-radius: 10px;
   border: 2px solid #4caf50;
   background-color: black;
+}
+
+.gameTimer {
+  font-size: 2rem;
+  border: 2px solid #ffcd19;
+  border-radius: 10px;
+  padding: 20px;
+  color: #ffcd19;
+}
+
+.recordBoard {
+  font-size: 2rem;
 }
