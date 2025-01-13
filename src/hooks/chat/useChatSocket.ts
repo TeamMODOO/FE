@@ -8,11 +8,14 @@ import {
 } from "react";
 
 import { ChattingResponse, ChattingType } from "@/model/chatting";
+import useClientIdStore from "@/store/useClientIdStore";
 import useSocketStore from "@/store/useSocketStore";
 
 export const useChatSocket = (
   setNotification: Dispatch<SetStateAction<number>>,
 ) => {
+  const { clientId } = useClientIdStore();
+
   const { socket, isConnected } = useSocketStore();
 
   const [messageList, setMessageList] = useState<ChattingType[]>([]);
@@ -33,6 +36,7 @@ export const useChatSocket = (
 
     const messageInfo = {
       message: messageValue.trim(),
+      client_id: clientId,
     };
 
     socket.emit("CS_CHAT", messageInfo);

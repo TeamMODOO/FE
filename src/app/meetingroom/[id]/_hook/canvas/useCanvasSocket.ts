@@ -4,6 +4,8 @@ import { fabric } from "fabric";
 import Pako from "pako";
 import { Socket } from "socket.io-client";
 
+import useClientIdStore from "@/store/useClientIdStore";
+
 interface CanvasState {
   objects: fabric.Object[];
   timestamp: number;
@@ -14,6 +16,8 @@ export const useCanvasSocket = (
   socket: Socket | null,
   isConnected: boolean,
 ) => {
+  const { clientId } = useClientIdStore();
+
   // 마지막 캔버스 상태를 저장하는 ref
   const lastCanvasStateRef = useRef<CanvasState>({ objects: [], timestamp: 0 });
   // 업데이트 진행 중 여부를 추적하는 ref
@@ -87,6 +91,7 @@ export const useCanvasSocket = (
       socket.emit("CS_PICTURE_INFO", {
         picture: compressedData,
         timestamp: currentTime,
+        client_id: clientId,
       });
 
       lastUpdateTimeRef.current = currentTime;
