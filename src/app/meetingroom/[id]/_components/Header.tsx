@@ -1,7 +1,4 @@
 import { Mic, MicOff, PhoneOff, Video, VideoOff } from "lucide-react";
-import { Socket } from "socket.io-client";
-
-import { Button } from "@/components/ui/button";
 
 interface HeaderProps {
   isMuted: boolean;
@@ -19,34 +16,73 @@ export function Header({
   onLeaveRoom,
 }: HeaderProps) {
   return (
-    <header className="flex w-full items-center justify-between bg-gray-100 p-4">
-      <div className="flex items-center gap-4 text-sm text-muted-foreground"></div>
+    <header className="flex w-full items-center bg-[rgba(0,0,0,0.8)] p-4 text-white">
+      <div className="flex items-center gap-4 text-xl text-muted-foreground"></div>
+      <div className="flex-1 flex items-start justify-start">
+        <img src="/logo/logo_jungletower.png" alt="정글타워_로고" width={200} />
+      </div>
+
       <div className="flex flex-wrap gap-4">
-        <Button
-          variant={isMuted ? "default" : "outline"}
+        <button
+          // variant={isMuted ? "default" : "outline"}
           onClick={onMuteToggle}
+          className="
+          bg-[rgba(0,0,0,0.4)] hover:bg-[rgba(100,100,100,0.4)]
+          rounded-lg
+          border-2 
+          border-[rgba(111,99,98,1)] 
+          p-4
+          flex 
+          gap-2
+          text-xl
+          text-[rgba(201,189,188,1)]
+          "
         >
           {isMuted ? (
-            <MicOff className="mr-2 size-4" />
+            <MicOff className="mr-2 min-w-6 min-h-6" />
           ) : (
-            <Mic className="mr-2 size-4" />
+            <Mic className="mr-2 min-w-6 min-h-6" />
           )}
           {isMuted ? "음소거 해제" : "음소거"}
-        </Button>
-        <Button
-          variant={localStream ? "outline" : "default"}
+        </button>
+        <button
+          // variant={localStream ? "outline" : "default"}
           onClick={onCameraToggle}
+          className="
+          bg-[rgba(0,0,0,0.4)] hover:bg-[rgba(100,100,100,0.4)]
+          rounded-lg
+          border-2 
+          border-[rgba(111,99,98,1)] 
+          p-4
+          flex 
+          gap-2
+          text-xl
+          text-[rgba(201,189,188,1)]
+          "
         >
           {localStream ? (
-            <Video className="mr-2 size-4" />
+            <Video className="mr-2 min-w-6 min-h-6" />
           ) : (
-            <VideoOff className="mr-2 size-4" />
+            <VideoOff className="mr-2 min-w-6 min-h-6" />
           )}
           {localStream ? "카메라 끄기" : "카메라 켜기"}
-        </Button>
-        <Button variant="destructive" onClick={onLeaveRoom}>
-          <PhoneOff className="mr-2 size-4" />방 나가기
-        </Button>
+        </button>
+        <button
+          onClick={onLeaveRoom}
+          className="
+          bg-[rgba(0,0,0,0.4)] hover:bg-[rgba(100,100,100,0.4)]
+          rounded-lg
+          border-2 
+          border-[rgba(111,99,98,1)] 
+          p-4 
+          flex 
+          gap-2
+          text-[rgba(201,189,188,1)]
+          "
+        >
+          <PhoneOff className="mr-2 min-h-6 min-w-6 " />
+          <span className="text-xl ">방 나가기</span>
+        </button>
       </div>
     </header>
   );

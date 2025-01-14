@@ -40,10 +40,10 @@ export const LOBBY_PORTALS: PortalInfo[] = [
 
 export const LOBBY_NPCS: NpcInfo[] = [
   {
-    x: 300,
+    x: 302,
     y: 450,
-    width: 20,
-    height: 35,
+    width: 25,
+    height: 45,
     image: "/character/npc1.png",
     modalTitle: "정글 김코치",
     name: "정글 김코치\r\n[일일 코테 미션]",
@@ -51,8 +51,8 @@ export const LOBBY_NPCS: NpcInfo[] = [
   {
     x: 750,
     y: 150,
-    width: 20,
-    height: 35,
+    width: 25,
+    height: 45,
     image: "/character/npc2.png",
     modalTitle: "정글 백코치",
     name: "정글 백코치\r\n[정글 QnA]",
@@ -69,8 +69,8 @@ export const LOBBY_NPCS: NpcInfo[] = [
   {
     x: 420,
     y: 170,
-    width: 40,
-    height: 40,
+    width: 52,
+    height: 52,
     image: "/character/npc3.png",
     modalTitle: "정글 김원장",
     name: "정글 김원장\r\n[튜토리얼]",

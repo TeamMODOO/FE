@@ -20,7 +20,6 @@ import CanvasSection from "./_components/canvas/CanvasSection";
 import { Header } from "./_components/Header";
 import { LocalVideo } from "./_components/video/LocalVideo";
 import { RemoteMedia } from "./_components/video/RemoteMedia";
-import { useMeetingRoomAttend } from "./_hook/useMeetingRoom";
 import { useMediaDevices } from "./_hook/webRTC/useMediaDevices";
 import { usePeerEvents } from "./_hook/webRTC/usePeerSocketEvent";
 import { useRoom } from "./_hook/webRTC/useRoom";
@@ -35,7 +34,7 @@ function Page() {
   const roomId = (params.id as string) ?? "99999";
 
   useAudioSocketConnect({ roomId: roomId });
-  useMeetingRoomAttend({ roomId: roomId });
+  // useMeetingRoomAttend({ roomId: roomId });
 
   const audioSocket: Socket = useAudioSocketStore(
     (state) => state.socket,
@@ -264,7 +263,7 @@ function Page() {
 
   useEffect(() => {
     if (audioSocket && isAudioConnected) {
-      joinRoom();
+      // joinRoom();
     }
   }, [audioSocket, isAudioConnected]);
 

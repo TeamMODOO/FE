@@ -19,7 +19,7 @@ const CanvasSection = () => {
 
   return (
     <div
-      className="bg-grayscale-white relative h-screen w-full"
+      className="bg-[#22c55e] relative h-screen w-full"
       ref={canvasContainerRef}
     >
       <canvas ref={canvasRef} className="absolute inset-0" />

@@ -26,11 +26,20 @@ export function ChatContainer({
           }
         `}
       >
-        <Card className="relative flex h-96 w-80 flex-col">
-          <CardHeader className="flex flex-row items-center justify-between">
-            <h3 className="font-semibold">Chat</h3>
+        <Card
+          className="bg-color-none relative flex h-96 w-80 flex-col
+        border-[rgba(111,99,98,1)] bg-[rgba(0,0,0,0.9)]
+        "
+        >
+          <CardHeader
+            className="
+          flex flex-row items-center justify-between
+          text-2xl text-fuchsia-500
+          "
+          >
+            <h3 className="font-semibold">회의실 채팅</h3>
             <Button variant="ghost" size="icon" onClick={onClose}>
-              <X className="size-4" />
+              <X className="size-4 text-white" />
             </Button>
           </CardHeader>
           {children}

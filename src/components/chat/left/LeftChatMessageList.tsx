@@ -16,7 +16,7 @@ export function ChatMessageList({
 }: ChatMessageListProps) {
   return (
     <CardContent
-      className="flex grow flex-col overflow-auto"
+      className="custom-scrollbar flex grow flex-col overflow-auto"
       ref={scrollRef}
       onScroll={onScroll}
     >

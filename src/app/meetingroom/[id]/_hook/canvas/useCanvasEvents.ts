@@ -2,8 +2,8 @@ import { RefObject, useCallback, useEffect } from "react";
 
 import { fabric } from "fabric";
 
-const MAX_ZOOM = 5;
-const MIN_ZOOM = 0.01;
+const MAX_ZOOM = 3;
+const MIN_ZOOM = 0.5;
 
 export const useCanvasEvents = (
   canvas: fabric.Canvas | null,

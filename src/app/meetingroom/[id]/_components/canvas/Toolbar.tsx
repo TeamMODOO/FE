@@ -172,12 +172,28 @@ const Toolbar = () => {
   return (
     <TooltipProvider>
       <div className="absolute left-2.5 top-2.5 w-[60px]">
-        <div className="bg-grayscale-lightgray border-grayscale-lightgray flex w-auto flex-col items-center justify-center gap-2 rounded-xl border p-2 shadow-md">
+        <div
+          className="
+        bg-[rgba(0,0,0,0.8)] 
+        border-2 
+        border-[rgba(201,189,188,1)]
+        flex 
+        w-auto 
+        flex-col 
+        items-center 
+        justify-center 
+        gap-2 
+        rounded-xl 
+        p-2
+        "
+        >
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 variant={activeTool === "pen" ? "default" : "ghost"}
                 size="icon"
+                className="bg-[rgba(100,100,100,0.6)] hover:!bg-[rgba(100,100,100,1)]
+                text-white border-1 border-[rgba(201,189,188,1)]"
                 onClick={() => setActiveTool("pen")}
               >
                 <Pencil className="size-4" />
@@ -195,9 +211,11 @@ const Toolbar = () => {
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                variant={activeTool === "eraser" ? "default" : "ghost"}
+                // variant={activeTool === "eraser" ? "default" : "ghost"}
                 size="icon"
                 onClick={() => setActiveTool("eraser")}
+                className="bg-[rgba(100,100,100,0.6)] hover:!bg-[rgba(100,100,100,1)]
+                text-white border-1 border-[rgba(201,189,188,1)]"
               >
                 <Eraser className="size-4" />
               </Button>
@@ -208,9 +226,11 @@ const Toolbar = () => {
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                variant={activeTool === "hand" ? "default" : "ghost"}
+                // variant={activeTool === "hand" ? "default" : "ghost"}
                 size="icon"
                 onClick={() => setActiveTool("hand")}
+                className="bg-[rgba(100,100,100,0.6)] hover:!bg-[rgba(100,100,100,1)]
+                text-white border-1 border-[rgba(201,189,188,1)]"
               >
                 <Hand className="size-4" />
               </Button>
@@ -221,24 +241,28 @@ const Toolbar = () => {
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                variant="ghost"
+                // variant="ghost"
                 size="icon"
                 onClick={handleUndoClick}
                 disabled={!canvas || canvas._objects.length === 0}
+                className="bg-[rgba(100,100,100,0.6)] hover:!bg-[rgba(100,100,100,1)]
+                text-white border-1 border-[rgba(201,189,188,1)]"
               >
                 <Undo className="size-4" />
               </Button>
             </TooltipTrigger>
-            <TooltipContent>Undo</TooltipContent>
+            <TooltipContent>실행 취소</TooltipContent>
           </Tooltip>
 
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
-                variant="ghost"
+                // variant="ghost"
                 size="icon"
                 onClick={handleRedoClick}
                 disabled={!canvas || history.length === 0}
+                className="bg-[rgba(100,100,100,0.6)] hover:!bg-[rgba(100,100,100,1)]
+                text-white border-1 border-[rgba(201,189,188,1)]"
               >
                 <Redo className="size-4" />
               </Button>
