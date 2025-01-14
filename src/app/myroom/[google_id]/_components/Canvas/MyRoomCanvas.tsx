@@ -161,9 +161,9 @@ const MyRoomCanvas: React.FC = () => {
    */
   const [myUser, setMyUser] = useState<User>({
     id: "me",
-    x: 300,
-    y: 400,
-    nickname: "", // 초기값 비우기
+    x: 250,
+    y: 550,
+    nickname: "",
     characterType: "sprite1",
     direction: 0,
     isMoving: false,
