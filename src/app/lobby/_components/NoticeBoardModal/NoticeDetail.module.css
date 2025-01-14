@@ -17,6 +17,7 @@
   color: black;
   border: 2px solid rgba(111, 99, 98, 1);
   min-height: 20dvh;
+  white-space: pre-line;
 }
 
 .detailContainer::-webkit-scrollbar {

@@ -3,7 +3,6 @@
 import React from "react";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 import styles from "./NoticeCreateForm.module.css";
@@ -30,9 +29,11 @@ export default function NoticeCreateForm({
 }: NoticeCreateFormProps) {
   return (
     <div className={styles.formContainer}>
-      <div>
-        <Label htmlFor="writerName">글 제목</Label>
-        <Input
+      <div className="flex flex-col gap-3 ">
+        <Label htmlFor="writerName" className="text-xl">
+          글 제목
+        </Label>
+        <input
           id="writerName"
           placeholder="글 제목"
           value={writerName}
@@ -41,7 +42,9 @@ export default function NoticeCreateForm({
         />
       </div>
       <div className={styles.textSection}>
-        <Label htmlFor="writerMessage">글 내용</Label>
+        <Label htmlFor="writerMessage" className="text-xl">
+          글 내용
+        </Label>
         {/* <Input
           id="writerMessage"
           placeholder="작성할 내용을 입력하세요"
@@ -57,10 +60,18 @@ export default function NoticeCreateForm({
         ></textarea>
       </div>
       <div className={styles.buttonSection}>
-        <Button variant="secondary" onClick={onCancel}>
+        <Button
+          variant="secondary"
+          onClick={onCancel}
+          className="border-2 border-[rgba(111,99,98,1)] p-5 text-2xl"
+        >
           취소
         </Button>
-        <Button onClick={onCreate} disabled={isPosting}>
+        <Button
+          onClick={onCreate}
+          disabled={isPosting}
+          className="border-2 border-[rgba(111,99,98,1)] p-5 text-2xl"
+        >
           {isPosting ? "작성 중..." : "작성하기"}
         </Button>
       </div>

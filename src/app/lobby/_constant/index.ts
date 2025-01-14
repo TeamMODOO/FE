@@ -58,8 +58,8 @@ export const LOBBY_NPCS: NpcInfo[] = [
   {
     x: 560,
     y: 0,
-    width: 100,
-    height: 50,
+    width: 80,
+    height: 40,
     image: "/furniture/board.png",
     modalTitle: "게시판 NPC",
     name: "자유 게시판",
