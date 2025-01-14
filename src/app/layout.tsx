@@ -5,7 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { cn } from "@/lib/utils";
 import { AppProviders } from "@/provider";
 import { QueryProvider } from "@/provider/query-provider";
-import { NotoSerifKR, SpoqaHanSansNeo } from "@/styles/font";
+import { DungGeunMo, NotoSerifKR, SpoqaHanSansNeo } from "@/styles/font";
 
 import "@/styles/globals.css";
 
@@ -25,9 +25,15 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${SpoqaHanSansNeo.variable} ${NotoSerifKR.variable}`}
+      className={`${SpoqaHanSansNeo.variable} ${NotoSerifKR.variable} ${DungGeunMo.variable}`}
     >
-      <body className={cn("font-spoqa-han-sans-neo", "w-full", "h-dvh")}>
+      <body
+        className={cn(
+          "[font-family:var(--font-dung-geun-mo),serif]",
+          "w-full",
+          "h-dvh",
+        )}
+      >
         <QueryProvider>
           <AppProviders>
             {children}
