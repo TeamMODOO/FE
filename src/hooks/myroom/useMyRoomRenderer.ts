@@ -1,6 +1,7 @@
 "use client";
 
 import { RefObject, useEffect, useRef } from "react";
+
 import { techStackDataUrls } from "@/app/myroom/[google_id]/_constant";
 import {
   FRAME_HEIGHT,
@@ -198,7 +199,7 @@ export function useMyRoomRenderer({
       const textWidth = metrics.width;
       const textHeight = 30;
       const textX = f.x + w / 2;
-      const textY = f.y + h + 15;
+      const textY = f.y + h + 28;
 
       ctx.fillStyle = "black";
       ctx.fillRect(
@@ -407,7 +408,28 @@ export function useMyRoomRenderer({
 
   // 초기 1회 그리기
   useEffect(() => {
+    // 모든 필요한 이미지/데이터가 준비됐는지 확인
+    if (!canvasRef.current) return;
+    if (!backgroundImage) return;
+    if (Object.keys(spriteImages).length < 1) return;
+    if (Object.keys(furnitureImages).length < 1) return;
+
+    // 배치된 가구들( resume/portfolio/techStack/board )도
+    // 최소한 length가 0은 아니므로 그릴 내용이 맞는지?
+    // => 0이어도 "빈 리스트"로서 그릴 게 없을 뿐, 호출은 문제없음.
+
     drawCanvas();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [
+    canvasRef,
+    canvasSize,
+    backgroundImage,
+    spriteImages,
+    furnitureImages,
+    resume,
+    portfolio,
+    technologyStack,
+    board,
+    portal,
+  ]);
 }
