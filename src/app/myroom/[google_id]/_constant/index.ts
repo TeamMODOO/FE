@@ -39,7 +39,7 @@ export const MAP_CONSTANTS = {
   SPEED: 30, // 이동 속도
 };
 
-export const CHAR_SCALE = 3;
+export const CHARACTER_SCALE = 2;
 
 export const defaultResume: Funiture[] = [
   {
@@ -172,7 +172,7 @@ export const defaultBoard: Funiture[] = [
 
 export const MYROOM_COLLISION_ZONES: CollisionZone[] = [
   // 상단 벽
-  { x: 0, y: 0, width: 2000, height: 580 },
+  // { x: 0, y: 0, width: 2000, height: 580 },
 ];
 
 export const interiorImages: Record<string, string> = {
