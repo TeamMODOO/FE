@@ -101,6 +101,7 @@ export const EnterMeetingRoom: React.FC<EnterMeetingRoomProps> = ({
                 bg-[rgba(155,155,155,0.6)]
                 text-xl
                 text-white
+                !outline-none
                 "
               >
                 <TabsTrigger
@@ -110,6 +111,7 @@ export const EnterMeetingRoom: React.FC<EnterMeetingRoomProps> = ({
                   h-[5dvh]
                   p-0
                   text-xl
+                  !outline-none
                   data-[state=active]:bg-[rgba(255,255,255,0.7)]
                   data-[state=active]:text-[rgba(111,99,98,1)]
                   "
@@ -139,6 +141,7 @@ export const EnterMeetingRoom: React.FC<EnterMeetingRoomProps> = ({
             className="
             flex-1
             p-1
+            outline-none
             "
           >
             <div className="mb-2 flex justify-end">
