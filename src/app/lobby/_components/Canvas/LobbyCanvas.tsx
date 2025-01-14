@@ -621,7 +621,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen, isJoin }) => {
         isOpen={npc1ModalOpen}
         onClose={() => setNpc1ModalOpen(false)}
         imgSrc="/npc_event/npc1.png"
-        title="정글의 수석 코치"
+        title="정글 김코치"
       >
         <DailyProblemContent />
       </NpcModal>
@@ -629,7 +629,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen, isJoin }) => {
         isOpen={npc2ModalOpen}
         onClose={() => setNpc2ModalOpen(false)}
         imgSrc="/npc_event/npc2.png"
-        title="정글의 게임 전문 코치"
+        title="정글 백코치"
       >
         <QnaContent
           qnaList={QNA_LIST}
@@ -653,7 +653,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen, isJoin }) => {
         isOpen={npc3ModalOpen}
         onClose={() => setNpc3ModalOpen(false)}
         imgSrc="/npc_event/npc3.png"
-        title="정글의 원장"
+        title="정글 김원장"
       >
         <TutorialContent
           tutorialList={TUTORIAL_LIST}

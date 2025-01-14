@@ -83,7 +83,7 @@
 
 .buttonSection {
   background-color: rgba(0, 0, 0, 0.5);
-  width: 20dvw;
+  width: 30dvw;
   height: 30dvh;
   border-radius: 10px;
   padding: 10px;
@@ -130,7 +130,7 @@
   color: white;
   animation: fadeOpacity 1.7s infinite;
   text-align: center;
-  font-size: 0.8rem;
+  font-size: 1.3rem;
 }
 
 .guestLoginButton {

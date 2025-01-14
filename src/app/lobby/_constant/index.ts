@@ -45,8 +45,8 @@ export const LOBBY_NPCS: NpcInfo[] = [
     width: 20,
     height: 35,
     image: "/character/npc1.png",
-    modalTitle: "NPC1 대화",
-    name: "정글의 수석코치",
+    modalTitle: "정글 김코치",
+    name: "정글 김코치\r\n[일일 코테 미션]",
   },
   {
     x: 750,
@@ -54,8 +54,8 @@ export const LOBBY_NPCS: NpcInfo[] = [
     width: 20,
     height: 35,
     image: "/character/npc2.png",
-    modalTitle: "NPC2 대화",
-    name: "정글의 게임 전문 코치",
+    modalTitle: "정글 백코치",
+    name: "정글 백코치\r\n[정글 QnA]",
   },
   {
     x: 560,
@@ -64,7 +64,7 @@ export const LOBBY_NPCS: NpcInfo[] = [
     height: 50,
     image: "/furniture/board.png",
     modalTitle: "게시판 NPC",
-    name: "게시판",
+    name: "자유 게시판",
   },
   {
     x: 420,
@@ -72,8 +72,8 @@ export const LOBBY_NPCS: NpcInfo[] = [
     width: 40,
     height: 40,
     image: "/character/npc3.png",
-    modalTitle: "정글의 원장",
-    name: "정글의 원장",
+    modalTitle: "정글 김원장",
+    name: "정글 김원장\r\n[튜토리얼]",
   },
   {
     x: 135,

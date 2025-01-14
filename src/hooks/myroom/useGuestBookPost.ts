@@ -98,7 +98,7 @@ export function useGuestBookPost(hostGoogleId: string) {
     }
   }
 
-  async function deleteGuestBook(id: string) {
+  async function deleteGuestBook(hostGoogleId: string, guestbookId: string) {
     // **인증 상태 확인**
     if (status !== "authenticated" || !session?.user?.email) {
       throw new Error("사용자가 인증되지 않았습니다.");
@@ -111,7 +111,7 @@ export function useGuestBookPost(hostGoogleId: string) {
 
     // **delete 요청 보내기**
     const response: AxiosResponse<GuestBookPostResponse> = await axios.delete(
-      `${baseUrl}/posts/${id}/${hostGoogleId}`,
+      `${baseUrl}/posts/${hostGoogleId}/${guestbookId}`,
       {
         withCredentials: true, // 쿠키 설정
         headers: {

@@ -136,10 +136,32 @@ export function useMyRoomRenderer({
           const w = f.width ?? 100;
           const h = f.height ?? 100;
           ctx.drawImage(img, f.x, f.y, w, h);
-          ctx.font = "bold 20px Arial";
-          ctx.fillStyle = "white";
+
+          // 가구 이름
+          const text = f.funiturename;
+          ctx.font = "30px 'DungGeunMo'";
           ctx.textAlign = "center";
-          ctx.fillText(f.funiturename, f.x + w / 2, f.y + h + 15);
+
+          // 텍스트 폭/높이 측정
+          const metrics = ctx.measureText(text);
+          const textWidth = metrics.width;
+          const textHeight = 30; // 폰트 크기에 맞춰 적당히
+
+          const textX = f.x + w / 2;
+          const textY = f.y + h + 15;
+
+          // 검은 사각형(배경)
+          ctx.fillStyle = "black";
+          ctx.fillRect(
+            textX - textWidth / 2,
+            textY - textHeight + 5,
+            textWidth,
+            textHeight,
+          );
+
+          // 노란색 텍스트
+          ctx.fillStyle = "yellow";
+          ctx.fillText(text, textX, textY);
         });
 
         // 방명록
@@ -153,10 +175,31 @@ export function useMyRoomRenderer({
             ctx.fillStyle = "orange";
             ctx.fillRect(b.x, b.y, w, h);
           }
-          ctx.font = "bold 20px Arial";
-          ctx.fillStyle = "white";
+
+          // 방명록 이름
+          const text = b.funiturename;
+          ctx.font = "30px 'DungGeunMo'";
           ctx.textAlign = "center";
-          ctx.fillText(b.funiturename, b.x + w / 2, b.y + h + 15);
+
+          const metrics = ctx.measureText(text);
+          const textWidth = metrics.width;
+          const textHeight = 30;
+
+          const textX = b.x + w / 2;
+          const textY = b.y + h + 15;
+
+          // 검은 사각형(배경)
+          ctx.fillStyle = "black";
+          ctx.fillRect(
+            textX - textWidth / 2,
+            textY - textHeight + 5,
+            textWidth,
+            textHeight,
+          );
+
+          // 노란색 텍스트
+          ctx.fillStyle = "yellow";
+          ctx.fillText(text, textX, textY);
         });
 
         // 포탈
@@ -173,14 +216,33 @@ export function useMyRoomRenderer({
           ctx.fillStyle = "rgba(255, 0, 0, 0.5)";
           ctx.fillRect(portal.x, portal.y, portal.width, portal.height);
         }
-        ctx.font = "bold 20px Arial";
-        ctx.fillStyle = "white";
-        ctx.textAlign = "center";
-        ctx.fillText(
-          portal.name,
-          portal.x + portal.width / 2,
-          portal.y + portal.height + 20,
-        );
+
+        // 포탈 이름
+        {
+          const text = portal.name;
+          ctx.font = "30px 'DungGeunMo'";
+          ctx.textAlign = "center";
+
+          const metrics = ctx.measureText(text);
+          const textWidth = metrics.width;
+          const textHeight = 30;
+
+          const textX = portal.x + portal.width / 2;
+          const textY = portal.y + portal.height + 20;
+
+          // 검은 사각형(배경)
+          ctx.fillStyle = "black";
+          ctx.fillRect(
+            textX - textWidth / 2,
+            textY - textHeight + 5,
+            textWidth,
+            textHeight,
+          );
+
+          // 노란색 텍스트
+          ctx.fillStyle = "yellow";
+          ctx.fillText(text, textX, textY);
+        }
 
         // (추가) 충돌 박스 디버깅
         // MYROOM_COLLISION_ZONES.forEach((zone) => {
@@ -229,14 +291,30 @@ export function useMyRoomRenderer({
           });
           ctx.restore();
 
-          ctx.font = "bold 20px Arial";
-          ctx.fillStyle = "white";
+          // 캐릭터 닉네임
+          const text = myUser.nickname;
+          ctx.font = "30px 'DungGeunMo'";
           ctx.textAlign = "center";
-          ctx.fillText(
-            myUser.nickname,
-            myUser.x + scaledW / 2,
-            myUser.y + scaledH + 22,
+
+          const metrics = ctx.measureText(text);
+          const textWidth = metrics.width;
+          const textHeight = 30;
+
+          const textX = myUser.x + (FRAME_WIDTH * charScale) / 2;
+          const textY = myUser.y + FRAME_HEIGHT * charScale + 28;
+
+          // 검은 사각형(배경)
+          ctx.fillStyle = "black";
+          ctx.fillRect(
+            textX - textWidth / 2,
+            textY - textHeight + 5,
+            textWidth,
+            textHeight,
           );
+
+          // 흰색 텍스트
+          ctx.fillStyle = "white";
+          ctx.fillText(text, textX, textY);
         }
 
         ctx.restore();

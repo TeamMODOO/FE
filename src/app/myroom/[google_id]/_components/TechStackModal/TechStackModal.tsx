@@ -1,6 +1,7 @@
 "use client";
 
-import * as React from "react";
+import { useEffect, useState } from "react";
+import { IconType } from "react-icons";
 
 import { RotateCcw, Search } from "lucide-react";
 
@@ -12,13 +13,15 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Funiture } from "@/model/Funiture";
 
 import Style from "./TechStackModal.style";
 
 export interface TechStackModalProps {
   open: boolean;
   onClose: (v: boolean) => void;
-  techStackList: string[];
+  techStackList: { name: string; icon: IconType }[];
+  prevTechStackList: Funiture[];
   selectedTechList: string[];
   setSelectedTechList: (list: string[]) => void;
   onSave: () => void;
@@ -28,14 +31,15 @@ const TechStackModal: React.FC<TechStackModalProps> = ({
   open,
   onClose,
   techStackList,
+  prevTechStackList,
   selectedTechList,
   setSelectedTechList,
   onSave,
 }) => {
-  const [searchTerm, setSearchTerm] = React.useState("");
+  const [searchTerm, setSearchTerm] = useState("");
 
   const filteredTechStack = techStackList.filter((stack) =>
-    stack.toLowerCase().includes(searchTerm.toLowerCase()),
+    stack.name.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   const handleCheckboxChange = (stack: string) => {
@@ -43,7 +47,7 @@ const TechStackModal: React.FC<TechStackModalProps> = ({
       const newList = selectedTechList.filter((item) => item !== stack);
       setSelectedTechList(newList);
     } else {
-      if (selectedTechList.length < 9) {
+      if (selectedTechList.length < 8) {
         setSelectedTechList([...selectedTechList, stack]);
       }
     }
@@ -53,6 +57,8 @@ const TechStackModal: React.FC<TechStackModalProps> = ({
     setSelectedTechList([]);
     setSearchTerm("");
   };
+
+  useEffect(() => {}, []);
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -74,7 +80,7 @@ const TechStackModal: React.FC<TechStackModalProps> = ({
 
           <div className="flex items-center justify-between">
             <div className={Style.warningMent}>
-              최대 9개를 선택할 수 있습니다.
+              최대 8개를 선택할 수 있습니다.
               {selectedTechList.length > 0 &&
                 ` • ${selectedTechList.length}개 선택됨`}
             </div>
@@ -93,20 +99,22 @@ const TechStackModal: React.FC<TechStackModalProps> = ({
 
           <div className="custom-scrollbar max-h-[300px] overflow-y-auto">
             <div className={Style.buttonSection}>
-              {filteredTechStack.map((stack) => (
+              {filteredTechStack.map((stack, idx) => (
                 <Button
-                  key={stack}
+                  key={idx}
                   variant={
-                    selectedTechList.includes(stack) ? "default" : "outline"
+                    selectedTechList.includes(stack.name)
+                      ? "default"
+                      : "outline"
                   }
                   className={`${Style.stackButton} ${
-                    selectedTechList.includes(stack)
+                    selectedTechList.includes(stack.name)
                       ? "bg-[rgba(65,240,185,0.6)] text-white"
                       : ""
                   }`}
-                  onClick={() => handleCheckboxChange(stack)}
+                  onClick={() => handleCheckboxChange(stack.name)}
                 >
-                  {stack}
+                  {stack.name}
                 </Button>
               ))}
             </div>
