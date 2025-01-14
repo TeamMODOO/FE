@@ -1,4 +1,4 @@
-"use client"; // 혹은 _constant.ts처럼 사용 중이라면 "use client"는 상황에 맞게
+"use client";
 
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -97,7 +97,7 @@ techStackList.forEach((item) => {
 });
 
 export const MAP_CONSTANTS = {
-  SPEED: 30, // 이동 속도
+  SPEED: 50, // 이동 속도
 };
 
 export const CHARACTER_SCALE = 2;

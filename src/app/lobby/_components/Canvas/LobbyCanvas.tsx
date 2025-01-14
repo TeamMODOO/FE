@@ -422,21 +422,20 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen, isJoin }) => {
 
   // (P) 15fps 이동 (로컬)
   useEffect(() => {
-    const fps = 15;
-    const frameDuration = 1000 / fps;
-    let lastTime = 0;
+    let lastTime = performance.now();
     let moveTimer = 0;
 
-    function loop(time: number) {
-      const delta = time - lastTime;
-      if (delta >= frameDuration) {
-        lastTime = time - (delta % frameDuration);
-        doMove();
-      }
+    function loop(currentTime: number) {
+      const delta = currentTime - lastTime;
+      lastTime = currentTime;
+
+      // 매 프레임마다 이동 계산
+      doMove(delta);
+
       moveTimer = requestAnimationFrame(loop);
     }
 
-    function doMove() {
+    function doMove(delta: number) {
       if (!clientId) return;
       if (chatOpen || isAnyModalOpen) return;
 
@@ -447,13 +446,21 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen, isJoin }) => {
       const newDir = getDirection(pressedKeys);
       let { x, y } = me; // SC_USER_POSITION_INFO에서 세팅된 좌표
 
+      // delta(ms) → deltaSec(초)
+      const deltaSec = delta / 1000;
+
+      // speed(px/초)
+      const speed = LOBBY_MAP_CONSTANTS.SPEED; // 예: 4, 5, 100 등
+      // 이번 프레임에서 이동해야 할 거리
+      const distance = speed * deltaSec;
+
       let moved = false;
       if (newDir !== null) {
         let newX = x;
         let newY = y;
 
         if (newDir === 1 && y > 0) {
-          newY -= LOBBY_MAP_CONSTANTS.SPEED;
+          newY -= distance;
         } else if (
           newDir === 0 &&
           y <
@@ -461,7 +468,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen, isJoin }) => {
               LOBBY_MAP_CONSTANTS.IMG_HEIGHT *
                 LOBBY_MAP_CONSTANTS.CHARACTER_SCALE
         ) {
-          newY += LOBBY_MAP_CONSTANTS.SPEED;
+          newY += distance;
         } else if (
           newDir === 2 &&
           x <
@@ -469,9 +476,9 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen, isJoin }) => {
               LOBBY_MAP_CONSTANTS.IMG_WIDTH *
                 LOBBY_MAP_CONSTANTS.CHARACTER_SCALE
         ) {
-          newX += LOBBY_MAP_CONSTANTS.SPEED;
+          newX += distance;
         } else if (newDir === 3 && x > 0) {
-          newX -= LOBBY_MAP_CONSTANTS.SPEED;
+          newX -= distance;
         }
 
         // 충돌 체크
