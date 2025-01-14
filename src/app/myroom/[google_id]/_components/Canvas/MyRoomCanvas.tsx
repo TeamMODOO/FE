@@ -22,6 +22,7 @@ import { Direction, User } from "@/model/User";
 // ---- API
 import { useMyRoomOwnerProfile } from "@/queries/myroom/useMyRoomOwnerProfile";
 import { usePatchMyRoomOwnerProfile } from "@/queries/myroom/usePatchMyRoomOwnerProfile";
+import useClientIdStore from "@/store/useClientIdStore";
 
 // ---- 상수/데이터
 import {
@@ -436,6 +437,8 @@ const MyRoomCanvas: React.FC = () => {
   /** 13) API 쿼리 & PATCH */
   const params = useParams() as { google_id?: string };
   const googleId = params.google_id || undefined;
+  const { clientId } = useClientIdStore();
+
   const { data: ownerProfile } = useMyRoomOwnerProfile(googleId);
 
   // ownerProfile → 로컬 state
@@ -607,11 +610,8 @@ const MyRoomCanvas: React.FC = () => {
 
   /** (C) 가구 클릭 로직 */
   const handleFurnitureClickCustom = (item: Funiture) => {
-    if (item.funitureType === "none") {
-      // alert → AlertModal
-      openAlertModal("아직 등록되지 않은 항목입니다.");
-      return;
-    }
+    if (item.funitureType === "none") return;
+
     if (item.funitureType.startsWith("resume/")) {
       const pdf = item.data?.resumeLink;
       if (!pdf) {
@@ -749,40 +749,36 @@ const MyRoomCanvas: React.FC = () => {
     <>
       <BgMusicGlobal src="/sounds/myroomBGM.wav" />
       <BgMusicButton />
-      {isLoadingSession ? (
-        /**
-         * session이 아직 로딩중이라면 "Loading..." 만 표시
-         */
-        <div>Loading...</div>
-      ) : (
-        <div
-          className={Style.canvasContainerClass}
-          style={{
-            width: `${canvasSize.w}px`,
-            height: `${canvasSize.h}px`,
-            overflow: "hidden",
-            position: "relative",
-          }}
-        >
-          {/* 발소리 재생 위한 오디오 태그 */}
-          <audio ref={walkAudioRef} src="" />
-          {/* 모달 이벤트 사운드용 <audio> */}
-          <audio
-            ref={modalEventAudioRef}
-            src="/sounds/modalEvent.wav"
-            style={{ display: "none" }}
-          />
-          {/* 포탈 사운드 재생을 위한 태그 */}
-          <audio
-            ref={portalAudioRef}
-            src="/sounds/portalEvent.wav"
-            style={{ display: "none" }}
-          />
 
-          {/* (1) Canvas */}
-          <canvas ref={canvasRef} className={Style.absoluteCanvasClass} />
+      <div
+        className={Style.canvasContainerClass}
+        style={{
+          width: `${canvasSize.w}px`,
+          height: `${canvasSize.h}px`,
+          overflow: "hidden",
+          position: "relative",
+        }}
+      >
+        {/* 발소리 재생 위한 오디오 태그 */}
+        <audio ref={walkAudioRef} src="" />
+        {/* 모달 이벤트 사운드용 <audio> */}
+        <audio
+          ref={modalEventAudioRef}
+          src="/sounds/modalEvent.wav"
+          style={{ display: "none" }}
+        />
+        {/* 포탈 사운드 재생을 위한 태그 */}
+        <audio
+          ref={portalAudioRef}
+          src="/sounds/portalEvent.wav"
+          style={{ display: "none" }}
+        />
 
-          {/* (2) 하단 버튼들 */}
+        {/* (1) Canvas */}
+        <canvas ref={canvasRef} className={Style.absoluteCanvasClass} />
+
+        {/* (2) 하단 버튼들 */}
+        {googleId === clientId ? (
           <div className={Style.bottomButtonsClass}>
             <p className={Style.bottomTitle}>마이룸 꾸미기</p>
             <Button
@@ -807,78 +803,81 @@ const MyRoomCanvas: React.FC = () => {
               기술 스택 추가
             </Button>
           </div>
+        ) : (
+          <></>
+        )}
 
-          {/* (모달) 이력서 */}
-          <ResumeModal
-            open={resumeModalOpen}
-            onClose={setResumeModalOpen}
-            resumeFile={resumeFile}
-            setResumeFile={setResumeFile}
-            onSave={handleSaveResume}
+        {/* (모달) 이력서 */}
+        <ResumeModal
+          open={resumeModalOpen}
+          onClose={setResumeModalOpen}
+          resumeFile={resumeFile}
+          setResumeFile={setResumeFile}
+          onSave={handleSaveResume}
+        />
+
+        {/* (모달) 포트폴리오 */}
+        <PortfolioModal
+          open={portfolioModalOpen}
+          onClose={setPortfolioModalOpen}
+          portfolioLink={portfolioLink}
+          setPortfolioLink={setPortfolioLink}
+          onSave={handleSavePortfolio}
+        />
+
+        {/* (모달) 기술스택 */}
+        <TechStackModal
+          open={techStackModalOpen}
+          onClose={setTechStackModalOpen}
+          techStackList={techStackList}
+          prevTechStackList={technologyStack}
+          selectedTechList={selectedTechList}
+          setSelectedTechList={setSelectedTechList}
+          onSave={handleSaveTechStack}
+        />
+
+        {/* (모달) 가구 정보 */}
+        <FurnitureInfoModal
+          open={viewModalOpen}
+          onClose={setViewModalOpen}
+          furniture={selectedFurnitureData ?? null}
+        />
+
+        {/* (모달) 방명록 */}
+        {isBoardOpen && (
+          <BoardModal
+            open={isBoardOpen}
+            onClose={setIsBoardOpen}
+            boardComments={boardComments}
+            visitorName={visitorName}
+            visitorMessage={visitorMessage}
+            setVisitorName={setVisitorName}
+            setVisitorMessage={setVisitorMessage}
+            handleAddComment={handleAddComment}
           />
+        )}
 
-          {/* (모달) 포트폴리오 */}
-          <PortfolioModal
-            open={portfolioModalOpen}
-            onClose={setPortfolioModalOpen}
-            portfolioLink={portfolioLink}
-            setPortfolioLink={setPortfolioLink}
-            onSave={handleSavePortfolio}
-          />
+        {/* (모달) PDF 뷰어 */}
+        <PdfViewerModal
+          open={pdfModalOpen}
+          onClose={setPdfModalOpen}
+          pdfUrl={pdfUrl}
+        />
 
-          {/* (모달) 기술스택 */}
-          <TechStackModal
-            open={techStackModalOpen}
-            onClose={setTechStackModalOpen}
-            techStackList={techStackList}
-            selectedTechList={selectedTechList}
-            setSelectedTechList={setSelectedTechList}
-            onSave={handleSaveTechStack}
-          />
+        {/* (모달) 포트폴리오 링크 뷰어 */}
+        <PortfolioLinkViewModal
+          open={portfolioLinkViewModalOpen}
+          onClose={setPortfolioLinkViewModalOpen}
+          link={clickedPortfolioLink}
+        />
 
-          {/* (모달) 가구 정보 */}
-          <FurnitureInfoModal
-            open={viewModalOpen}
-            onClose={setViewModalOpen}
-            furniture={selectedFurnitureData ?? null}
-          />
-
-          {/* (모달) 방명록 */}
-          {isBoardOpen && (
-            <BoardModal
-              open={isBoardOpen}
-              onClose={setIsBoardOpen}
-              boardComments={boardComments}
-              visitorName={visitorName}
-              visitorMessage={visitorMessage}
-              setVisitorName={setVisitorName}
-              setVisitorMessage={setVisitorMessage}
-              handleAddComment={handleAddComment}
-            />
-          )}
-
-          {/* (모달) PDF 뷰어 */}
-          <PdfViewerModal
-            open={pdfModalOpen}
-            onClose={setPdfModalOpen}
-            pdfUrl={pdfUrl}
-          />
-
-          {/* (모달) 포트폴리오 링크 뷰어 */}
-          <PortfolioLinkViewModal
-            open={portfolioLinkViewModalOpen}
-            onClose={setPortfolioLinkViewModalOpen}
-            link={clickedPortfolioLink}
-          />
-
-          {/* (추가) AlertModal (대체된 alert) */}
-          {alertModalOpen && (
-            <AlertModal title="알림" onClose={() => setAlertModalOpen(false)}>
-              {alertMessage}
-            </AlertModal>
-          )}
-        </div>
-      )}
+        {/* (추가) AlertModal (대체된 alert) */}
+        {alertModalOpen && (
+          <AlertModal title="알림" onClose={() => setAlertModalOpen(false)}>
+            {alertMessage}
+          </AlertModal>
+        )}
+      </div>
       <div
         className={`
           duration-[2000ms] 
