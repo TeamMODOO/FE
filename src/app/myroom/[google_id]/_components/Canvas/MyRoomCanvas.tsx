@@ -38,8 +38,6 @@ import {
 } from "../../_constant";
 // ---- 모달
 import BoardModal from "../BoardModal/BoardModal";
-import FurnitureInfoModal from "../FurnitureInfoModal/FurnitureInfoModal";
-import PortfolioLinkViewModal from "../PortfolioLinkViewModal/PortfolioLinkViewModal";
 import PdfViewerModal from "../PortfolioModal/PdfViewerModal";
 import PortfolioModal from "../PortfolioModal/PortfolioModal";
 import ResumeModal from "../ResumeModal/ResumeModal";
@@ -842,13 +840,6 @@ const MyRoomCanvas: React.FC = () => {
           onSave={handleSaveTechStack}
         />
 
-        {/* (모달) 가구 정보 */}
-        <FurnitureInfoModal
-          open={viewModalOpen}
-          onClose={setViewModalOpen}
-          furniture={selectedFurnitureData ?? null}
-        />
-
         {/* (모달) 방명록 */}
         {isBoardOpen && (
           <BoardModal
@@ -868,13 +859,6 @@ const MyRoomCanvas: React.FC = () => {
           open={pdfModalOpen}
           onClose={setPdfModalOpen}
           pdfUrl={pdfUrl}
-        />
-
-        {/* (모달) 포트폴리오 링크 뷰어 */}
-        <PortfolioLinkViewModal
-          open={portfolioLinkViewModalOpen}
-          onClose={setPortfolioLinkViewModalOpen}
-          link={clickedPortfolioLink}
         />
 
         {/* (추가) AlertModal (대체된 alert) */}

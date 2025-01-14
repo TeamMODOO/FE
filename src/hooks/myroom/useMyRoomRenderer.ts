@@ -2,6 +2,7 @@
 
 import { RefObject, useEffect, useRef } from "react";
 
+import { techStackDataUrls } from "@/app/myroom/[google_id]/_constant";
 import {
   FRAME_HEIGHT,
   FRAME_WIDTH,
@@ -9,7 +10,6 @@ import {
 } from "@/hooks/performance/useLoadSprites";
 import { Funiture } from "@/model/Funiture";
 import { User } from "@/model/User";
-
 // 맵 크기
 const MAP_WIDTH = 2000;
 const MAP_HEIGHT = 900;
@@ -65,6 +65,24 @@ export function useMyRoomRenderer({
   });
 
   const cameraPosRef = useRef({ x: 0, y: 0 });
+
+  const stackImagesRef = useRef<Record<string, HTMLImageElement>>({});
+
+  useEffect(() => {
+    const loadedImages: Record<string, HTMLImageElement> = {};
+    const stackNames = Object.keys(techStackDataUrls); // ["Java", "React", ...]
+
+    stackNames.forEach((name) => {
+      const url = techStackDataUrls[name]; // data:image/svg+xml;base64,...
+      const img = new Image();
+      img.src = url;
+      // onload -> 별도 처리할 필요가 있으면 해도 됨
+      loadedImages[name] = img;
+    });
+
+    // 최종 할당
+    stackImagesRef.current = loadedImages;
+  }, []);
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -131,26 +149,48 @@ export function useMyRoomRenderer({
         // (2) 가구/방명록/포탈
         const allFurniture = [...resume, ...portfolio, ...technologyStack];
         allFurniture.forEach((f) => {
-          const img = furnitureImages[f.funitureType];
-          if (!img || f.funitureType === "none") return;
           const w = f.width ?? 100;
           const h = f.height ?? 100;
-          ctx.drawImage(img, f.x, f.y, w, h);
 
-          // 가구 이름
-          const text = f.funiturename;
+          // 기본 텍스트
+          let textToRender = f.funiturename;
+
+          // 기술스택인지 확인
+          if (f.funitureType.startsWith("technologyStack/")) {
+            const stackName = f.data?.stack; // 예: "Vue.js", "Git", ...
+            if (!stackName) return;
+
+            // (4) 위에서 캐싱해둔 이미지 객체
+            const iconImg = stackImagesRef.current[stackName];
+
+            if (iconImg) {
+              // 캐싱된 이미지가 로드되어 있으면 draw
+              ctx.drawImage(iconImg, f.x, f.y, w, h);
+            } else {
+              // 아직 이미지가 없거나 로드 중이면 임시 사각형
+              ctx.fillStyle = "lightblue";
+              ctx.fillRect(f.x, f.y, w, h);
+            }
+
+            // 스택 이름을 표시 (funiturename 대신)
+            textToRender = stackName;
+          } else {
+            // 기술스택이 아닌 일반 가구
+            if (!furnitureImages[f.funitureType] || f.funitureType === "none")
+              return;
+            ctx.drawImage(furnitureImages[f.funitureType], f.x, f.y, w, h);
+          }
+
+          // (텍스트 표시)
           ctx.font = "30px 'DungGeunMo'";
           ctx.textAlign = "center";
 
-          // 텍스트 폭/높이 측정
-          const metrics = ctx.measureText(text);
+          const metrics = ctx.measureText(textToRender);
           const textWidth = metrics.width;
-          const textHeight = 30; // 폰트 크기에 맞춰 적당히
-
+          const textHeight = 30;
           const textX = f.x + w / 2;
           const textY = f.y + h + 15;
 
-          // 검은 사각형(배경)
           ctx.fillStyle = "black";
           ctx.fillRect(
             textX - textWidth / 2,
@@ -159,9 +199,8 @@ export function useMyRoomRenderer({
             textHeight,
           );
 
-          // 노란색 텍스트
           ctx.fillStyle = "yellow";
-          ctx.fillText(text, textX, textY);
+          ctx.fillText(textToRender, textX, textY);
         });
 
         // 방명록

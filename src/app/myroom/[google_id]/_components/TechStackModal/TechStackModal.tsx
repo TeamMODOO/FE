@@ -36,6 +36,16 @@ const TechStackModal: React.FC<TechStackModalProps> = ({
   setSelectedTechList,
   onSave,
 }) => {
+  useEffect(() => {
+    // prevTechStackList에서 stack 이름을 추출하고, 유효한 값만 필터링
+    const stacks = prevTechStackList
+      .map((item) => item.data?.stack)
+      .filter((stack): stack is string => Boolean(stack));
+
+    // selectedTechList 상태를 추출한 스택들로 설정
+    setSelectedTechList(stacks);
+  }, [prevTechStackList, setSelectedTechList]);
+
   const [searchTerm, setSearchTerm] = useState("");
 
   const filteredTechStack = techStackList.filter((stack) =>
