@@ -10,9 +10,11 @@ export const LOBBY_MAP_CONSTANTS = {
   MAP_WIDTH: 1200,
   MAP_HEIGHT: 700,
 
-  IMG_WIDTH: 32,
-  IMG_HEIGHT: 32,
-  SPEED: 1.5,
+  IMG_WIDTH: 60,
+  IMG_HEIGHT: 120,
+  SPEED: 2,
+
+  CHARACTER_SCALE: 0.4,
 };
 
 export const LOBBY_PORTALS: PortalInfo[] = [

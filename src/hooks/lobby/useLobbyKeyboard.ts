@@ -50,7 +50,7 @@ export function useLobbyKeyboard({
     const me = usersRef.current.find((u) => u.id === localClientId);
     if (!me) return;
 
-    const [cl, cr, ct, cb] = [me.x, me.x + 32, me.y, me.y + 32];
+    const [cl, cr, ct, cb] = [me.x, me.x + 60, me.y, me.y + 120];
 
     // 1) 포탈 충돌
     for (const portal of portals) {

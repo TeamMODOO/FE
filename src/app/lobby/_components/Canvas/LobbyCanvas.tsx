@@ -251,9 +251,13 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen, isJoin }) => {
     if (!me) return;
 
     const cl = me.drawX;
-    const cr = me.drawX + 32;
+    const cr =
+      me.drawX +
+      LOBBY_MAP_CONSTANTS.IMG_WIDTH * LOBBY_MAP_CONSTANTS.CHARACTER_SCALE;
     const ct = me.drawY;
-    const cb = me.drawY + 32;
+    const cb =
+      me.drawY +
+      LOBBY_MAP_CONSTANTS.IMG_HEIGHT * LOBBY_MAP_CONSTANTS.CHARACTER_SCALE;
 
     // 포탈 충돌
     for (const p of LOBBY_PORTALS) {
@@ -452,12 +456,18 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen, isJoin }) => {
           newY -= LOBBY_MAP_CONSTANTS.SPEED;
         } else if (
           newDir === 0 &&
-          y < LOBBY_MAP_CONSTANTS.MAP_HEIGHT - LOBBY_MAP_CONSTANTS.IMG_HEIGHT
+          y <
+            LOBBY_MAP_CONSTANTS.MAP_HEIGHT -
+              LOBBY_MAP_CONSTANTS.IMG_HEIGHT *
+                LOBBY_MAP_CONSTANTS.CHARACTER_SCALE
         ) {
           newY += LOBBY_MAP_CONSTANTS.SPEED;
         } else if (
           newDir === 2 &&
-          x < LOBBY_MAP_CONSTANTS.MAP_WIDTH - LOBBY_MAP_CONSTANTS.IMG_WIDTH
+          x <
+            LOBBY_MAP_CONSTANTS.MAP_WIDTH -
+              LOBBY_MAP_CONSTANTS.IMG_WIDTH *
+                LOBBY_MAP_CONSTANTS.CHARACTER_SCALE
         ) {
           newX += LOBBY_MAP_CONSTANTS.SPEED;
         } else if (newDir === 3 && x > 0) {
@@ -468,8 +478,11 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen, isJoin }) => {
         const newBB = {
           x: newX,
           y: newY,
-          width: LOBBY_MAP_CONSTANTS.IMG_WIDTH,
-          height: LOBBY_MAP_CONSTANTS.IMG_HEIGHT,
+          width:
+            LOBBY_MAP_CONSTANTS.IMG_WIDTH * LOBBY_MAP_CONSTANTS.CHARACTER_SCALE,
+          height:
+            LOBBY_MAP_CONSTANTS.IMG_HEIGHT *
+            LOBBY_MAP_CONSTANTS.CHARACTER_SCALE,
         };
         let collision = false;
         for (const zone of LOBBY_COLLISION_ZONES) {
@@ -565,6 +578,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen, isJoin }) => {
     localClientId: clientId ?? "",
     portals: LOBBY_PORTALS,
     npcs: LOBBY_NPCS,
+    characterScale: LOBBY_MAP_CONSTANTS.CHARACTER_SCALE,
   });
 
   // (T) 최종 렌더
