@@ -30,6 +30,7 @@ export default function Page() {
     // 새로운 방 입장
     socket.emit("CS_JOIN_ROOM", {
       client_id: clientId,
+      room_type: "myroom",
       room_id: roomId,
     });
 

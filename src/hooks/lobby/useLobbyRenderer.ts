@@ -28,6 +28,7 @@ interface UseLobbyRendererParams {
   localClientId: string;
   portals: PortalInfo[];
   npcs: NpcInfo[];
+  characterScale: number;
 }
 
 export default function useLobbyRenderer({
@@ -41,6 +42,7 @@ export default function useLobbyRenderer({
   localClientId,
   portals,
   npcs,
+  characterScale,
 }: UseLobbyRendererParams) {
   const cameraPosRef = useRef({ x: 0, y: 0 });
 
@@ -118,8 +120,10 @@ export default function useLobbyRenderer({
         let targetX = 0;
         let targetY = 0;
         if (me) {
-          const centerX = me.drawX + LOBBY_MAP_CONSTANTS.IMG_WIDTH / 2;
-          const centerY = me.drawY + LOBBY_MAP_CONSTANTS.IMG_HEIGHT / 2;
+          const centerX =
+            me.drawX + (LOBBY_MAP_CONSTANTS.IMG_WIDTH * characterScale) / 2;
+          const centerY =
+            me.drawY + (LOBBY_MAP_CONSTANTS.IMG_HEIGHT * characterScale) / 2;
           targetX = centerX - FIXED_VIEWPORT_WIDTH / 2;
           targetY = centerY - FIXED_VIEWPORT_HEIGHT / 2;
 
@@ -276,6 +280,9 @@ export default function useLobbyRenderer({
           const sx = uf.frame * FRAME_WIDTH;
           const sy = (direction ?? 0) * FRAME_HEIGHT;
 
+          const scaledW = FRAME_WIDTH * characterScale;
+          const scaledH = FRAME_HEIGHT * characterScale;
+
           ctx.save();
           // LAYER_ORDER 순서대로 그리기 (예: 하의 → 상의 → 머리 등)
           if (Object.keys(spriteImages).length === LAYER_ORDER.length) {
@@ -290,22 +297,22 @@ export default function useLobbyRenderer({
                 FRAME_HEIGHT,
                 drawX,
                 drawY,
-                FRAME_WIDTH,
-                FRAME_HEIGHT,
+                scaledW,
+                scaledH,
               );
             });
           } else {
             // 미로딩 시 임시 박스
             ctx.fillStyle = "blue";
-            ctx.fillRect(drawX, drawY, FRAME_WIDTH, FRAME_HEIGHT);
+            ctx.fillRect(drawX, drawY, scaledW, scaledH);
           }
           ctx.restore();
 
           // (유저) 닉네임
           const text = nickname;
           const fontSize = 15;
-          const textX = drawX + FRAME_WIDTH / 2;
-          const textY = drawY + FRAME_HEIGHT + 12;
+          const textX = drawX + scaledW / 2;
+          const textY = drawY + scaledH + 14;
 
           ctx.font = `${fontSize}px 'DungGeunMo'`;
           ctx.textAlign = "center";
@@ -349,5 +356,6 @@ export default function useLobbyRenderer({
     localClientId,
     portals,
     npcs,
+    characterScale,
   ]);
 }

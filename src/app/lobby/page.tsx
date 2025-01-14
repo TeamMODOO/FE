@@ -36,6 +36,7 @@ export default function Page() {
       room_type: ROOM_TYPE,
       room_id: ROOM_ID,
     });
+    // console.log(clientId, ROOM_TYPE, ROOM_ID);
 
     socket.emit("CS_USER_POSITION", {
       client_id: clientId,

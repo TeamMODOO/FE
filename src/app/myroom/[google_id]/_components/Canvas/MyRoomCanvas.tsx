@@ -26,7 +26,7 @@ import useClientIdStore from "@/store/useClientIdStore";
 
 // ---- 상수/데이터
 import {
-  CHAR_SCALE,
+  CHARACTER_SCALE,
   defaultBoard,
   defaultPortfolio,
   defaultResume,
@@ -162,9 +162,9 @@ const MyRoomCanvas: React.FC = () => {
    */
   const [myUser, setMyUser] = useState<User>({
     id: "me",
-    x: 300,
-    y: 700,
-    nickname: "", // 초기값 비우기
+    x: 250,
+    y: 550,
+    nickname: "",
     characterType: "sprite1",
     direction: 0,
     isMoving: false,
@@ -297,7 +297,7 @@ const MyRoomCanvas: React.FC = () => {
     backgroundImage,
     spriteImages,
     myUser,
-    charScale: CHAR_SCALE,
+    charScale: CHARACTER_SCALE,
     furnitureImages,
     resume,
     portfolio,
@@ -355,7 +355,8 @@ const MyRoomCanvas: React.FC = () => {
       }
 
       const SPEED = MAP_CONSTANTS.SPEED;
-      const SPRITE_SIZE = 64 * CHAR_SCALE;
+      const SPRITE_W = 60 * CHARACTER_SCALE;
+      const SPRITE_H = 120 * CHARACTER_SCALE;
       let moved = false;
       const prevX = x;
       const prevY = y;
@@ -370,7 +371,7 @@ const MyRoomCanvas: React.FC = () => {
           break;
         case 0: // down
           {
-            const maxY = 900 - 128;
+            const maxY = 900 - SPRITE_H;
             if (y < maxY) {
               y = Math.min(maxY, y + SPEED);
               moved = true;
@@ -379,7 +380,7 @@ const MyRoomCanvas: React.FC = () => {
           break;
         case 2: // right
           {
-            const maxX = 2000 - 82;
+            const maxX = 2000 - SPRITE_W;
             if (x < maxX) {
               x = Math.min(maxX, x + SPEED);
               moved = true;
@@ -396,7 +397,12 @@ const MyRoomCanvas: React.FC = () => {
 
       // 충돌 체크
       if (moved) {
-        const newBox = { x, y, width: SPRITE_SIZE, height: SPRITE_SIZE };
+        const newBox = {
+          x,
+          y,
+          width: SPRITE_W,
+          height: SPRITE_H,
+        };
         let collision = false;
         for (const zone of MYROOM_COLLISION_ZONES) {
           if (doRectsOverlap(newBox, zone)) {
@@ -532,7 +538,7 @@ const MyRoomCanvas: React.FC = () => {
       const viewWidth = canvasSize.w / scale;
       let cameraX = 0;
 
-      const centerX = myUser.x + 64 * CHAR_SCALE * 0.5;
+      const centerX = myUser.x + 60 * CHARACTER_SCALE * 0.5;
       cameraX = centerX - viewWidth / 2;
 
       const maxCamX = 2000 - viewWidth;
