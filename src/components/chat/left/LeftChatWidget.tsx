@@ -37,6 +37,24 @@ export function ChatWidget({
     setNotification,
   });
 
+  /**
+   * =========================
+   * 1) Esc 키 눌렀을 때 모달 닫기
+   * =========================
+   */
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (isOpen && e.key === "Escape") {
+        setIsOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleEsc);
+
+    return () => {
+      window.removeEventListener("keydown", handleEsc);
+    };
+  }, [isOpen, setIsOpen]);
+
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";

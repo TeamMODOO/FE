@@ -30,7 +30,11 @@ const ColorPanel = () => {
 
   return (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
-      <PopoverTrigger asChild>
+      <PopoverTrigger
+        asChild
+        className="bg-[rgba(100,100,100,0.6)] hover:!bg-[rgba(100,100,100,1)]
+                text-white border-1 border-[rgba(201,189,188,1)]"
+      >
         <Button variant="outline" className="size-10 p-0">
           <div
             className="size-6 rounded-full"
@@ -38,7 +42,7 @@ const ColorPanel = () => {
           />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-2">
+      <PopoverContent className="w-auto p-2 bg-[rgba(100,100,100,0.9)] border-2 border-[rgba(201,189,188,1)] ml-[0.7rem]">
         <div className="grid grid-cols-3 gap-2">
           {Object.entries(COLOR_CODE).map(([color, code]) => (
             <Button

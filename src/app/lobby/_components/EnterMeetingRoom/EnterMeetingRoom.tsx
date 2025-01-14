@@ -64,9 +64,9 @@ export const EnterMeetingRoom: React.FC<EnterMeetingRoomProps> = ({
     });
   };
 
-  // const handleRefresh = () => {
-  //   refetch();
-  // };
+  const handleRefresh = () => {
+    refetch();
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -149,8 +149,8 @@ export const EnterMeetingRoom: React.FC<EnterMeetingRoomProps> = ({
                 variant="outline"
                 size="icon"
                 className="bg-[rgba(155,155,155,0.6)]"
-                // onClick={handleRefresh}
-                // disabled={isLoading}
+                onClick={handleRefresh}
+                disabled={isLoading}
               >
                 <RefreshCw
                   className="

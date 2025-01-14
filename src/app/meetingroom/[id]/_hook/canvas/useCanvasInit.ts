@@ -21,7 +21,7 @@ export const useCanvasInit = () => {
     });
 
     // Canvas 기본 설정
-    newCanvas.backgroundColor = "white";
+    newCanvas.backgroundColor = "#22c55e";
     newCanvas.freeDrawingBrush.width = INITIAL_BRUSH_WIDTH;
     newCanvas.isDrawingMode = true;
 
