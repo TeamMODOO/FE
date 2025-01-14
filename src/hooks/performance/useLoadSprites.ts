@@ -3,10 +3,10 @@
 
 import { useEffect, useState } from "react";
 
-export const FRAME_WIDTH = 32;
-export const FRAME_HEIGHT = 32;
+export const FRAME_WIDTH = 60;
+export const FRAME_HEIGHT = 120;
 /** 스프라이트 레이어 순서: 예) body → eyes → clothes → hair */
-export const LAYER_ORDER = ["body", "eyes", "clothes", "hair"];
+export const LAYER_ORDER = ["man"];
 
 /**
  * 각 레이어별 스프라이트 시트를 로딩
