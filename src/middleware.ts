@@ -12,7 +12,7 @@ export async function middleware(req: NextRequest) {
   const session = await auth();
 
   // 인증이 필요 없는 경로 목록
-  const excludedPaths = ["/_next", "/api", "/favicon.ico", "/background"];
+  const excludedPaths = ["/_next", "/api", "/favicon.png", "/background"];
 
   // 현재 요청 경로가 제외 목록에 속하는지 확인
   const isExcluded = excludedPaths.some((path) => pathname.startsWith(path));
@@ -56,6 +56,6 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next|api|signin|signinloading|favicon.ico|background|css|hooks).*)",
+    "/((?!_next|api|signin|signinloading|favicon.png|background|css|hooks).*)",
   ],
 };
