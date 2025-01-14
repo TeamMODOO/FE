@@ -152,19 +152,63 @@ export default function useLobbyRenderer({
         if (portalImage && portalImage.complete) {
           portals.forEach((p) => {
             ctx.drawImage(portalImage, p.x, p.y, p.width, p.height);
-            ctx.font = "bold 12px Arial";
-            ctx.fillStyle = "yellow";
+
+            // 텍스트 배경 + 텍스트
+            const text = p.name;
+            const fontSize = 15;
+            const textX = p.x + p.width / 2;
+            const textY = p.y + p.height + 12;
+
+            ctx.font = `${fontSize}px 'DungGeunMo'`;
             ctx.textAlign = "center";
-            ctx.fillText(p.name, p.x + p.width / 2, p.y + p.height + 12);
+
+            // 텍스트 폭 측정
+            const metrics = ctx.measureText(text);
+            const textWidth = metrics.width;
+
+            // 검은 사각형 (배경)
+            ctx.fillStyle = "black";
+            ctx.fillRect(
+              textX - textWidth / 2,
+              textY - fontSize + 3,
+              textWidth,
+              fontSize,
+            );
+
+            // 텍스트 표시 (노란색)
+            ctx.fillStyle = "yellow";
+            ctx.fillText(text, textX, textY);
           });
         } else {
           portals.forEach((p) => {
             ctx.fillStyle = "rgba(0,255,255,0.3)";
             ctx.fillRect(p.x, p.y, p.width, p.height);
-            ctx.font = "bold 12px Arial";
-            ctx.fillStyle = "yellow";
+
+            // 텍스트 배경 + 텍스트
+            const text = p.name;
+            const fontSize = 20;
+            const textX = p.x + p.width / 2;
+            const textY = p.y + p.height + 12;
+
+            ctx.font = `${fontSize}px 'DungGeunMo'`;
             ctx.textAlign = "center";
-            ctx.fillText(p.name, p.x + p.width / 2, p.y + p.height + 12);
+
+            // 텍스트 폭 측정
+            const metrics = ctx.measureText(text);
+            const textWidth = metrics.width;
+
+            // 검은 사각형 (배경)
+            ctx.fillStyle = "black";
+            ctx.fillRect(
+              textX - textWidth / 2,
+              textY - fontSize + 3,
+              textWidth,
+              fontSize,
+            );
+
+            // 텍스트 표시 (노란색)
+            ctx.fillStyle = "yellow";
+            ctx.fillText(text, textX, textY);
           });
         }
 
@@ -174,18 +218,40 @@ export default function useLobbyRenderer({
           if (img) {
             ctx.drawImage(img, npc.x, npc.y, npc.width, npc.height);
           }
-          // 이름
-          ctx.font = "bold 12px Arial";
-          ctx.fillStyle = "yellow";
+
+          // 1) 이름 문자열에서 줄바꿈 기준으로 split
+          const lines = npc.name.split(/\r?\n/);
+          const fontSize = 15;
+          const lineHeight = fontSize + 4; // 줄 간격(취향껏 조정)
+
+          ctx.font = `${fontSize}px 'DungGeunMo'`;
           ctx.textAlign = "center";
-          ctx.fillText(
-            npc.name,
-            npc.x + npc.width / 2,
-            npc.y + npc.height + 12,
-          );
+
+          // 2) 각 줄마다 반복
+          lines.forEach((line, i) => {
+            const textX = npc.x + npc.width / 2;
+            const textY = npc.y + npc.height + 12 + i * lineHeight;
+
+            // 텍스트 폭 구하기
+            const metrics = ctx.measureText(line);
+            const textWidth = metrics.width;
+
+            // 3) 배경 사각형
+            ctx.fillStyle = "black";
+            ctx.fillRect(
+              textX - textWidth / 2, // 중앙 정렬이므로 x - 폭/2
+              textY - fontSize + 3, // 사각형의 y위치(글자 높이만큼 위로)
+              textWidth,
+              fontSize,
+            );
+
+            // 4) 텍스트
+            ctx.fillStyle = "yellow";
+            ctx.fillText(line, textX, textY);
+          });
         });
 
-        // (F) 캐릭터
+        // (F) 캐릭터(유저들)
         usersRef.current.forEach((user) => {
           const { id, drawX, drawY, direction, isMoving, nickname } = user;
 
@@ -211,7 +277,7 @@ export default function useLobbyRenderer({
           const sy = (direction ?? 0) * FRAME_HEIGHT;
 
           ctx.save();
-          // LAYER_ORDER 순서대로 그리기
+          // LAYER_ORDER 순서대로 그리기 (예: 하의 → 상의 → 머리 등)
           if (Object.keys(spriteImages).length === LAYER_ORDER.length) {
             LAYER_ORDER.forEach((layer) => {
               const spr = spriteImages[layer];
@@ -229,21 +295,37 @@ export default function useLobbyRenderer({
               );
             });
           } else {
-            // 미로딩 시 임시
+            // 미로딩 시 임시 박스
             ctx.fillStyle = "blue";
             ctx.fillRect(drawX, drawY, FRAME_WIDTH, FRAME_HEIGHT);
           }
           ctx.restore();
 
-          // 닉네임
-          ctx.font = "bold 12px Arial";
-          ctx.fillStyle = "white";
+          // (유저) 닉네임
+          const text = nickname;
+          const fontSize = 15;
+          const textX = drawX + FRAME_WIDTH / 2;
+          const textY = drawY + FRAME_HEIGHT + 12;
+
+          ctx.font = `${fontSize}px 'DungGeunMo'`;
           ctx.textAlign = "center";
-          ctx.fillText(
-            nickname,
-            drawX + FRAME_WIDTH / 2,
-            drawY + FRAME_HEIGHT + 12,
+
+          // 텍스트 폭 측정
+          const metrics = ctx.measureText(text);
+          const textWidth = metrics.width;
+
+          // 검은 사각형 (배경)
+          ctx.fillStyle = "black";
+          ctx.fillRect(
+            textX - textWidth / 2,
+            textY - fontSize + 3,
+            textWidth,
+            fontSize,
           );
+
+          // 텍스트 표시 (흰색)
+          ctx.fillStyle = "white";
+          ctx.fillText(text, textX, textY);
         });
 
         ctx.restore();

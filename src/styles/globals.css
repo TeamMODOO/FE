@@ -83,26 +83,26 @@
   }
 }
 
-/* @font-face {
+@font-face {
   font-family: "DungGeunMo";
-  src: url("/fonts/DungGeunMo.ttf") format("ttf");
+  src: url("/fonts/DungGeunMo.ttf") format("truetype");
   font-weight: 100;
   font-style: normal;
-} */
+}
 
 .custom-scrollbar {
-  /* overflow-y-auto나 .custom-scrollbar가 있는 요소를 대상으로 합니다 */
+  /* 아래 커스텀 스크롤 바 적용 */
 }
 
 .custom-scrollbar::-webkit-scrollbar {
-  width: 7px; /* 스크롤바 너비 */
+  width: 7px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: none; /* 트랙 배경 */
+  background: none;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  border-radius: 10px; /* 썸(thumb) 둥글게 */
-  background: rgba(65, 240, 185, 0.6); /* 썸 배경색 */
+  border-radius: 10px;
+  background: rgba(65, 240, 185, 0.6);
 }
