@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   title: "정글타워",
   description: "jungle tower",
   icons: {
-    icon: "/favicon/favicon.ico",
+    icon: "/favicon/favicon.png",
   },
 };
 

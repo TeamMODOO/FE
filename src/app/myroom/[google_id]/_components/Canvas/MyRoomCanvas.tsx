@@ -38,8 +38,6 @@ import {
 } from "../../_constant";
 // ---- 모달
 import BoardModal from "../BoardModal/BoardModal";
-import FurnitureInfoModal from "../FurnitureInfoModal/FurnitureInfoModal";
-import PortfolioLinkViewModal from "../PortfolioLinkViewModal/PortfolioLinkViewModal";
 import PdfViewerModal from "../PortfolioModal/PdfViewerModal";
 import PortfolioModal from "../PortfolioModal/PortfolioModal";
 import ResumeModal from "../ResumeModal/ResumeModal";
@@ -328,24 +326,32 @@ const MyRoomCanvas: React.FC = () => {
       let { x, y } = prev;
       let newDir: Direction | null = null;
 
-      if (pressedKeys["w"] || pressedKeys["W"] || pressedKeys["ArrowUp"]) {
+      if (
+        pressedKeys["w"] ||
+        pressedKeys["W"] ||
+        pressedKeys["ArrowUp"] ||
+        pressedKeys["ㅈ"]
+      ) {
         newDir = 1;
       } else if (
         pressedKeys["s"] ||
         pressedKeys["S"] ||
-        pressedKeys["ArrowDown"]
+        pressedKeys["ArrowDown"] ||
+        pressedKeys["ㄴ"]
       ) {
         newDir = 0;
       } else if (
         pressedKeys["d"] ||
         pressedKeys["D"] ||
-        pressedKeys["ArrowRight"]
+        pressedKeys["ArrowRight"] ||
+        pressedKeys["ㅇ"]
       ) {
         newDir = 2;
       } else if (
         pressedKeys["a"] ||
         pressedKeys["A"] ||
-        pressedKeys["ArrowLeft"]
+        pressedKeys["ArrowLeft"] ||
+        pressedKeys["ㅁ"]
       ) {
         newDir = 3;
       }
@@ -842,13 +848,6 @@ const MyRoomCanvas: React.FC = () => {
           onSave={handleSaveTechStack}
         />
 
-        {/* (모달) 가구 정보 */}
-        <FurnitureInfoModal
-          open={viewModalOpen}
-          onClose={setViewModalOpen}
-          furniture={selectedFurnitureData ?? null}
-        />
-
         {/* (모달) 방명록 */}
         {isBoardOpen && (
           <BoardModal
@@ -868,13 +867,6 @@ const MyRoomCanvas: React.FC = () => {
           open={pdfModalOpen}
           onClose={setPdfModalOpen}
           pdfUrl={pdfUrl}
-        />
-
-        {/* (모달) 포트폴리오 링크 뷰어 */}
-        <PortfolioLinkViewModal
-          open={portfolioLinkViewModalOpen}
-          onClose={setPortfolioLinkViewModalOpen}
-          link={clickedPortfolioLink}
         />
 
         {/* (추가) AlertModal (대체된 alert) */}

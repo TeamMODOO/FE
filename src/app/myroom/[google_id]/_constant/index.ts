@@ -1,3 +1,8 @@
+"use client";
+
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { IconType } from "react-icons";
 import {
   FaConfluence,
   FaDocker,
@@ -69,8 +74,30 @@ export const techStackList = [
   { name: "Cypress", icon: SiCypress },
 ];
 
+/** (B) 아이콘 → data:image/svg+xml;base64 변환 함수 */
+function generateIconDataUrl(Icon: IconType, size = 40, color = "#000") {
+  // 1) React Element 생성
+  const svgElement = createElement(Icon, { size, color });
+
+  // 2) svg 문자열 변환
+  const svgString = renderToStaticMarkup(svgElement);
+
+  // 3) base64 인코딩
+  const base64 = btoa(svgString);
+
+  // 4) data URL
+  return `data:image/svg+xml;base64,${base64}`;
+}
+
+/** (C) techStackList를 순회하며, stackName → dataURL 매핑 생성 */
+export const techStackDataUrls: Record<string, string> = {};
+techStackList.forEach((item) => {
+  const { name, icon } = item;
+  techStackDataUrls[name] = generateIconDataUrl(icon, 40, "white");
+});
+
 export const MAP_CONSTANTS = {
-  SPEED: 30, // 이동 속도
+  SPEED: 50, // 이동 속도
 };
 
 export const CHARACTER_SCALE = 2;
