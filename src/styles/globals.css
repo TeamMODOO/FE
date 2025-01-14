@@ -83,6 +83,13 @@
   }
 }
 
+/* @font-face {
+  font-family: "DungGeunMo";
+  src: url("/fonts/DungGeunMo.ttf") format("ttf");
+  font-weight: 100;
+  font-style: normal;
+} */
+
 .custom-scrollbar {
   /* overflow-y-auto나 .custom-scrollbar가 있는 요소를 대상으로 합니다 */
 }

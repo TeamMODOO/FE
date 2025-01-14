@@ -53,3 +53,30 @@ export const NotoSerifKR = localFont({
   display: "swap",
   variable: "--font-noto-serif-kr",
 });
+
+export const DungGeunMo = localFont({
+  src: [
+    {
+      path: "../../public/fonts/DungGeunMo.ttf",
+      weight: "100",
+    },
+    {
+      path: "../../public/fonts/DungGeunMo.ttf",
+      weight: "300",
+    },
+    {
+      path: "../../public/fonts/DungGeunMo.ttf",
+      weight: "400",
+    },
+    {
+      path: "../../public/fonts/DungGeunMo.ttf",
+      weight: "500",
+    },
+    {
+      path: "../../public/fonts/DungGeunMo.ttf",
+      weight: "700",
+    },
+  ],
+  display: "swap",
+  variable: "--font-dung-geun-mo",
+});
