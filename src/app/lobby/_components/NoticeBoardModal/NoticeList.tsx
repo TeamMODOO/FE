@@ -96,7 +96,12 @@ export default function NoticeList({
         </ul>
       </div>
       <div className={styles.buttonSection}>
-        <Button onClick={onClickWrite}>글 작성하기</Button>
+        <Button
+          onClick={onClickWrite}
+          className="border-2 !border-[rgba(111,99,98,1)] p-4 text-2xl"
+        >
+          글 작성하기
+        </Button>
       </div>
     </div>
   );

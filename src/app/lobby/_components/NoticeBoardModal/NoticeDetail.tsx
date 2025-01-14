@@ -86,7 +86,10 @@ export default function NoticeDetail({
       </div>
       <div className={styles.detailContainer}>{notice.content}</div>
       <div className={styles.buttonSection}>
-        <Button className="mt-4" onClick={onBack}>
+        <Button
+          className="mt-4 border-2 border-[rgba(111,99,98,1)] p-4 text-2xl"
+          onClick={onBack}
+        >
           목록으로
         </Button>
       </div>
