@@ -97,7 +97,7 @@ techStackList.forEach((item) => {
 });
 
 export const MAP_CONSTANTS = {
-  SPEED: 30, // 이동 속도
+  SPEED: 50, // 이동 속도
 };
 
 export const CHARACTER_SCALE = 2;
