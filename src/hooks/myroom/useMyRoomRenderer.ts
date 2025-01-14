@@ -385,7 +385,7 @@ export function useMyRoomRenderer({
 
     // direction/isMoving은 즉시 반영(스냅)
     drawUserRef.current.direction = myUser.direction ?? 0;
-    drawUserRef.current.isMoving = myUser.isMoving;
+    drawUserRef.current.isMoving = myUser.isMoving ?? false;
 
     if (myUser.x === prevX && myUser.y === prevY) {
       // 위치가 같으면 보간 불필요
