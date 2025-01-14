@@ -14,7 +14,7 @@
 }
 
 .modal {
-  font-family: var(--font-noto-serif-kr), serif;
+  font-family: var(--font-dung-geun-mo), serif;
   background: linear-gradient(
     to bottom,
     rgba(0, 0, 0, 0.6),
@@ -65,7 +65,7 @@
 }
 
 .modalTitle {
-  font-family: var(--font-noto-serif-kr), serif;
+  font-family: var(--font-dung-geun-mo), serif;
   color: rgba(192, 37, 202, 1);
   font-weight: bold;
   font-size: 2rem;
