@@ -326,24 +326,32 @@ const MyRoomCanvas: React.FC = () => {
       let { x, y } = prev;
       let newDir: Direction | null = null;
 
-      if (pressedKeys["w"] || pressedKeys["W"] || pressedKeys["ArrowUp"]) {
+      if (
+        pressedKeys["w"] ||
+        pressedKeys["W"] ||
+        pressedKeys["ArrowUp"] ||
+        pressedKeys["ㅈ"]
+      ) {
         newDir = 1;
       } else if (
         pressedKeys["s"] ||
         pressedKeys["S"] ||
-        pressedKeys["ArrowDown"]
+        pressedKeys["ArrowDown"] ||
+        pressedKeys["ㄴ"]
       ) {
         newDir = 0;
       } else if (
         pressedKeys["d"] ||
         pressedKeys["D"] ||
-        pressedKeys["ArrowRight"]
+        pressedKeys["ArrowRight"] ||
+        pressedKeys["ㅇ"]
       ) {
         newDir = 2;
       } else if (
         pressedKeys["a"] ||
         pressedKeys["A"] ||
-        pressedKeys["ArrowLeft"]
+        pressedKeys["ArrowLeft"] ||
+        pressedKeys["ㅁ"]
       ) {
         newDir = 3;
       }
