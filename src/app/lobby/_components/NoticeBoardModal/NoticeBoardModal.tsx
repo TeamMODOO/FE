@@ -187,7 +187,7 @@ export default function NoticeBoardModal({
                 X
               </button>
               <div className={styles.modalHeader}>
-                <p className={styles.modalTitle}>게시판</p>
+                <p className={styles.modalTitle}>자유 게시판</p>
               </div>
               <div className={styles.modalContent}>{renderContent()}</div>
             </div>
