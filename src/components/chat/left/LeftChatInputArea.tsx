@@ -30,8 +30,8 @@ export function ChatInputArea({
       <Button
         type="submit"
         size="icon"
-        className="size-[58px] border-2
-        border-[rgba(111,99,98,1)] bg-gradient-to-b from-black/10 to-black/20 hover:bg-[rgba(85,85,85,0.5)"
+        className="hover:bg-[rgba(85,85,85,0.5) size-[58px]
+        border-2 border-[rgba(111,99,98,1)] bg-gradient-to-b from-black/10 to-black/20"
       >
         <Send className="size-4" />
       </Button>

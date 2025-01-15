@@ -892,7 +892,7 @@ const MyRoomCanvas: React.FC = () => {
       </div>
       <div
         className={`
-          duration-[2000ms] 
+          duration-2000 
           pointer-events-none 
           fixed 
           inset-0 

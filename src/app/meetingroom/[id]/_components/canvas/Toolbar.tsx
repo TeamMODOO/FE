@@ -174,16 +174,16 @@ const Toolbar = () => {
       <div className="absolute left-2.5 top-2.5 w-[60px]">
         <div
           className="
-        bg-[rgba(0,0,0,0.8)] 
-        border-2 
-        border-[rgba(201,189,188,1)]
         flex 
         w-auto 
-        flex-col 
+        flex-col
         items-center 
         justify-center 
         gap-2 
         rounded-xl 
+        border-2 
+        border-[rgba(201,189,188,1)] 
+        bg-[rgba(0,0,0,0.8)] 
         p-2
         "
         >
@@ -192,8 +192,8 @@ const Toolbar = () => {
               <Button
                 variant={activeTool === "pen" ? "default" : "ghost"}
                 size="icon"
-                className="bg-[rgba(100,100,100,0.6)] hover:!bg-[rgba(100,100,100,1)]
-                text-white border-1 border-[rgba(201,189,188,1)]"
+                className="border-1 border-[rgba(201,189,188,1)]
+                bg-[rgba(100,100,100,0.6)] text-white hover:!bg-[rgba(100,100,100,1)]"
                 onClick={() => setActiveTool("pen")}
               >
                 <Pencil className="size-4" />
@@ -214,8 +214,8 @@ const Toolbar = () => {
                 // variant={activeTool === "eraser" ? "default" : "ghost"}
                 size="icon"
                 onClick={() => setActiveTool("eraser")}
-                className="bg-[rgba(100,100,100,0.6)] hover:!bg-[rgba(100,100,100,1)]
-                text-white border-1 border-[rgba(201,189,188,1)]"
+                className="border-1 border-[rgba(201,189,188,1)]
+                bg-[rgba(100,100,100,0.6)] text-white hover:!bg-[rgba(100,100,100,1)]"
               >
                 <Eraser className="size-4" />
               </Button>
@@ -229,8 +229,8 @@ const Toolbar = () => {
                 // variant={activeTool === "hand" ? "default" : "ghost"}
                 size="icon"
                 onClick={() => setActiveTool("hand")}
-                className="bg-[rgba(100,100,100,0.6)] hover:!bg-[rgba(100,100,100,1)]
-                text-white border-1 border-[rgba(201,189,188,1)]"
+                className="border-1 border-[rgba(201,189,188,1)]
+                bg-[rgba(100,100,100,0.6)] text-white hover:!bg-[rgba(100,100,100,1)]"
               >
                 <Hand className="size-4" />
               </Button>
@@ -245,8 +245,8 @@ const Toolbar = () => {
                 size="icon"
                 onClick={handleUndoClick}
                 disabled={!canvas || canvas._objects.length === 0}
-                className="bg-[rgba(100,100,100,0.6)] hover:!bg-[rgba(100,100,100,1)]
-                text-white border-1 border-[rgba(201,189,188,1)]"
+                className="border-1 border-[rgba(201,189,188,1)]
+                bg-[rgba(100,100,100,0.6)] text-white hover:!bg-[rgba(100,100,100,1)]"
               >
                 <Undo className="size-4" />
               </Button>
@@ -261,8 +261,8 @@ const Toolbar = () => {
                 size="icon"
                 onClick={handleRedoClick}
                 disabled={!canvas || history.length === 0}
-                className="bg-[rgba(100,100,100,0.6)] hover:!bg-[rgba(100,100,100,1)]
-                text-white border-1 border-[rgba(201,189,188,1)]"
+                className="border-1 border-[rgba(201,189,188,1)]
+                bg-[rgba(100,100,100,0.6)] text-white hover:!bg-[rgba(100,100,100,1)]"
               >
                 <Redo className="size-4" />
               </Button>
