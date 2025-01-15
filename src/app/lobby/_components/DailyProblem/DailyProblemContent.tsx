@@ -75,8 +75,8 @@ const DailyProblemContent: React.FC = () => {
             cursor-pointer 
             py-2 
             text-left
-            text-[rgb(15,190,135)]
-            hover:text-[rgb(6,209,130,0.7)]
+            text-[rgb(255,255,0)]
+            hover:text-[rgb(253,224,71,0.7)]
           "
         >
           [일일 퀘스트] 백준 문제를 풀어 용을 처치하자!

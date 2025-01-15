@@ -1,9 +1,9 @@
 .qnaItem {
-  color: rgb(15, 190, 135);
+  color: yellow;
 }
 
 .qnaItem:hover {
-  color: rgb(6, 209, 130, 0.7);
+  color: rgb(253, 224, 71, 0.7);
   text-underline-position: below;
   cursor: pointer;
 }
@@ -17,7 +17,7 @@
   overflow-x: auto;
   padding-right: 5px;
   margin-bottom: 2dvh;
-  font-size: 1.5rem;
+  font-size: 1.7rem;
   pointer-events: none;
 }
 

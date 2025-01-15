@@ -72,11 +72,11 @@
 }
 .modalTitle {
   font-weight: bold;
-  font-size: 2rem;
+  font-size: 2.2rem;
   margin-top: 2rem;
   margin-left: 1rem;
   padding-left: 2rem;
-  color: rgba(192, 37, 202, 1);
+  color: yellow;
   pointer-events: none;
 }
 .modalContent {
@@ -84,7 +84,7 @@
   padding: 1rem 2rem;
   margin-top: 0;
   padding-top: 0;
-  font-size: 1.3rem;
+  font-size: 1.7rem;
   line-height: 1.4;
   color: #fff;
   min-height: 30dvh;

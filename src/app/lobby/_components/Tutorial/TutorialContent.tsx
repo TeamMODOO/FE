@@ -113,7 +113,7 @@ const QnaContent: React.FC<TutorialProps> = ({ tutorialList }) => {
   return (
     <div>
       <div className={styles.answerBox}>
-        <h2 className="mb-5 text-xl font-bold text-[rgb(15,190,135)]">
+        <h2 className="mb-5 text-[1.6rem] font-bold text-yellow-300">
           Q. {selectedQna.question}
         </h2>
         <div className={styles.answerOutput} style={{ whiteSpace: "pre-line" }}>
