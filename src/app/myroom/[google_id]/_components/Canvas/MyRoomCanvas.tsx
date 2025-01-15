@@ -632,7 +632,7 @@ const MyRoomCanvas: React.FC = () => {
       return;
     } else {
       // 여기 수정
-      window.open(item.data?.url, "_blank", "noopener,noreferrer");
+      window.open(item.data?.link, "_blank", "noopener,noreferrer");
     }
   };
 
