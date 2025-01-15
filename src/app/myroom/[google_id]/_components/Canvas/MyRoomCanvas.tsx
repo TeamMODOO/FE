@@ -227,10 +227,7 @@ const MyRoomCanvas: React.FC = () => {
   const [portfolioLink, setPortfolioLink] = useState("");
   const [selectedTechList, setSelectedTechList] = useState<string[]>([]);
 
-  const [selectedFurnitureData, setSelectedFurnitureData] =
-    useState<Funiture | null>(null);
   const [pdfUrl, setPdfUrl] = useState("");
-  const [clickedPortfolioLink, setClickedPortfolioLink] = useState("");
 
   /** 7) 모달 열림 여부 통합 */
   const isAnyModalOpen =
@@ -572,7 +569,7 @@ const MyRoomCanvas: React.FC = () => {
       }
 
       // 가구
-      const allFurniture = [...resume, ...portfolio, ...technologyStack];
+      const allFurniture = [...resume, ...portfolio];
       for (const f of allFurniture) {
         if (
           worldX >= f.x &&
@@ -580,6 +577,7 @@ const MyRoomCanvas: React.FC = () => {
           worldY >= f.y &&
           worldY <= f.y + f.height
         ) {
+          if (f.funitureType === "none") return;
           playModalEventSound();
           handleFurnitureClickCustom(f);
           return;
@@ -597,7 +595,6 @@ const MyRoomCanvas: React.FC = () => {
     myUser,
     resume,
     portfolio,
-    technologyStack,
     board,
     portal,
     canvasSize,
@@ -625,9 +622,10 @@ const MyRoomCanvas: React.FC = () => {
       setPdfUrl(pdf);
       setPdfModalOpen(true);
       return;
+    } else {
+      // 여기 수정
+      window.open(item.data?.url, "_blank", "noopener,noreferrer");
     }
-    setSelectedFurnitureData(item);
-    setViewModalOpen(true);
   };
 
   /** (D) 이력서/포트폴리오/기술스택 PATCH */
@@ -685,12 +683,23 @@ const MyRoomCanvas: React.FC = () => {
       openAlertModal("googleId가 없음, 수정 불가");
       return;
     }
+    const prevLink = portfolio.map((item) => item.data?.link ?? "");
+    const curLink = [];
+    if (prevLink[0] === "") {
+      curLink.push(portfolioLink);
+    } else if (prevLink[1] === "") {
+      curLink.push(prevLink[0], portfolioLink);
+    } else if (prevLink[2] === "") {
+      curLink.push(prevLink[0], prevLink[1], portfolioLink);
+    } else {
+      curLink.push(prevLink[1], prevLink[2], portfolioLink);
+    }
     patchProfile(
       {
         googleId,
         // 마찬가지로, 배열 구조라면 이렇게
         // 단일 문자열이라면 portfolio_url: portfolioLink
-        portfolio_url: [portfolioLink],
+        portfolio_url: curLink,
       },
       {
         onSuccess: () => {
