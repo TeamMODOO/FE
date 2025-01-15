@@ -3,12 +3,12 @@
 import { RefObject, useEffect, useRef } from "react";
 
 import { LOBBY_MAP_CONSTANTS } from "@/app/lobby/_constant";
+import { LOBBY_COLLISION_ZONES } from "@/app/lobby/_constant";
 import {
   FRAME_HEIGHT,
   FRAME_WIDTH,
   LAYER_ORDER,
 } from "@/hooks/performance/useLoadSprites";
-import { LOBBY_COLLISION_ZONES } from "@/app/lobby/_constant";
 import { NpcInfo } from "@/model/Npc";
 import { PortalInfo } from "@/model/Portal";
 import { LobbyUser } from "@/store/useUsersRef";
