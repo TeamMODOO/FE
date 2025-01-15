@@ -19,6 +19,7 @@ export function useMeetingRoom() {
   return useQuery({
     queryKey: ["meetingroom"] as const,
     queryFn: fetchMeetingRoom,
-    staleTime: 1000 * 60 * 5, // 5분
+    staleTime: 0,
+    refetchOnWindowFocus: true,
   });
 }
