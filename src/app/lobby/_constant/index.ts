@@ -40,7 +40,7 @@ export const LOBBY_PORTALS: PortalInfo[] = [
 
 export const LOBBY_NPCS: NpcInfo[] = [
   {
-    x: 302,
+    x: 352,
     y: 450,
     width: 25,
     height: 45,
@@ -265,6 +265,44 @@ export const LOBBY_COLLISION_ZONES: CollisionZone[] = [
     y: 532,
     width: 10,
     height: 50,
+  },
+
+  /////// NPC /////////
+  {
+    x: 352,
+    y: 450,
+    width: 25,
+    height: 45,
+  },
+  {
+    x: 750,
+    y: 150,
+    width: 25,
+    height: 45,
+  },
+  {
+    x: 560,
+    y: 0,
+    width: 80,
+    height: 40,
+  },
+  {
+    x: 420,
+    y: 170,
+    width: 52,
+    height: 52,
+  },
+  // {
+  //   x: 135,
+  //   y: 350,
+  //   width: 120,
+  //   height: 120,
+  // },
+  {
+    x: 90,
+    y: 50,
+    width: 150,
+    height: 100,
   },
 ];
 
