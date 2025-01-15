@@ -17,11 +17,10 @@ interface ExtendedUser extends UserType {
 }
 
 export const FriendInformation = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isAnimating, setIsAnimating] = useState(false);
+  const [isOpen, setIsOpen] = useState(false); // 열림/닫힘 여부
+  const [isAnimating, setIsAnimating] = useState(false); // 애니메이션 진행 여부
 
   const { socket, isConnected } = useSocketStore();
-
   const [onlineUsersId, setOnlineUsersId] = useState<string[]>([]);
   const { data: users } = useUserListQuery();
 
@@ -40,6 +39,7 @@ export const FriendInformation = () => {
     [users, onlineUsersId],
   );
 
+  // 소켓 이벤트 처리
   useEffect(() => {
     if (!socket || !isConnected) return;
 
@@ -61,19 +61,27 @@ export const FriendInformation = () => {
     };
   }, [socket, isConnected]);
 
+  useEffect(() => {
+    if (isOpen) {
+      const rafId = requestAnimationFrame(() => setIsAnimating(true));
+      return () => cancelAnimationFrame(rafId);
+    } else {
+      // 닫을 때도 200ms (CSS 트랜지션 시간) 뒤에 unmount
+      const timer = setTimeout(() => setIsAnimating(false), 200);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
+
   /**
-   * 1) 모달 열기/닫기 애니메이션 처리
+   * 배경 스크롤 방지 처리
    */
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
-      setIsAnimating(true);
     } else {
-      setIsAnimating(false);
-      const timer = setTimeout(() => {
-        document.body.style.overflow = "unset";
-      }, 200);
-      return () => clearTimeout(timer);
+      // isOpen이 false라도, 실제 unmount는 200ms 뒤이므로
+      // 여기서 바로 overflow를 unset 해도 괜찮습니다.
+      document.body.style.overflow = "unset";
     }
     return () => {
       document.body.style.overflow = "unset";
@@ -81,7 +89,7 @@ export const FriendInformation = () => {
   }, [isOpen]);
 
   /**
-   * 2) [ESC] 키로 모달 닫기
+   * [ESC] 키 닫기
    */
   useEffect(() => {
     const handleEscKey = (e: KeyboardEvent) => {
@@ -95,37 +103,52 @@ export const FriendInformation = () => {
     };
   }, [isOpen]);
 
-  const toggleWidget = () => setIsOpen(!isOpen);
+  /**
+   * 'z' 또는 'Z' 키로 열기/닫기
+   */
+  useEffect(() => {
+    const handleZKey = (e: KeyboardEvent) => {
+      if (e.key === "z" || e.key === "Z") {
+        toggleWidget();
+      }
+    };
+    window.addEventListener("keydown", handleZKey);
+    return () => {
+      window.removeEventListener("keydown", handleZKey);
+    };
+  }, []);
+
+  // 열고 닫는 함수
+  const toggleWidget = () => setIsOpen((prev) => !prev);
 
   return (
     <>
+      {/* isAnimating=true(열리는 중/열려있음), isOpen=true(실제로 열린 상태) */}
+      {/* 둘 중 하나라도 true이면 모달을 렌더링한다 */}
       {(isOpen || isAnimating) && (
         <div className="fixed inset-0 z-[60] flex items-start justify-end p-4">
           <div
+            // 아래처럼 트랜지션 클래스 적용
             className={`
-              w-full transition-all duration-200
-              ease-out md:w-96
-              ${
-                isAnimating
-                  ? "scale-100 opacity-100"
-                  : "pointer-events-none scale-95 opacity-0"
-              }
+              w-full transition-all
+              duration-200 ease-out md:w-96
+              ${isAnimating ? "scale-100 opacity-100" : "pointer-events-none scale-95 opacity-0"}
             `}
           >
             <Card
               className="
-              bg-color-none 
-              flex h-[calc(100vh-2rem)]
-              flex-col
-              rounded-xl
-              border-2 
-              border-[rgba(111,99,98,1)]
-              bg-gradient-to-b
-              from-black/60
-              to-black/95
-              [backdrop-filter:blur(2px)]
-              [font-family:var(--font-noto-serif-kr),serif]
-            "
+                bg-color-none 
+                flex h-[calc(100vh-2rem)]
+                flex-col
+                rounded-xl
+                border-2 
+                border-[rgba(111,99,98,1)]
+                bg-gradient-to-b
+                from-black/60
+                to-black/95
+                [backdrop-filter:blur(2px)]
+                [font-family:var(--font-noto-serif-kr),serif]
+              "
             >
               <CardHeader className="flex flex-row items-center justify-between">
                 <h3
@@ -133,7 +156,7 @@ export const FriendInformation = () => {
                     text-3xl
                     font-bold
                     text-fuchsia-600
-                "
+                  "
                 >
                   친구 목록
                 </h3>
@@ -160,6 +183,8 @@ export const FriendInformation = () => {
           </div>
         </div>
       )}
+
+      {/* 모달이 닫혀있으면 '친구 목록' 버튼 표시 */}
       {!isOpen && (
         <Button
           onClick={toggleWidget}
