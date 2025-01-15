@@ -36,7 +36,8 @@ const languageExtensions = {
 const customFontSizeTheme = EditorView.theme(
   {
     ".cm-content": {
-      fontSize: "17px",
+      fontSize: "23px",
+      fontWeight: "bold",
     },
     ".cm-scroller::-webkit-scrollbar": {
       width: "3px",
@@ -48,7 +49,7 @@ const customFontSizeTheme = EditorView.theme(
       background: "none",
     },
     ".cm-scroller::-webkit-scrollbar-thumb": {
-      background: "red",
+      background: "yellow",
       borderRadius: "5px",
     },
   },
@@ -270,8 +271,11 @@ export default function QuestSection() {
 
       <div className={styles.questHeader}>
         <h1 className={styles.title}>오늘의 문제</h1>
-        <h1 className={styles.timer}>{isStart ? formattedTime : "00:00:00"}</h1>
-        <Button className={styles.startButton} onClick={handleStartOrStop}>
+        <h1 className="text-[2rem]">{isStart ? formattedTime : "00:00:00"}</h1>
+        <Button
+          className="ml-4 border-2 border-[rgba(111,99,98,1)] p-6 text-[1.5rem]"
+          onClick={handleStartOrStop}
+        >
           {buttonText}
         </Button>
       </div>
@@ -313,7 +317,11 @@ export default function QuestSection() {
             onChange={onChangeCode}
           />
 
-          <Button disabled={!isStart} onClick={handleSubmit}>
+          <Button
+            disabled={!isStart}
+            onClick={handleSubmit}
+            className="min-h-10 border-2 border-[rgba(111,99,98,1)] p-6 text-[1.7rem] "
+          >
             제출하기
           </Button>
 
@@ -323,7 +331,9 @@ export default function QuestSection() {
               {isLoading ? (
                 <div className={styles.spinnerContainer}>
                   <div className={styles.spinner}></div>
-                  <p>답안을 검토 중입니다... 잠시만 기다려주세요.</p>
+                  <p className="text-[1.7rem]">
+                    답안을 검토 중입니다... 잠시만 기다려주세요.
+                  </p>
                 </div>
               ) : (
                 <>
