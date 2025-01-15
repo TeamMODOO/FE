@@ -631,8 +631,11 @@ const MyRoomCanvas: React.FC = () => {
       setPdfModalOpen(true);
       return;
     } else {
-      // 여기 수정
-      window.open(item.data?.link, "_blank", "noopener,noreferrer");
+      const fileName = item.data?.fileName ?? "";
+      const hasProtocol = /^https?:\/\//i.test(fileName);
+      const url = hasProtocol ? fileName : `https://${fileName}`;
+
+      window.open(url, "_blank", "noopener,noreferrer");
     }
   };
 
