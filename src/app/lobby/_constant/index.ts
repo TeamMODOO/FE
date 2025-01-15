@@ -101,7 +101,7 @@ export const LOBBY_COLLISION_ZONES: CollisionZone[] = [
     x: 0,
     y: 0,
     width: 1200,
-    height: 20,
+    height: 5,
   },
   {
     x: 0,
@@ -141,13 +141,13 @@ export const LOBBY_COLLISION_ZONES: CollisionZone[] = [
     x: 0,
     y: 208,
     width: 320,
-    height: 15,
+    height: 5,
   },
   {
     x: 315,
     y: 0,
     width: 5,
-    height: 80,
+    height: 65,
   },
   {
     x: 315,
@@ -158,19 +158,19 @@ export const LOBBY_COLLISION_ZONES: CollisionZone[] = [
 
   // 마이룸
   {
-    x: 885,
+    x: 880,
     y: 208,
     width: 315,
-    height: 15,
+    height: 5,
   },
   {
-    x: 885,
+    x: 880,
     y: 0,
     width: 5,
-    height: 80,
+    height: 65,
   },
   {
-    x: 885,
+    x: 880,
     y: 172,
     width: 5,
     height: 40,
@@ -187,13 +187,13 @@ export const LOBBY_COLLISION_ZONES: CollisionZone[] = [
     x: 185,
     y: 370,
     width: 10,
-    height: 50,
+    height: 24,
   },
   {
     x: 430,
     y: 370,
     width: 10,
-    height: 50,
+    height: 24,
   },
   // 퀘스트 - 아래쪽
   {
@@ -204,13 +204,13 @@ export const LOBBY_COLLISION_ZONES: CollisionZone[] = [
   },
   {
     x: 185,
-    y: 530,
+    y: 532,
     width: 10,
     height: 50,
   },
   {
     x: 430,
-    y: 530,
+    y: 532,
     width: 10,
     height: 50,
   },
@@ -219,38 +219,50 @@ export const LOBBY_COLLISION_ZONES: CollisionZone[] = [
   {
     x: 765,
     y: 370,
-    width: 250,
-    height: 15,
+    width: 115,
+    height: 18,
+  },
+  {
+    x: 885,
+    y: 370,
+    width: 65,
+    height: 12,
+  },
+  {
+    x: 955,
+    y: 370,
+    width: 60,
+    height: 18,
   },
   {
     x: 1005,
     y: 370,
     width: 10,
-    height: 50,
+    height: 24,
   },
   {
     x: 765,
     y: 370,
     width: 10,
-    height: 50,
+    height: 24,
   },
 
   // 미팅룸 - 아래쪽
   {
     x: 765,
-    y: 545,
+    y: 570,
     width: 250,
     height: 15,
   },
   {
     x: 1005,
-    y: 505,
+    y: 532,
     width: 10,
     height: 50,
   },
   {
     x: 765,
-    y: 505,
+    y: 532,
     width: 10,
     height: 50,
   },
