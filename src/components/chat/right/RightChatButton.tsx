@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+
 import { MessageCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -8,6 +10,20 @@ interface ChatButtonProps {
 }
 
 export function ChatButton({ onClick, notification }: ChatButtonProps) {
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // key가 'c'일 때 실행
+      if (event.key === "c") {
+        onClick();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [onClick]);
+
   return (
     <Button
       onClick={onClick}
