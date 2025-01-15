@@ -96,7 +96,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen, isJoin }) => {
 
   useEffect(() => {
     const bg = new Image();
-    bg.src = "/background/lobby_image.webp";
+    bg.src = "/background/lobby_image.png";
     bg.onload = () => setBackgroundImage(bg);
   }, []);
 
