@@ -39,6 +39,7 @@ export const EnterMeetingRoom: React.FC<EnterMeetingRoomProps> = ({
   const { clientId } = useClientIdStore();
 
   const [roomName, setRoomName] = useState("");
+  const [isError, setIsError] = useState(false);
   // 데이터 요청
   const { data, isLoading, refetch } = useMeetingRoom();
   const { mutate: createNotice } = useCreateMeetingRoom();
@@ -47,6 +48,10 @@ export const EnterMeetingRoom: React.FC<EnterMeetingRoomProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     if (!clientId) return;
+    if (!roomName.trim()) {
+      setIsError(true);
+      return;
+    }
     e.preventDefault();
 
     const roomId = uuid();
@@ -236,8 +241,9 @@ export const EnterMeetingRoom: React.FC<EnterMeetingRoomProps> = ({
               >
                 <div
                   className="
-                        flex
-                        flex-col 
+                        relative
+                        flex 
+                        flex-col
                         justify-center
                         gap-2
                         rounded-xl
@@ -263,9 +269,17 @@ export const EnterMeetingRoom: React.FC<EnterMeetingRoomProps> = ({
                     text-black
                     placeholder:text-xl
                     "
-                    onChange={(e) => setRoomName(e.target.value)}
+                    onChange={(e) => {
+                      setIsError(false);
+                      setRoomName(e.target.value);
+                    }}
                     placeholder="방 제목을 입력하세요"
                   />
+                  {isError && (
+                    <div className="text-sm text-red-500">
+                      방 제목을 입력해주세요
+                    </div>
+                  )}
                 </div>
                 <Button
                   type="submit"
