@@ -111,7 +111,7 @@ export function useGuestBookPost(hostGoogleId: string) {
 
     // **delete 요청 보내기**
     const response: AxiosResponse<GuestBookPostResponse> = await axios.delete(
-      `${baseUrl}/posts/${hostGoogleId}/${guestbookId}`,
+      `${baseUrl}/posts/guestbooks/${hostGoogleId}/${guestbookId}`,
       {
         withCredentials: true, // 쿠키 설정
         headers: {
