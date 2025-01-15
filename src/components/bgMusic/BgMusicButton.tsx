@@ -1,5 +1,6 @@
-// src/components/bgMusic/BgMusicButton.tsx
 "use client";
+
+import { useEffect } from "react";
 
 import { Volume2, VolumeOff } from "lucide-react";
 
@@ -20,6 +21,20 @@ export function BgMusicButton({ position = "right" }: BgMusicButtonProps) {
   const handleToggleMusic = () => {
     setIsPlaying(!isPlaying);
   };
+
+  // 'c' 키 입력 시 handleToggleMusic 실행
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "c" || event.key === "C") {
+        handleToggleMusic();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isPlaying]); // isPlaying이 바뀔 때마다 이벤트 콜백도 최신 값 유지
 
   return (
     <Button
