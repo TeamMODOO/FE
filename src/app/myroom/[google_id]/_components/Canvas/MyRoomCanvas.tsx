@@ -694,7 +694,8 @@ const MyRoomCanvas: React.FC = () => {
       openAlertModal("googleId가 없음, 수정 불가");
       return;
     }
-    const prevLink = portfolio.map((item) => item.data?.link ?? "");
+
+    const prevLink = portfolio.map((item) => item.data?.fileName ?? "");
     const curLink = [];
     if (prevLink[0] === "") {
       curLink.push(portfolioLink);
@@ -705,6 +706,7 @@ const MyRoomCanvas: React.FC = () => {
     } else {
       curLink.push(prevLink[1], prevLink[2], portfolioLink);
     }
+
     patchProfile(
       {
         googleId,
