@@ -12,8 +12,8 @@ interface ChatButtonProps {
 export function ChatButton({ onClick, notification }: ChatButtonProps) {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      // key가 'c'일 때 실행
-      if (event.key === "c") {
+      // key가 'x'일 때 실행
+      if (event.key === "x" || event.key === "X") {
         onClick();
       }
     };
