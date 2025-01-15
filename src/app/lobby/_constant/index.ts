@@ -12,7 +12,7 @@ export const LOBBY_MAP_CONSTANTS = {
 
   IMG_WIDTH: 60,
   IMG_HEIGHT: 120,
-  SPEED: 300,
+  SPEED: 2,
 
   CHARACTER_SCALE: 0.4,
 };
