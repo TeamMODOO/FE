@@ -9,7 +9,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
   return (
     <div className="mb-2">
       <div
-        className="rounded-lg bg-secondary-none border-2 border-[rgba(111,99,98,1)]
+        className="bg-secondary-none rounded-lg border-2 border-[rgba(111,99,98,1)]
         bg-[rgba(50,50,50,0.7)]
         p-3"
       >
