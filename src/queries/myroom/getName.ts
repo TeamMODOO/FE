@@ -10,7 +10,9 @@ interface HostResponse {
 export const getHostName = async (clientId: string): Promise<string> => {
   // 환경 변수를 사용하는 URL을 구성합니다
   const baseUrl = process.env.NEXT_PUBLIC_API_SERVER_PATH;
-  const response = await axios.get<HostResponse>(`${baseUrl}/${clientId}`);
+  const response = await axios.get<HostResponse>(
+    `${baseUrl}/users/${clientId}`,
+  );
 
   return response.data.name;
 };
