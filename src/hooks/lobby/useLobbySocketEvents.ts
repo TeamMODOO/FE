@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { Direction } from "@/model/LobbyUser";
+import { getHostName } from "@/queries/myroom/getName";
 import useClientIdStore from "@/store/useClientIdStore";
 import useSocketStore from "@/store/useSocketStore";
 import { LobbyUser } from "@/store/useUsersRef";
@@ -12,6 +13,7 @@ interface MovementInfoToServer {
   position_y: number;
   direction: number; // 0=Down,1=Up,2=Right,3=Left
   client_id: string;
+  user_name: string;
 }
 
 export interface MovementInfoFromServer {
@@ -73,8 +75,8 @@ export default function useLobbySocketEvents({
   onRemoveUser,
 }: LobbySocketEventsProps) {
   const { clientId } = useClientIdStore();
-
   const { socket, isConnected } = useSocketStore();
+  const [userName, setUserName] = useState("");
 
   // (A) 내 이동 emit
   const emitMovement = useCallback(
@@ -85,6 +87,7 @@ export default function useLobbySocketEvents({
         position_y: y,
         direction,
         client_id: clientId!,
+        user_name: userName,
       } satisfies MovementInfoToServer);
     },
     [socket, isConnected],
@@ -251,6 +254,15 @@ export default function useLobbySocketEvents({
       socket.off("SC_USER_POSITION_INFO", onUserPositionInfo);
     };
   }, [socket, isConnected, onAddUser, onUpdateUserPosition]);
+
+  useEffect(() => {
+    async function fetchData() {
+      const name = await getHostName(clientId ?? "");
+      setUserName(name);
+    }
+
+    fetchData();
+  }, [clientId]);
 
   return { emitMovement };
 }
