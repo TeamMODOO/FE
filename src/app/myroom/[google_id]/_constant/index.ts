@@ -106,9 +106,9 @@ export const defaultResume: Funiture[] = [
   {
     id: "resume-1",
     x: 820,
-    y: 70,
-    width: 470,
-    height: 140,
+    y: 50,
+    width: 200,
+    height: 200,
     funitureType: "none",
     funiturename: "이력서(PDF)",
   },
@@ -222,10 +222,10 @@ export const defaultTechnologyStack: Funiture[] = [
 export const defaultBoard: Funiture[] = [
   {
     id: "board1",
-    x: 1500,
-    y: 70,
-    width: 300,
-    height: 100,
+    x: 1400,
+    y: 20,
+    width: 500,
+    height: 300,
     funitureType: "board",
     funiturename: "방명록",
   },
@@ -258,6 +258,6 @@ export const interiorImages: Record<string, string> = {
     "/interior/technologyStack/technologyStack7.gif",
   "technologyStack/technologyStack8":
     "/interior/technologyStack/technologyStack8.gif",
-  board: "/furniture/board.png",
+  board: "/interior/profile.png",
   portal: "/furniture/portal.png",
 };
