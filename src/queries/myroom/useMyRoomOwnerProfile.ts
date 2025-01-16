@@ -34,12 +34,8 @@ export function useMyRoomOwnerProfile(googleId?: string) {
     // ------------------ meta.callbacks로 onSuccess / onError 전달 ------------------
     meta: {
       callbacks: {
-        onSuccess: (data: OwnerProfile) => {
-          // console.log(">> [useMyRoomOwnerProfile] onSuccess:", data);
-        },
-        onError: (error: Error) => {
-          // console.log(">> [useMyRoomOwnerProfile] onError:", error);
-        },
+        onSuccess: (data: OwnerProfile) => {},
+        onError: (error: Error) => {},
       },
     },
   });

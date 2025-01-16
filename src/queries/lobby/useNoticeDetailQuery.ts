@@ -13,7 +13,6 @@ export function useNoticeDetailQuery(noticeId: number | null) {
       const { data } = await axios.get<NoticeData>(
         `${process.env.NEXT_PUBLIC_API_SERVER_PATH}/posts/notices/${noticeId}`,
       );
-      //   console.log(`GET /posts/notices/${noticeId} response:`, data);
       return data;
     },
     enabled: noticeId !== null, // noticeId가 있어야만 fetch 실행

@@ -26,6 +26,7 @@ import { NoticeItem } from "@/model/NoticeBoard";
 import { Direction } from "@/model/User";
 import useClientIdStore from "@/store/useClientIdStore";
 import useSocketStore from "@/store/useSocketStore";
+import { LobbyUser } from "@/store/useUsersRef";
 
 import DailyProblemContent from "../DailyProblem/DailyProblemContent";
 import { EnterMeetingRoom } from "../EnterMeetingRoom/EnterMeetingRoom";
@@ -34,7 +35,6 @@ import { NpcModal } from "../Npc/NpcModal";
 import QnaContent from "../Qna/QnaContent";
 import TutorialContent from "../Tutorial/TutorialContent";
 import Style from "./Canvas.style";
-import { LobbyUser } from "@/store/useUsersRef";
 interface LobbyCanvasProps {
   chatOpen: boolean;
   isJoin: boolean;

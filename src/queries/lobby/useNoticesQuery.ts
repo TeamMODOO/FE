@@ -13,7 +13,6 @@ export function useNoticesListQuery() {
       const { data } = await axios.get<NoticeData[]>(
         `${process.env.NEXT_PUBLIC_API_SERVER_PATH}/posts/notices`,
       );
-      //   console.log("GET /posts/notices response:", data);
       return data;
     },
   });
