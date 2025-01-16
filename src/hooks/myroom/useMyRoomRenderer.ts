@@ -3,6 +3,7 @@
 import { RefObject, useEffect, useRef } from "react";
 
 import { techStackDataUrls } from "@/app/myroom/[google_id]/_constant";
+import { MYROOM_COLLISION_ZONES } from "@/app/myroom/[google_id]/_constant";
 import {
   FRAME_HEIGHT,
   FRAME_WIDTH,
@@ -10,7 +11,6 @@ import {
 } from "@/hooks/performance/useLoadSprites";
 import { Funiture } from "@/model/Funiture";
 import { User } from "@/model/User";
-import { MYROOM_COLLISION_ZONES } from "@/app/myroom/[google_id]/_constant";
 
 const MAP_WIDTH = 2000;
 const MAP_HEIGHT = 900;
