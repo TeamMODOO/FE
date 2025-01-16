@@ -240,27 +240,19 @@ export const MYROOM_COLLISION_ZONES: CollisionZone[] = [
 ];
 
 export const interiorImages: Record<string, string> = {
-  none: "/interior/none.gif",
-  "resume/resume1": "/interior/resume/resume1.png",
+  none: "/interior/none.webp",
+  "resume/resume1": "/interior/resume/resume.png",
   "portfolio/portfolio1": "/interior/portfolio/portfolio1.png",
   "portfolio/portfolio2": "/interior/portfolio/portfolio2.png",
   "portfolio/portfolio3": "/interior/portfolio/portfolio3.png",
-  "technologyStack/technologyStack1":
-    "/interior/technologyStack/technologyStack1.gif",
-  "technologyStack/technologyStack2":
-    "/interior/technologyStack/technologyStack2.gif",
-  "technologyStack/technologyStack3":
-    "/interior/technologyStack/technologyStack3.gif",
-  "technologyStack/technologyStack4":
-    "/interior/technologyStack/technologyStack4.gif",
-  "technologyStack/technologyStack5":
-    "/interior/technologyStack/technologyStack5.gif",
-  "technologyStack/technologyStack6":
-    "/interior/technologyStack/technologyStack6.gif",
-  "technologyStack/technologyStack7":
-    "/interior/technologyStack/technologyStack7.gif",
-  "technologyStack/technologyStack8":
-    "/interior/technologyStack/technologyStack8.gif",
-  board: "/interior/profile.png",
+  "technologyStack/technologyStack1": "/interior/none.webp",
+  "technologyStack/technologyStack2": "/interior/none.webp",
+  "technologyStack/technologyStack3": "/interior/none.webp",
+  "technologyStack/technologyStack4": "/interior/none.webp",
+  "technologyStack/technologyStack5": "/interior/none.webp",
+  "technologyStack/technologyStack6": "/interior/none.webp",
+  "technologyStack/technologyStack7": "/interior/none.webp",
+  "technologyStack/technologyStack8": "/interior/none.webp",
+  board: "/furniture/profile.png",
   portal: "/furniture/portal.png",
 };
