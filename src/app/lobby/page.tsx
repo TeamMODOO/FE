@@ -18,16 +18,10 @@ const ROOM_ID = "floor7";
 export default function Page() {
   const [chatOpen, setChatOpen] = useState(false);
   const { clientId } = useClientIdStore();
-  const { socket, isConnected, currentRoom, setCurrentRoom } = useSocketStore();
+  const { socket, isConnected } = useSocketStore();
   const [isJoin, setIsJoin] = useState<boolean>(false);
-  const {
-    usersRef,
-    getUser,
-    addUser,
-    removeUser,
-    updateUserPosition,
-    isChanged,
-  } = useUsersRef();
+  const { usersRef, getUser, addUser, removeUser, updateUserPosition } =
+    useUsersRef();
 
   useEffect(() => {
     if (!clientId || !socket || !isConnected) return;
@@ -44,38 +38,16 @@ export default function Page() {
       room_id: ROOM_ID,
     });
     setIsJoin(true);
-    setCurrentRoom(ROOM_ID);
-  }, [socket, isConnected]);
+    return () => {
+      if (!clientId || !socket || !isConnected) return;
 
-  useEffect(() => {
-    if (!clientId || !socket || !isConnected) return;
-    const me = getUser(clientId);
-
-    if (!me) return;
-
-    // 이전 방에서 나가기
-    if (currentRoom) {
       socket.emit("CS_LEAVE_ROOM", {
         client_id: clientId,
-        room_id: currentRoom,
-        position_x: me.x,
-        position_y: me.y,
+        room_id: ROOM_ID,
       });
-    }
-
-    return () => {
-      if (socket && isConnected) {
-        socket.emit("CS_LEAVE_ROOM", {
-          client_id: clientId,
-          room_id: currentRoom,
-          position_x: me.x,
-          position_y: me.y,
-        });
-        setCurrentRoom(null);
-        setIsJoin(false);
-      }
+      setIsJoin(false);
     };
-  }, [socket, isConnected, isChanged]);
+  }, [socket, isConnected]);
 
   return (
     <>
@@ -89,9 +61,9 @@ export default function Page() {
         updateUserPosition={updateUserPosition}
       />
       <ChatWidget isOpen={chatOpen} setIsOpen={setChatOpen} />
-      <FriendInformation />
+      <FriendInformation chatOpen={chatOpen} />
       <BgMusicGlobal src="/sounds/lobbyBGM.wav" />
-      <BgMusicButton />
+      <BgMusicButton chatOpen={chatOpen} />
     </>
   );
 }

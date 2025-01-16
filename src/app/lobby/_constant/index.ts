@@ -40,8 +40,8 @@ export const LOBBY_PORTALS: PortalInfo[] = [
 
 export const LOBBY_NPCS: NpcInfo[] = [
   {
-    x: 302,
-    y: 450,
+    x: 352,
+    y: 390,
     width: 25,
     height: 45,
     image: "/character/npc1.png",
@@ -101,7 +101,7 @@ export const LOBBY_COLLISION_ZONES: CollisionZone[] = [
     x: 0,
     y: 0,
     width: 1200,
-    height: 20,
+    height: 5,
   },
   {
     x: 0,
@@ -141,13 +141,13 @@ export const LOBBY_COLLISION_ZONES: CollisionZone[] = [
     x: 0,
     y: 208,
     width: 320,
-    height: 15,
+    height: 5,
   },
   {
     x: 315,
     y: 0,
     width: 5,
-    height: 80,
+    height: 65,
   },
   {
     x: 315,
@@ -158,19 +158,19 @@ export const LOBBY_COLLISION_ZONES: CollisionZone[] = [
 
   // 마이룸
   {
-    x: 885,
+    x: 880,
     y: 208,
     width: 315,
-    height: 15,
+    height: 5,
   },
   {
-    x: 885,
+    x: 880,
     y: 0,
     width: 5,
-    height: 80,
+    height: 65,
   },
   {
-    x: 885,
+    x: 880,
     y: 172,
     width: 5,
     height: 40,
@@ -187,13 +187,13 @@ export const LOBBY_COLLISION_ZONES: CollisionZone[] = [
     x: 185,
     y: 370,
     width: 10,
-    height: 50,
+    height: 24,
   },
   {
     x: 430,
     y: 370,
     width: 10,
-    height: 50,
+    height: 24,
   },
   // 퀘스트 - 아래쪽
   {
@@ -204,13 +204,13 @@ export const LOBBY_COLLISION_ZONES: CollisionZone[] = [
   },
   {
     x: 185,
-    y: 530,
+    y: 532,
     width: 10,
     height: 50,
   },
   {
     x: 430,
-    y: 530,
+    y: 532,
     width: 10,
     height: 50,
   },
@@ -219,39 +219,77 @@ export const LOBBY_COLLISION_ZONES: CollisionZone[] = [
   {
     x: 765,
     y: 370,
-    width: 250,
-    height: 15,
+    width: 115,
+    height: 18,
+  },
+  {
+    x: 885,
+    y: 370,
+    width: 65,
+    height: 12,
+  },
+  {
+    x: 955,
+    y: 370,
+    width: 60,
+    height: 18,
   },
   {
     x: 1005,
     y: 370,
     width: 10,
-    height: 50,
+    height: 24,
   },
   {
     x: 765,
     y: 370,
     width: 10,
-    height: 50,
+    height: 24,
   },
 
   // 미팅룸 - 아래쪽
   {
     x: 765,
-    y: 545,
+    y: 570,
     width: 250,
     height: 15,
   },
   {
     x: 1005,
-    y: 505,
+    y: 532,
     width: 10,
     height: 50,
   },
   {
     x: 765,
-    y: 505,
+    y: 532,
     width: 10,
+    height: 50,
+  },
+
+  /////// NPC /////////
+  {
+    x: 352,
+    y: 400,
+    width: 25,
+    height: 25,
+  },
+  {
+    x: 750,
+    y: 160,
+    width: 25,
+    height: 25,
+  },
+  {
+    x: 434,
+    y: 180,
+    width: 24,
+    height: 32,
+  },
+  {
+    x: 100,
+    y: 50,
+    width: 130,
     height: 50,
   },
 ];
@@ -310,6 +348,9 @@ export const TUTORIAL_LIST: TU[] = [
     question: "기본적인 조작법을 알려주세요.",
     answers: [
       "방향키 또는 W/A/S/D 키로 캐릭터를 이동할 수 있습니다.",
+      "메인 페이지에서 Z 키를 눌러 친구 목록을 열 수 있습니다.",
+      "메인 페이지에서 X 키를 눌러 채팅을 열 수 있습니다.",
+      "정글 타워 안에서 C 키를 눌러 배경 음악을 끄고 켤 수 있습니다.",
       "NPC, 또는 포탈 근처에서 Space 키로 상호작용 할 수 있어요.",
       "ESC 키로 대화창이나 메뉴를 닫을 수도 있지요.",
       "화면 우측 상단의 토글 버튼들을 통해 친구목록을 확인할 수도, 채팅을 할 수도, 또 배경음악을 켜고 끌 수도 있어요.",

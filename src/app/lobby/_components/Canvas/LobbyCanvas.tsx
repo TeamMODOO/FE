@@ -26,6 +26,7 @@ import { NoticeItem } from "@/model/NoticeBoard";
 import { Direction } from "@/model/User";
 import useClientIdStore from "@/store/useClientIdStore";
 import useSocketStore from "@/store/useSocketStore";
+import { LobbyUser } from "@/store/useUsersRef";
 
 import DailyProblemContent from "../DailyProblem/DailyProblemContent";
 import { EnterMeetingRoom } from "../EnterMeetingRoom/EnterMeetingRoom";
@@ -34,7 +35,6 @@ import { NpcModal } from "../Npc/NpcModal";
 import QnaContent from "../Qna/QnaContent";
 import TutorialContent from "../Tutorial/TutorialContent";
 import Style from "./Canvas.style";
-import { LobbyUser } from "@/store/useUsersRef";
 interface LobbyCanvasProps {
   chatOpen: boolean;
   isJoin: boolean;
@@ -112,7 +112,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({
 
   useEffect(() => {
     const bg = new Image();
-    bg.src = "/background/lobby_image.webp";
+    bg.src = "/background/lobby_image.png";
     bg.onload = () => setBackgroundImage(bg);
   }, []);
 
@@ -307,10 +307,10 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({
     // NPC 충돌
     for (let i = 0; i < LOBBY_NPCS.length; i++) {
       const npc = LOBBY_NPCS[i];
-      const nl = npc.x;
-      const nr = npc.x + npc.width;
-      const nt = npc.y;
-      const nb = npc.y + npc.height;
+      const nl = npc.x - 20;
+      const nr = npc.x + npc.width + 20;
+      const nt = npc.y - 20;
+      const nb = npc.y + npc.height + 20;
 
       const overlap = cl < nr && cr > nl && ct < nb && cb > nt;
       if (overlap) {
