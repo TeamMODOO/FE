@@ -20,14 +20,8 @@ export default function Page() {
   const { clientId } = useClientIdStore();
   const { socket, isConnected } = useSocketStore();
   const [isJoin, setIsJoin] = useState<boolean>(false);
-  const {
-    usersRef,
-    getUser,
-    addUser,
-    removeUser,
-    updateUserPosition,
-    isChanged,
-  } = useUsersRef();
+  const { usersRef, getUser, addUser, removeUser, updateUserPosition } =
+    useUsersRef();
 
   useEffect(() => {
     if (!clientId || !socket || !isConnected) return;
@@ -44,22 +38,16 @@ export default function Page() {
       room_id: ROOM_ID,
     });
     setIsJoin(true);
-  }, [socket, isConnected]);
-
-  useEffect(() => {
     return () => {
       if (!clientId || !socket || !isConnected) return;
-      const me = getUser(clientId);
 
       socket.emit("CS_LEAVE_ROOM", {
         client_id: clientId,
         room_id: ROOM_ID,
-        position_x: me?.x ?? 350,
-        position_y: me?.y ?? 170,
       });
       setIsJoin(false);
     };
-  }, []);
+  }, [socket, isConnected]);
 
   return (
     <>

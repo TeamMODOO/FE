@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef } from "react";
 
 import { Direction } from "@/model/User";
 
@@ -25,7 +25,6 @@ export interface LobbyUser {
 
 export default function useUsersRef() {
   const usersRef = useRef<LobbyUser[]>([]);
-  const [isChanged, setIsChanged] = useState(0);
 
   /** 특정 유저 정보 가져오기 */
   function getUser(id: string) {
@@ -60,7 +59,6 @@ export default function useUsersRef() {
       lerpDuration: 0,
     };
     usersRef.current = [...usersRef.current, newUser];
-    setIsChanged((prev) => (prev + 1) % 1000);
   }
 
   /** 유저 제거 */
@@ -103,7 +101,6 @@ export default function useUsersRef() {
       }
     }
     usersRef.current = draft;
-    setIsChanged((prev) => (prev + 1) % 1000);
   }
 
   return {
@@ -112,6 +109,5 @@ export default function useUsersRef() {
     addUser,
     removeUser,
     updateUserPosition,
-    isChanged,
   };
 }
