@@ -177,6 +177,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({
 
   function playPortalEventSound() {
     if (!portalEventAudioRef.current) return;
+    portalEventAudioRef.current.volume = 0.2;
     portalEventAudioRef.current.currentTime = 0;
     portalEventAudioRef.current.play().catch(() => {});
   }
