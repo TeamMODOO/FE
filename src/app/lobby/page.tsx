@@ -18,7 +18,7 @@ const ROOM_ID = "floor7";
 export default function Page() {
   const [chatOpen, setChatOpen] = useState(false);
   const { clientId } = useClientIdStore();
-  const { socket, isConnected, currentRoom, setCurrentRoom } = useSocketStore();
+  const { socket, isConnected } = useSocketStore();
   const [isJoin, setIsJoin] = useState<boolean>(false);
   const {
     usersRef,
@@ -44,7 +44,6 @@ export default function Page() {
       room_id: ROOM_ID,
     });
     setIsJoin(true);
-    setCurrentRoom(ROOM_ID);
   }, [socket, isConnected]);
 
   useEffect(() => {
@@ -53,25 +52,14 @@ export default function Page() {
 
     if (!me) return;
 
-    // 이전 방에서 나가기
-    if (currentRoom) {
-      socket.emit("CS_LEAVE_ROOM", {
-        client_id: clientId,
-        room_id: currentRoom,
-        position_x: me.x,
-        position_y: me.y,
-      });
-    }
-
     return () => {
       if (socket && isConnected) {
         socket.emit("CS_LEAVE_ROOM", {
           client_id: clientId,
-          room_id: currentRoom,
+          room_id: ROOM_ID,
           position_x: me.x,
           position_y: me.y,
         });
-        setCurrentRoom(null);
         setIsJoin(false);
       }
     };
