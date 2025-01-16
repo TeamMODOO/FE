@@ -36,9 +36,9 @@ const useAudioSocketConnect = ({ roomId }: UseAudioSocketConnectType) => {
       setAudioSocketIsConnected(true);
     });
 
-    newAudioSocket.on("connect_error", (error) => {});
+    newAudioSocket.on("connect_error", () => {});
 
-    newAudioSocket?.on("disconnect", (reason) => {
+    newAudioSocket?.on("disconnect", () => {
       setAudioSocketIsConnected(false);
     });
 
