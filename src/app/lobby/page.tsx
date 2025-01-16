@@ -7,6 +7,7 @@ import { BgMusicGlobal } from "@/components/bgMusic/BgMusicGlobal";
 import { ChatWidget } from "@/components/chat/right/RightChatWidget";
 import useClientIdStore from "@/store/useClientIdStore";
 import useSocketStore from "@/store/useSocketStore";
+import useUsersRef from "@/store/useUsersRef";
 
 import LobbyCanvas from "./_components/Canvas/LobbyCanvas";
 import FriendInformation from "./_components/Widget/FriendInformation";
@@ -19,14 +20,20 @@ export default function Page() {
   const { clientId } = useClientIdStore();
   const { socket, isConnected, currentRoom, setCurrentRoom } = useSocketStore();
   const [isJoin, setIsJoin] = useState<boolean>(false);
+  const { usersRef } = useUsersRef();
   useEffect(() => {
     if (!clientId || !socket || !isConnected) return;
+
+    const me = usersRef.current.find((u) => u.id === clientId);
+    if (!me) return; // 아직 서버에서 내 정보 안 받았다면 동작X
 
     // 이전 방에서 나가기
     if (currentRoom) {
       socket.emit("CS_LEAVE_ROOM", {
         client_id: clientId,
         room_id: currentRoom,
+        position_x: me.x,
+        position_y: me.y,
       });
     }
 
@@ -36,7 +43,6 @@ export default function Page() {
       room_type: ROOM_TYPE,
       room_id: ROOM_ID,
     });
-    // console.log(clientId, ROOM_TYPE, ROOM_ID);
 
     socket.emit("CS_USER_POSITION", {
       client_id: clientId,
@@ -56,7 +62,7 @@ export default function Page() {
         setIsJoin(false);
       }
     };
-  }, [socket, isConnected]);
+  }, [socket, isConnected, usersRef]);
 
   return (
     <>
