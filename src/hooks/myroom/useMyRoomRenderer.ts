@@ -3,7 +3,6 @@
 import { RefObject, useEffect, useRef } from "react";
 
 import { techStackDataUrls } from "@/app/myroom/[google_id]/_constant";
-import { MYROOM_COLLISION_ZONES } from "@/app/myroom/[google_id]/_constant";
 import {
   FRAME_HEIGHT,
   FRAME_WIDTH,
@@ -337,13 +336,13 @@ export function useMyRoomRenderer({
     }
 
     // 충돌 영역
-    MYROOM_COLLISION_ZONES.forEach((zone) => {
-      ctx.fillStyle = "rgba(255, 0, 0, 0.3)"; // Semi-transparent red
-      ctx.fillRect(zone.x, zone.y, zone.width, zone.height);
-      ctx.strokeStyle = "red";
-      ctx.lineWidth = 2;
-      ctx.strokeRect(zone.x, zone.y, zone.width, zone.height);
-    });
+    // MYROOM_COLLISION_ZONES.forEach((zone) => {
+    //   ctx.fillStyle = "rgba(255, 0, 0, 0.3)"; // Semi-transparent red
+    //   ctx.fillRect(zone.x, zone.y, zone.width, zone.height);
+    //   ctx.strokeStyle = "red";
+    //   ctx.lineWidth = 2;
+    //   ctx.strokeRect(zone.x, zone.y, zone.width, zone.height);
+    // });
 
     ctx.restore();
   };

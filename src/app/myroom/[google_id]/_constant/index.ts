@@ -253,6 +253,6 @@ export const interiorImages: Record<string, string> = {
   "technologyStack/technologyStack6": "/interior/none.webp",
   "technologyStack/technologyStack7": "/interior/none.webp",
   "technologyStack/technologyStack8": "/interior/none.webp",
-  board: "/furniture/profile.png",
+  board: "/interior/profile.png",
   portal: "/furniture/portal.png",
 };
