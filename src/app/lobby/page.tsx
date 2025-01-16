@@ -47,23 +47,19 @@ export default function Page() {
   }, [socket, isConnected]);
 
   useEffect(() => {
-    if (!clientId || !socket || !isConnected) return;
-    const me = getUser(clientId);
-
-    if (!me) return;
-
     return () => {
-      if (socket && isConnected) {
-        socket.emit("CS_LEAVE_ROOM", {
-          client_id: clientId,
-          room_id: ROOM_ID,
-          position_x: me.x,
-          position_y: me.y,
-        });
-        setIsJoin(false);
-      }
+      if (!clientId || !socket || !isConnected) return;
+      const me = getUser(clientId);
+
+      socket.emit("CS_LEAVE_ROOM", {
+        client_id: clientId,
+        room_id: ROOM_ID,
+        position_x: me?.x ?? 350,
+        position_y: me?.y ?? 170,
+      });
+      setIsJoin(false);
     };
-  }, [socket, isConnected, isChanged]);
+  }, []);
 
   return (
     <>
