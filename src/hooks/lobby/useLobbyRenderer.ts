@@ -3,6 +3,7 @@
 import { RefObject, useEffect, useRef } from "react";
 
 import { LOBBY_MAP_CONSTANTS } from "@/app/lobby/_constant";
+import { LOBBY_COLLISION_ZONES } from "@/app/lobby/_constant";
 import {
   FRAME_HEIGHT,
   FRAME_WIDTH,
@@ -254,6 +255,16 @@ export default function useLobbyRenderer({
             ctx.fillText(line, textX, textY);
           });
         });
+
+        // ------------------ 충돌 영역 화면 표시 (디버깅) ------------------
+        LOBBY_COLLISION_ZONES.forEach((zone) => {
+          ctx.fillStyle = "rgba(255, 0, 0, 0.3)"; // Semi-transparent red
+          ctx.fillRect(zone.x, zone.y, zone.width, zone.height);
+          ctx.strokeStyle = "red";
+          ctx.lineWidth = 2;
+          ctx.strokeRect(zone.x, zone.y, zone.width, zone.height);
+        });
+        // --------------------
 
         // (F) 캐릭터(유저들)
         usersRef.current.forEach((user) => {

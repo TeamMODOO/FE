@@ -77,9 +77,9 @@ export default function Page() {
         updateUserPosition={updateUserPosition}
       />
       <ChatWidget isOpen={chatOpen} setIsOpen={setChatOpen} />
-      <FriendInformation />
+      <FriendInformation chatOpen={chatOpen} />
       <BgMusicGlobal src="/sounds/lobbyBGM.wav" />
-      <BgMusicButton />
+      <BgMusicButton chatOpen={chatOpen} />
     </>
   );
 }

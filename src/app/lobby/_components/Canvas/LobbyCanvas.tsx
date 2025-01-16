@@ -112,7 +112,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({
 
   useEffect(() => {
     const bg = new Image();
-    bg.src = "/background/lobby_image.webp";
+    bg.src = "/background/lobby_image.png";
     bg.onload = () => setBackgroundImage(bg);
   }, []);
 
@@ -307,10 +307,10 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({
     // NPC 충돌
     for (let i = 0; i < LOBBY_NPCS.length; i++) {
       const npc = LOBBY_NPCS[i];
-      const nl = npc.x;
-      const nr = npc.x + npc.width;
-      const nt = npc.y;
-      const nb = npc.y + npc.height;
+      const nl = npc.x - 20;
+      const nr = npc.x + npc.width + 20;
+      const nt = npc.y - 20;
+      const nb = npc.y + npc.height + 20;
 
       const overlap = cl < nr && cr > nl && ct < nb && cb > nt;
       if (overlap) {
