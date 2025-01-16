@@ -282,7 +282,7 @@ function Page() {
     // 새로운 방 입장
     socket.emit("CS_JOIN_ROOM", {
       client_id: clientId,
-      room_type: "meetingroom",
+      room_type: "ROOM_TYPE",
       room_id: roomId,
     });
 
