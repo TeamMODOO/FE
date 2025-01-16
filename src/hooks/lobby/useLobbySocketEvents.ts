@@ -102,7 +102,6 @@ export default function useLobbySocketEvents({
       const existing = getUser(data.client_id);
 
       // [수정2] 기존 유저가 없다면(=새 유저다) → onAddUser로 등록
-      // console.log("소ㅔㅋㅅ : ", data);
       if (!existing) {
         onAddUser(
           data.client_id,
@@ -230,7 +229,6 @@ export default function useLobbySocketEvents({
     if (!socket || !isConnected) return;
 
     const onUserPositionInfo = (data: SCUserPositionInfo) => {
-      // console.log(data);
       // "현재 접속 중인 모든 유저" 정보를 한 번에 내려줄 때
       // 어차피 "처음"으로 받는 정보이므로 → isMoving=false
       onAddUser(
@@ -248,7 +246,6 @@ export default function useLobbySocketEvents({
         data.user_name,
       );
     };
-
     socket.on("SC_USER_POSITION_INFO", onUserPositionInfo);
     return () => {
       socket.off("SC_USER_POSITION_INFO", onUserPositionInfo);

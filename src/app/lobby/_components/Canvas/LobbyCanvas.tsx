@@ -26,7 +26,6 @@ import { NoticeItem } from "@/model/NoticeBoard";
 import { Direction } from "@/model/User";
 import useClientIdStore from "@/store/useClientIdStore";
 import useSocketStore from "@/store/useSocketStore";
-import useUsersRef from "@/store/useUsersRef";
 
 import DailyProblemContent from "../DailyProblem/DailyProblemContent";
 import { EnterMeetingRoom } from "../EnterMeetingRoom/EnterMeetingRoom";
@@ -35,23 +34,40 @@ import { NpcModal } from "../Npc/NpcModal";
 import QnaContent from "../Qna/QnaContent";
 import TutorialContent from "../Tutorial/TutorialContent";
 import Style from "./Canvas.style";
-
+import { LobbyUser } from "@/store/useUsersRef";
 interface LobbyCanvasProps {
   chatOpen: boolean;
   isJoin: boolean;
+  // 상위에서 내려주는 props
+  usersRef: React.MutableRefObject<LobbyUser[]>;
+  getUser: (id: string) => LobbyUser | undefined;
+  addUser: (id: string, nickname: string, x?: number, y?: number) => void;
+  removeUser: (id: string) => void;
+  updateUserPosition: (
+    userId: string,
+    x: number,
+    y: number,
+    direction: Direction,
+    isMoving: boolean,
+    nickname: string,
+  ) => void;
 }
 
-const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen, isJoin }) => {
+const LobbyCanvas: React.FC<LobbyCanvasProps> = ({
+  chatOpen,
+  isJoin,
+  usersRef,
+  getUser,
+  addUser,
+  removeUser,
+  updateUserPosition,
+}) => {
   const router = useRouter();
   const { data: session, status } = useSession();
 
   // (A) 소켓, 클라이언트 ID
   const { socket, isConnected } = useSocketStore();
   const { clientId } = useClientIdStore();
-
-  // (B) 로컬 유저 목록
-  const { usersRef, getUser, addUser, removeUser, updateUserPosition } =
-    useUsersRef();
 
   const { emitMovement } = useLobbySocketEvents({
     userId: clientId ?? "",

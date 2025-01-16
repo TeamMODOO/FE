@@ -20,22 +20,17 @@ export default function Page() {
   const { clientId } = useClientIdStore();
   const { socket, isConnected, currentRoom, setCurrentRoom } = useSocketStore();
   const [isJoin, setIsJoin] = useState<boolean>(false);
-  const { usersRef } = useUsersRef();
+  const {
+    usersRef,
+    getUser,
+    addUser,
+    removeUser,
+    updateUserPosition,
+    isChanged,
+  } = useUsersRef();
+
   useEffect(() => {
     if (!clientId || !socket || !isConnected) return;
-
-    const me = usersRef.current.find((u) => u.id === clientId);
-    if (!me) return; // 아직 서버에서 내 정보 안 받았다면 동작X
-
-    // 이전 방에서 나가기
-    if (currentRoom) {
-      socket.emit("CS_LEAVE_ROOM", {
-        client_id: clientId,
-        room_id: currentRoom,
-        position_x: me.x,
-        position_y: me.y,
-      });
-    }
 
     // 새로운 방 입장
     socket.emit("CS_JOIN_ROOM", {
@@ -48,25 +43,51 @@ export default function Page() {
       client_id: clientId,
       room_id: ROOM_ID,
     });
-
     setIsJoin(true);
     setCurrentRoom(ROOM_ID);
+  }, [socket, isConnected]);
+
+  useEffect(() => {
+    if (!clientId || !socket || !isConnected) return;
+    const me = getUser(clientId);
+
+    if (!me) return;
+
+    // 이전 방에서 나가기
+    if (currentRoom) {
+      socket.emit("CS_LEAVE_ROOM", {
+        client_id: clientId,
+        room_id: currentRoom,
+        position_x: me.x,
+        position_y: me.y,
+      });
+    }
 
     return () => {
       if (socket && isConnected) {
         socket.emit("CS_LEAVE_ROOM", {
           client_id: clientId,
           room_id: currentRoom,
+          position_x: me.x,
+          position_y: me.y,
         });
         setCurrentRoom(null);
         setIsJoin(false);
       }
     };
-  }, [socket, isConnected, usersRef]);
+  }, [socket, isConnected, isChanged]);
 
   return (
     <>
-      <LobbyCanvas chatOpen={chatOpen} isJoin={isJoin} />
+      <LobbyCanvas
+        chatOpen={chatOpen}
+        isJoin={isJoin}
+        usersRef={usersRef}
+        getUser={getUser}
+        addUser={addUser}
+        removeUser={removeUser}
+        updateUserPosition={updateUserPosition}
+      />
       <ChatWidget isOpen={chatOpen} setIsOpen={setChatOpen} />
       <FriendInformation />
       <BgMusicGlobal src="/sounds/lobbyBGM.wav" />
