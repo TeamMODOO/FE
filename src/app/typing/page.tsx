@@ -95,7 +95,6 @@ export default function TypingPage() {
       );
 
       if (!response.ok) {
-        // console.log(`${randomRepo}의 GitHub API 요청 실패: ${response.status}`);
         if (response.status === 403) {
           // console.error("API 요청이 금지되었습니다. 잠시 후 다시 시도합니다.");
           // Swal.fire({
@@ -126,9 +125,7 @@ export default function TypingPage() {
           data.items[Math.floor(Math.random() * data.items.length)];
         await fetchCodeSnippet(randomItem);
       } else {
-        // console.log(`${randomRepo}에 적합한 .js 파일이 없습니다.`);
         if (retryCount > 0) {
-          // console.log("재시도 중...");
           await new Promise((resolve) => setTimeout(resolve, fetchDelay));
           await fetchJSFilesFromGithub(retryCount - 1);
         }
@@ -200,7 +197,6 @@ export default function TypingPage() {
             setCodeToType(randomSnippet);
             setFileLink(item.html_url);
           } else {
-            // console.log("파일에 코드 조각이 없습니다. 다시 시도합니다.");
             if (!codeToType) {
               setTimeout(() => {
                 setIsFetching(false);
@@ -217,7 +213,6 @@ export default function TypingPage() {
           setIsFetching(false);
         }
       } else {
-        // console.log("코드 콘텐츠가 없습니다.");
         setIsFetching(false);
       }
     } catch (error: unknown) {

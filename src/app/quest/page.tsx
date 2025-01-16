@@ -45,6 +45,7 @@ export default function Quest() {
   /** 2) 드래곤 애니메이션 사운드 */
   function playDragonEventSound() {
     if (!dragonAudioRef.current) return;
+    dragonAudioRef.current.volume = 0.3;
     dragonAudioRef.current.currentTime = 0;
     dragonAudioRef.current.play().catch(() => {});
   }

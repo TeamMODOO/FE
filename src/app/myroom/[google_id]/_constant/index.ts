@@ -106,9 +106,9 @@ export const defaultResume: Funiture[] = [
   {
     id: "resume-1",
     x: 820,
-    y: 70,
-    width: 470,
-    height: 140,
+    y: 50,
+    width: 200,
+    height: 200,
     funitureType: "none",
     funiturename: "이력서(PDF)",
   },
@@ -222,10 +222,10 @@ export const defaultTechnologyStack: Funiture[] = [
 export const defaultBoard: Funiture[] = [
   {
     id: "board1",
-    x: 1500,
-    y: 70,
-    width: 300,
-    height: 100,
+    x: 1400,
+    y: 20,
+    width: 500,
+    height: 300,
     funitureType: "board",
     funiturename: "방명록",
   },
@@ -234,30 +234,25 @@ export const defaultBoard: Funiture[] = [
 export const MYROOM_COLLISION_ZONES: CollisionZone[] = [
   // 상단 벽
   { x: 0, y: 0, width: 2000, height: 450 },
+
+  { x: 640, y: 450, width: 240, height: 50 },
+  { x: 1120, y: 450, width: 280, height: 50 },
 ];
 
 export const interiorImages: Record<string, string> = {
-  none: "/interior/none.gif",
-  "resume/resume1": "/interior/resume/resume1.png",
+  none: "/interior/none.webp",
+  "resume/resume1": "/interior/resume/resume.png",
   "portfolio/portfolio1": "/interior/portfolio/portfolio1.png",
   "portfolio/portfolio2": "/interior/portfolio/portfolio2.png",
   "portfolio/portfolio3": "/interior/portfolio/portfolio3.png",
-  "technologyStack/technologyStack1":
-    "/interior/technologyStack/technologyStack1.gif",
-  "technologyStack/technologyStack2":
-    "/interior/technologyStack/technologyStack2.gif",
-  "technologyStack/technologyStack3":
-    "/interior/technologyStack/technologyStack3.gif",
-  "technologyStack/technologyStack4":
-    "/interior/technologyStack/technologyStack4.gif",
-  "technologyStack/technologyStack5":
-    "/interior/technologyStack/technologyStack5.gif",
-  "technologyStack/technologyStack6":
-    "/interior/technologyStack/technologyStack6.gif",
-  "technologyStack/technologyStack7":
-    "/interior/technologyStack/technologyStack7.gif",
-  "technologyStack/technologyStack8":
-    "/interior/technologyStack/technologyStack8.gif",
-  board: "/furniture/board.png",
+  "technologyStack/technologyStack1": "/interior/none.webp",
+  "technologyStack/technologyStack2": "/interior/none.webp",
+  "technologyStack/technologyStack3": "/interior/none.webp",
+  "technologyStack/technologyStack4": "/interior/none.webp",
+  "technologyStack/technologyStack5": "/interior/none.webp",
+  "technologyStack/technologyStack6": "/interior/none.webp",
+  "technologyStack/technologyStack7": "/interior/none.webp",
+  "technologyStack/technologyStack8": "/interior/none.webp",
+  board: "/interior/profile.png",
   portal: "/furniture/portal.png",
 };

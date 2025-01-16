@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 
+import PrefetchManager from "@/components/PrefetchManager";
 import RedundantModal from "@/components/redundantModal/RedundantModal";
 import { Toaster } from "@/components/ui/toaster";
 import { cn } from "@/lib/utils";
 import { AppProviders } from "@/provider";
-import { QueryProvider } from "@/provider/query-provider";
 import { DungGeunMo, NotoSerifKR, SpoqaHanSansNeo } from "@/styles/font";
 
 import "@/styles/globals.css";
@@ -34,13 +34,12 @@ export default function RootLayout({
           "h-dvh",
         )}
       >
-        <QueryProvider>
-          <AppProviders>
-            {children}
-            <Toaster />
-            <RedundantModal />
-          </AppProviders>
-        </QueryProvider>
+        <PrefetchManager />
+        <AppProviders>
+          {children}
+          <Toaster />
+          <RedundantModal />
+        </AppProviders>
       </body>
     </html>
   );

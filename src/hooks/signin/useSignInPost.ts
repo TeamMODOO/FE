@@ -37,8 +37,6 @@ export function useSignInPost() {
     if (status === "authenticated" && !hasAccessTokenCookie()) {
       // 이미 로그인된 사용자가 있다면 서버로 로그인 요청을 보냄
       if (session?.user?.email && session.user.name && session.user.id) {
-        // console.log(session.user);
-        // console.log(hasAccessTokenCookie());
         signIn();
       }
     }
@@ -54,9 +52,6 @@ export function useSignInPost() {
       if (!session?.user?.email || !session?.user?.name || !session?.user?.id) {
         throw new Error("필수 로그인 정보가 없습니다.");
       }
-
-      // console.log(session.user);
-      // console.log(session.user.id);
 
       const requestBody = {
         email: session.user.email,
@@ -79,10 +74,7 @@ export function useSignInPost() {
           },
         },
       );
-
-      // console.log(response.data);
       setData(response.data); // { message: "로그인 성공" }
-      // console.log("로그인 성공");
     } catch (err: unknown) {
       // console.error("로그인 요청 실패:", err);
       const axiosError = err as AxiosError<ErrorResponse>;

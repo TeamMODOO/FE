@@ -34,16 +34,12 @@ const useAudioSocketConnect = ({ roomId }: UseAudioSocketConnectType) => {
       audioSocketRef.current = newAudioSocket;
       setAudioSocket(newAudioSocket);
       setAudioSocketIsConnected(true);
-      // console.log("Audio Socket connected", newAudioSocket.id);
     });
 
-    newAudioSocket.on("connect_error", (error) => {
-      // console.log("Audio Socket connect_error:", error);
-    });
+    newAudioSocket.on("connect_error", () => {});
 
-    newAudioSocket?.on("disconnect", (reason) => {
+    newAudioSocket?.on("disconnect", () => {
       setAudioSocketIsConnected(false);
-      // console.log("Audio Socket disconnected", reason);
     });
 
     return () => {
@@ -54,7 +50,6 @@ const useAudioSocketConnect = ({ roomId }: UseAudioSocketConnectType) => {
       audioSocketRef.current?.off("connect_error");
       audioSocketRef.current?.off("disconnect");
       audioSocketRef.current?.disconnect();
-      // console.log("End Socket Connection!");
     };
   }, [roomId]);
 };

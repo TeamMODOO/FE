@@ -31,16 +31,12 @@ export function SocketProvider({ children }: PropsWithChildren) {
 
     // 기존 소켓 연결을 정리
     const cleanup = () => {
-      if (socket) {
-        socket.emit("CS_USER_DESTRUCTION", {
-          client_id: clientId,
-        });
-        socket.disconnect();
-      }
+      if (socket) socket.disconnect();
     };
 
     // 페이지를 떠날 때 동기적으로 처리하기 위한 함수
     const handleBeforeUnload = () => cleanup();
+    window.addEventListener("beforeunload", handleBeforeUnload);
 
     // 소켓 인스턴스 생성
     const socket = io(process.env.NEXT_PUBLIC_BASE_URL!, {
@@ -57,7 +53,6 @@ export function SocketProvider({ children }: PropsWithChildren) {
     socket.on("connect", () => {
       setSocket(socket);
       setIsConnected(true);
-      window.addEventListener("beforeunload", handleBeforeUnload);
     });
 
     socket.on("SC_DUPLICATE_CONNECTION", () => {
