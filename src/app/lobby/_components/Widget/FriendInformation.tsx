@@ -1,5 +1,3 @@
-"use client";
-
 import { useEffect, useMemo, useState } from "react";
 
 import { Users, X } from "lucide-react";
@@ -16,7 +14,13 @@ interface ExtendedUser extends UserType {
   status: string;
 }
 
-export const FriendInformation = () => {
+interface FriendInformationProps {
+  chatOpen?: boolean;
+}
+
+export const FriendInformation = ({
+  chatOpen = false,
+}: FriendInformationProps) => {
   const [isOpen, setIsOpen] = useState(false); // 열림/닫힘 여부
   const [isAnimating, setIsAnimating] = useState(false); // 애니메이션 진행 여부
 
@@ -61,26 +65,24 @@ export const FriendInformation = () => {
     };
   }, [socket, isConnected]);
 
+  // 모달 열고 닫기 시, 애니메이션 처리
   useEffect(() => {
     if (isOpen) {
+      // 열 때
       const rafId = requestAnimationFrame(() => setIsAnimating(true));
       return () => cancelAnimationFrame(rafId);
     } else {
-      // 닫을 때도 200ms (CSS 트랜지션 시간) 뒤에 unmount
+      // 닫을 때: 200ms 뒤에 실제 DOM에서 제거
       const timer = setTimeout(() => setIsAnimating(false), 200);
       return () => clearTimeout(timer);
     }
   }, [isOpen]);
 
-  /**
-   * 배경 스크롤 방지 처리
-   */
+  // 배경 스크롤 막기
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
     } else {
-      // isOpen이 false라도, 실제 unmount는 200ms 뒤이므로
-      // 여기서 바로 overflow를 unset 해도 괜찮습니다.
       document.body.style.overflow = "unset";
     }
     return () => {
@@ -88,9 +90,7 @@ export const FriendInformation = () => {
     };
   }, [isOpen]);
 
-  /**
-   * [ESC] 키 닫기
-   */
+  // ESC 키로 닫기
   useEffect(() => {
     const handleEscKey = (e: KeyboardEvent) => {
       if (isOpen && e.key === "Escape") {
@@ -103,35 +103,45 @@ export const FriendInformation = () => {
     };
   }, [isOpen]);
 
-  /**
-   * 'z' 또는 'Z' 키로 열기/닫기
-   */
+  // 'z', 'Z', 'ㅋ' 키로 열기/닫기
   useEffect(() => {
     const handleZKey = (e: KeyboardEvent) => {
-      if (e.key === "z" || e.key === "Z") {
+      // 여기서 chatOpen이 true라면, 친구목록 단축키 무시
+      if (chatOpen) return;
+
+      // IME 입력(한글 조합 등) 중이면 단축키 무시
+      if (e.isComposing) return;
+
+      // input, textarea, contentEditable 포커스 시 단축키 무시
+      const target = e.target as HTMLElement;
+      const tagName = target.tagName.toLowerCase();
+      const isInputFocused =
+        tagName === "input" ||
+        tagName === "textarea" ||
+        (target as HTMLElement).isContentEditable;
+      if (isInputFocused) return;
+
+      if (e.key === "z" || e.key === "Z" || e.key === "ㅋ") {
         toggleWidget();
       }
     };
+
     window.addEventListener("keydown", handleZKey);
     return () => {
       window.removeEventListener("keydown", handleZKey);
     };
-  }, []);
+  }, [chatOpen]);
+  // chatOpen이 바뀌면(즉, true/false 바뀔 때) 이 핸들러도 갱신
 
-  // 열고 닫는 함수
   const toggleWidget = () => setIsOpen((prev) => !prev);
 
   return (
     <>
-      {/* isAnimating=true(열리는 중/열려있음), isOpen=true(실제로 열린 상태) */}
-      {/* 둘 중 하나라도 true이면 모달을 렌더링한다 */}
       {(isOpen || isAnimating) && (
         <div className="fixed inset-0 z-[60] flex items-start justify-end p-4">
           <div
-            // 아래처럼 트랜지션 클래스 적용
             className={`
-              w-full transition-all
-              duration-200 ease-out md:w-96
+              w-full transition-all duration-200 ease-out md:w-96
               ${isAnimating ? "scale-100 opacity-100" : "pointer-events-none scale-95 opacity-0"}
             `}
           >
@@ -184,7 +194,7 @@ export const FriendInformation = () => {
         </div>
       )}
 
-      {/* 모달이 닫혀있으면 '친구 목록' 버튼 표시 */}
+      {/* 닫혀있을 때만 버튼 노출 */}
       {!isOpen && (
         <Button
           onClick={toggleWidget}

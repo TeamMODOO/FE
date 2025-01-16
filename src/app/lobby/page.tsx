@@ -62,9 +62,9 @@ export default function Page() {
     <>
       <LobbyCanvas chatOpen={chatOpen} isJoin={isJoin} />
       <ChatWidget isOpen={chatOpen} setIsOpen={setChatOpen} />
-      <FriendInformation />
+      <FriendInformation chatOpen={chatOpen} />
       <BgMusicGlobal src="/sounds/lobbyBGM.wav" />
-      <BgMusicButton />
+      <BgMusicButton chatOpen={chatOpen} />
     </>
   );
 }
