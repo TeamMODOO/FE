@@ -75,6 +75,7 @@ const MyRoomCanvas: React.FC = () => {
   // 2) 사운드 재생 함수
   function playPortalSound() {
     if (!portalAudioRef.current) return;
+    portalAudioRef.current.volume = 0.2;
     portalAudioRef.current.currentTime = 0;
     portalAudioRef.current.play().catch(() => {
       // 브라우저 정책으로 막힐 수 있음
