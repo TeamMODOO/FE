@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { Direction } from "@/model/LobbyUser";
+import { getHostName } from "@/queries/myroom/getName";
 import useClientIdStore from "@/store/useClientIdStore";
 import useSocketStore from "@/store/useSocketStore";
 import { LobbyUser } from "@/store/useUsersRef";
@@ -12,6 +13,7 @@ interface MovementInfoToServer {
   position_y: number;
   direction: number; // 0=Down,1=Up,2=Right,3=Left
   client_id: string;
+  user_name: string;
 }
 
 export interface MovementInfoFromServer {
@@ -73,8 +75,8 @@ export default function useLobbySocketEvents({
   onRemoveUser,
 }: LobbySocketEventsProps) {
   const { clientId } = useClientIdStore();
-
   const { socket, isConnected } = useSocketStore();
+  const [userName, setUserName] = useState("");
 
   // (A) 내 이동 emit
   const emitMovement = useCallback(
@@ -85,6 +87,7 @@ export default function useLobbySocketEvents({
         position_y: y,
         direction,
         client_id: clientId!,
+        user_name: userName,
       } satisfies MovementInfoToServer);
     },
     [socket, isConnected],
@@ -99,7 +102,6 @@ export default function useLobbySocketEvents({
       const existing = getUser(data.client_id);
 
       // [수정2] 기존 유저가 없다면(=새 유저다) → onAddUser로 등록
-      // console.log("소ㅔㅋㅅ : ", data);
       if (!existing) {
         onAddUser(
           data.client_id,
@@ -227,7 +229,6 @@ export default function useLobbySocketEvents({
     if (!socket || !isConnected) return;
 
     const onUserPositionInfo = (data: SCUserPositionInfo) => {
-      // console.log(data);
       // "현재 접속 중인 모든 유저" 정보를 한 번에 내려줄 때
       // 어차피 "처음"으로 받는 정보이므로 → isMoving=false
       onAddUser(
@@ -245,12 +246,20 @@ export default function useLobbySocketEvents({
         data.user_name,
       );
     };
-
     socket.on("SC_USER_POSITION_INFO", onUserPositionInfo);
     return () => {
       socket.off("SC_USER_POSITION_INFO", onUserPositionInfo);
     };
   }, [socket, isConnected, onAddUser, onUpdateUserPosition]);
+
+  useEffect(() => {
+    async function fetchData() {
+      const name = await getHostName(clientId ?? "");
+      setUserName(name);
+    }
+
+    fetchData();
+  }, [clientId]);
 
   return { emitMovement };
 }

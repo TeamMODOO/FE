@@ -26,7 +26,6 @@ export const useChatSocket = (
       ...newMessage,
       create_at: new Date(),
     };
-
     setNotification((prev) => prev + 1);
     setMessageList((prev) => [...prev, addMessageInfo]);
   }, []);

@@ -7,6 +7,7 @@ import { BgMusicGlobal } from "@/components/bgMusic/BgMusicGlobal";
 import { ChatWidget } from "@/components/chat/right/RightChatWidget";
 import useClientIdStore from "@/store/useClientIdStore";
 import useSocketStore from "@/store/useSocketStore";
+import useUsersRef from "@/store/useUsersRef";
 
 import LobbyCanvas from "./_components/Canvas/LobbyCanvas";
 import FriendInformation from "./_components/Widget/FriendInformation";
@@ -19,6 +20,9 @@ export default function Page() {
   const { clientId } = useClientIdStore();
   const { socket, isConnected } = useSocketStore();
   const [isJoin, setIsJoin] = useState<boolean>(false);
+  const { usersRef, getUser, addUser, removeUser, updateUserPosition } =
+    useUsersRef();
+
   useEffect(() => {
     if (!clientId || !socket || !isConnected) return;
 
@@ -47,7 +51,15 @@ export default function Page() {
 
   return (
     <>
-      <LobbyCanvas chatOpen={chatOpen} isJoin={isJoin} />
+      <LobbyCanvas
+        chatOpen={chatOpen}
+        isJoin={isJoin}
+        usersRef={usersRef}
+        getUser={getUser}
+        addUser={addUser}
+        removeUser={removeUser}
+        updateUserPosition={updateUserPosition}
+      />
       <ChatWidget isOpen={chatOpen} setIsOpen={setChatOpen} />
       <FriendInformation chatOpen={chatOpen} />
       <BgMusicGlobal src="/sounds/lobbyBGM.wav" />
