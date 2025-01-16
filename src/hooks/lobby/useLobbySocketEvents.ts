@@ -247,10 +247,32 @@ export default function useLobbySocketEvents({
       );
     };
     socket.on("SC_USER_POSITION_INFO", onUserPositionInfo);
+
     return () => {
       socket.off("SC_USER_POSITION_INFO", onUserPositionInfo);
     };
   }, [socket, isConnected, onAddUser, onUpdateUserPosition]);
+
+  useEffect(() => {
+    if (!socket || !isConnected) return;
+
+    const onMovementInfo = () => {
+      const userInfo = getUser(userId);
+
+      socket.emit("CS_MOVEMENT_INFO", {
+        client_id: userInfo?.id,
+        position_x: userInfo?.x,
+        position_y: userInfo?.y,
+        direction: userInfo?.direction,
+        user_name: userInfo?.nickname,
+      });
+    };
+
+    socket.on("SC_GET_POSITION", onMovementInfo);
+    return () => {
+      socket.off("SC_GET_POSITION", onMovementInfo);
+    };
+  }, [getUser, isConnected, socket, userId]);
 
   useEffect(() => {
     async function fetchData() {
