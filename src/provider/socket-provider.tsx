@@ -2,6 +2,8 @@
 
 import { PropsWithChildren, useEffect } from "react";
 
+import { usePathname } from "next/navigation";
+
 import { useSession } from "next-auth/react";
 
 import { io } from "socket.io-client";
@@ -15,6 +17,7 @@ export function SocketProvider({ children }: PropsWithChildren) {
   const { setSocket, setIsConnected, reset } = useSocketStore();
   const { clientId, initializeClientId } = useClientIdStore();
   const { setIsConnections } = useIsConnectionsStore();
+  const pathname = usePathname();
 
   useEffect(() => {
     if (status === "loading") return;
@@ -27,6 +30,7 @@ export function SocketProvider({ children }: PropsWithChildren) {
   }, [session?.user.id, session?.user.guest_id]);
 
   useEffect(() => {
+    if (pathname === "/signin") return;
     if (status === "loading" || !clientId) return;
 
     // 기존 소켓 연결을 정리
