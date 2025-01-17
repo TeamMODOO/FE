@@ -25,7 +25,7 @@ export function BgMusicGlobal({ src }: BgMusicGlobalProps) {
     if (!audio) return;
 
     if (isPlaying) {
-      audio.volume = 0.7;
+      audio.volume = 1;
       audio.play();
     } else {
       audio.pause();
