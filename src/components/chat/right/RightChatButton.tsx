@@ -13,7 +13,7 @@ export function ChatButton({ onClick, notification }: ChatButtonProps) {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       // key가 'x'일 때 실행
-      if (event.key === "x" || event.key === "X") {
+      if (event.key === "x" || event.key === "X" || event.key === "ㅌ") {
         onClick();
       }
     };

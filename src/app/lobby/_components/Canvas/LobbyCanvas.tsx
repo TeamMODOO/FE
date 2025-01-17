@@ -161,7 +161,7 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen, isJoin }) => {
 
   function playPortalEventSound() {
     if (!portalEventAudioRef.current) return;
-    portalEventAudioRef.current.volume = 0.2;
+    portalEventAudioRef.current.volume = 0.5;
     portalEventAudioRef.current.currentTime = 0;
     portalEventAudioRef.current.play().catch(() => {});
   }
