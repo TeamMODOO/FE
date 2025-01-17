@@ -194,4 +194,13 @@ export const useCanvasSocket = (
       sendCanvasState(lastCanvasStateRef.current.objects);
     });
   }, [lastCanvasStateRef, lastCanvasStateRef.current]);
+
+  useEffect(() => {
+    if (!socket || !isConnected || !canvas) return;
+
+    socket.on("SC_GET_PICTURE", () => {
+      const currentObjects = canvas.getObjects();
+      sendCanvasState(currentObjects);
+    });
+  }, [canvas]);
 };
