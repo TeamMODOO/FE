@@ -188,6 +188,14 @@ export const useCanvasSocket = (
   }, [socket, handleIncomingData]);
 
   useEffect(() => {
+    if (!socket || !isConnected) return;
+
+    socket.on("SC_GET_PICTURE", () => {
+      sendCanvasState(lastCanvasStateRef.current.objects);
+    });
+  }, [lastCanvasStateRef, lastCanvasStateRef.current]);
+
+  useEffect(() => {
     if (!socket || !isConnected || !canvas) return;
 
     socket.on("SC_GET_PICTURE", () => {
