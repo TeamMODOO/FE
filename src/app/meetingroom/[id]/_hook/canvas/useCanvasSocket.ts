@@ -1,4 +1,7 @@
+"use client";
 import { useCallback, useEffect, useRef } from "react";
+
+import { useParams } from "next/navigation";
 
 import { fabric } from "fabric";
 import Pako from "pako";
@@ -8,7 +11,6 @@ import useClientIdStore from "@/store/useClientIdStore";
 
 interface CanvasState {
   objects: fabric.Object[];
-  timestamp: number;
 }
 
 export const useCanvasSocket = (
@@ -19,13 +21,13 @@ export const useCanvasSocket = (
   const { clientId } = useClientIdStore();
 
   // 마지막 캔버스 상태를 저장하는 ref
-  const lastCanvasStateRef = useRef<CanvasState>({ objects: [], timestamp: 0 });
+  const lastCanvasStateRef = useRef<CanvasState>({ objects: [] });
   // 업데이트 진행 중 여부를 추적하는 ref
   const isUpdatingRef = useRef(false);
-  // 마지막 업데이트 시간을 추적하는 ref
-  const lastUpdateTimeRef = useRef<number>(Date.now());
+  // 룸 아이디
+  const params = useParams();
+  const roomId = (params.id as string) ?? "99999";
 
-  // 객체의 핵심 상태만 추출
   const extractObjectState = useCallback((obj: fabric.Object) => {
     const baseState = {
       type: obj.type,
@@ -73,8 +75,6 @@ export const useCanvasSocket = (
     (objects: fabric.Object[]) => {
       if (!socket || !isConnected || isUpdatingRef.current) return;
 
-      const currentTime = Date.now();
-
       const serializedObjects = objects.map((obj) =>
         obj.toObject([
           "type",
@@ -90,11 +90,9 @@ export const useCanvasSocket = (
 
       socket.emit("CS_PICTURE_INFO", {
         picture: compressedData,
-        timestamp: currentTime,
+        room_id: roomId,
         client_id: clientId,
       });
-
-      lastUpdateTimeRef.current = currentTime;
     },
     [socket],
   );
@@ -107,7 +105,6 @@ export const useCanvasSocket = (
     if (hasSignificantChanges(currentObjects)) {
       lastCanvasStateRef.current = {
         objects: [...currentObjects],
-        timestamp: Date.now(),
       };
       sendCanvasState(currentObjects);
     }
@@ -189,4 +186,12 @@ export const useCanvasSocket = (
       socket.off("SC_PICTURE_INFO", handleIncomingData);
     };
   }, [socket, handleIncomingData]);
+
+  useEffect(() => {
+    if (!socket || !isConnected) return;
+
+    socket.on("SC_GET_PICTURE", () => {
+      sendCanvasState(lastCanvasStateRef.current.objects);
+    });
+  }, [lastCanvasStateRef, lastCanvasStateRef.current]);
 };
