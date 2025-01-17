@@ -239,7 +239,8 @@ const LobbyCanvas: React.FC<LobbyCanvasProps> = ({ chatOpen, isJoin }) => {
     npc3ModalOpen ||
     noticeModalOpen ||
     meetingModalOpen ||
-    alertModalOpen;
+    alertModalOpen ||
+    chatOpen;
 
   useEffect(() => {
     if (isAnyModalOpen) {
