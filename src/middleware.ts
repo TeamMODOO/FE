@@ -2,8 +2,6 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
-import { getToken } from "next-auth/jwt";
-
 import { auth } from "./auth";
 
 export async function middleware(req: NextRequest) {
@@ -27,23 +25,6 @@ export async function middleware(req: NextRequest) {
     // '/signin' 으로 리다이렉트
     return NextResponse.redirect(new URL("/signin", req.url));
   }
-
-  // /signin 경로에 접근하려는 경우 추가 로직 수행
-  if (pathname.startsWith("/signin")) {
-    const token = await getToken({
-      req,
-      secret: process.env.NEXTAUTH_SECRET,
-    });
-    if (token && token.providerName === "google") {
-      // 이미 구글 로그인 상태라면 /lobby로 리디렉션
-      return NextResponse.redirect(new URL("/lobby", req.url));
-    }
-    // 로그인되지 않은 사용자는 /signin에 접근 가능
-    return NextResponse.next();
-  }
-
-  // 인증이 필요한 경로일 경우 토큰 확인
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
 
   if (!session) {
     // 인증되지 않은 사용자라면 /signin으로 리디렉션
