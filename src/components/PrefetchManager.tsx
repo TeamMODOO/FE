@@ -21,7 +21,7 @@ const PREFETCH_PATHS = {
     "/interior/portfolio/portfolio2.png",
     "/interior/portfolio/portfolio3.png",
   ],
-  quest: ["/portrait/dragon_flying.webp"],
+  quest: ["/background/quest_prev.webp", "/portrait/dragon_flying.webp"],
 };
 
 const PrefetchManager = () => {
