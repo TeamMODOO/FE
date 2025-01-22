@@ -15,7 +15,7 @@
 
 ![image](https://github.com/user-attachments/assets/5d7e0a14-cf47-458c-b5ed-b5f8544acbf6)
 
-<a href src="https://jgtower.com/">[정글 타워 바로가기]</a>
+<a href="https://jgtower.com/" target="_blank" rel="noopener noreferrer">[정글 타워 바로가기]</a>
 
 ## 🛠️ 서비스 아키텍처
 
@@ -29,7 +29,7 @@
 
 ## 🎬 발표 영상
 
-<a href src="https://youtu.be/rIdfkrjFIro?si=6Mf1lEHPCHJ47xe1">
+<a href="https://youtu.be/rIdfkrjFIro?si=6Mf1lEHPCHJ47xe1" target="_blank" rel="noopener noreferrer">
 <img src="https://github.com/user-attachments/assets/f85aeef3-b695-40aa-b127-589b6e3c28ad" alt="정글 타워"/>
 [발표 영상 바로가기]
 </a>
