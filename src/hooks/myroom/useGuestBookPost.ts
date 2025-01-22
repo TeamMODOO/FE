@@ -98,9 +98,34 @@ export function useGuestBookPost(hostGoogleId: string) {
     }
   }
 
+  async function deleteGuestBook(hostGoogleId: string, guestbookId: string) {
+    // **인증 상태 확인**
+    if (status !== "authenticated" || !session?.user?.email) {
+      throw new Error("사용자가 인증되지 않았습니다.");
+    }
+
+    const baseUrl = process.env.NEXT_PUBLIC_API_SERVER_PATH;
+    if (!baseUrl) {
+      throw new Error("API 서버 주소가 설정되지 않았습니다.");
+    }
+
+    // **delete 요청 보내기**
+    const response: AxiosResponse<GuestBookPostResponse> = await axios.delete(
+      `${baseUrl}/posts/guestbooks/${hostGoogleId}/${guestbookId}`,
+      {
+        withCredentials: true, // 쿠키 설정
+        headers: {
+          "Content-Type": "application/json",
+          // Authorization 헤더 추가 (필요 시)
+          // Authorization: `Bearer ${session.accessToken}`,
+        },
+      },
+    );
+  }
   return {
     // **방명록 작성 관련**
     postGuestBook,
+    deleteGuestBook,
     postLoading,
     postError,
     postData,

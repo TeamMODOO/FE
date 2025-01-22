@@ -66,10 +66,7 @@ export function usePatchMyRoomOwnerProfile() {
       queryClient.invalidateQueries({
         queryKey: ["myRoomOwnerProfile", variables.googleId],
       });
-      // console.log("[usePatchMyRoomOwnerProfile] success:", data);
     },
-    onError: (error) => {
-      // console.log("[usePatchMyRoomOwnerProfile] error:", error);
-    },
+    onError: (error) => {},
   });
 }

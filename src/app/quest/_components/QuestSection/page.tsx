@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -13,8 +13,7 @@ import { python } from "@codemirror/lang-python";
 import { EditorView } from "@codemirror/view";
 import CodeMirror from "@uiw/react-codemirror";
 
-import AlertModal from "@/components/alertModal/AlertModal"; // ← 추가
-import NeedSignInModal from "@/components/modal/NeedSignIn/NeedSignInModal"; // (기존)
+import AlertModal from "@/components/alertModal/AlertModal";
 import { Button } from "@/components/ui/button";
 import { useQuestGet } from "@/hooks/quest/useQuestGet";
 import { useQuestPost } from "@/hooks/quest/useQuestPost";
@@ -37,7 +36,8 @@ const languageExtensions = {
 const customFontSizeTheme = EditorView.theme(
   {
     ".cm-content": {
-      fontSize: "17px",
+      fontSize: "23px",
+      fontWeight: "bold",
     },
     ".cm-scroller::-webkit-scrollbar": {
       width: "3px",
@@ -49,7 +49,7 @@ const customFontSizeTheme = EditorView.theme(
       background: "none",
     },
     ".cm-scroller::-webkit-scrollbar-thumb": {
-      background: "red",
+      background: "yellow",
       borderRadius: "5px",
     },
   },
@@ -61,6 +61,10 @@ export default function QuestSection() {
   const { data: session } = useSession();
   const router = useRouter();
 
+  // 효과음 처리 위한 Ref
+  const correctAudioRef = useRef<HTMLAudioElement>(null);
+  const incorrectAudioRef = useRef<HTMLAudioElement>(null);
+
   /** 문제 풀이 시작 여부 */
   const [isStart, setIsStart] = useState(false);
 
@@ -71,6 +75,7 @@ export default function QuestSection() {
   const [onConfirm, setOnConfirm] = useState<() => void>(() => () => {});
 
   const handleLockedClick = () => {
+    playSwordSound();
     setIsStart(true);
   };
 
@@ -142,6 +147,17 @@ export default function QuestSection() {
     }
   };
 
+  // isCorrect 여부 감지 후 사운드 재생
+  useEffect(() => {
+    if (isCorrect !== null) {
+      if (isCorrect) {
+        correctAudioRef.current?.play().catch(() => {});
+      } else {
+        incorrectAudioRef.current?.play().catch(() => {});
+      }
+    }
+  }, [isCorrect]);
+
   /* 모달 닫기 */
   const handleCloseModal = () => {
     setShowModal(false);
@@ -187,6 +203,7 @@ export default function QuestSection() {
 
   const handleStartOrStop = () => {
     if (!isStart) {
+      playSwordSound();
       setIsStart(true);
     } else {
       // 기존 window.confirm 대신 → ConfirmModal 열기
@@ -218,18 +235,47 @@ export default function QuestSection() {
   }
 
   const handleCompleteQuest = async () => {
+    const todayString = new Date().toISOString().slice(0, 10);
     if (session?.user.role !== "guest") {
+      localStorage.setItem("dailyQuestDone", todayString);
       await submitQuestResult(formatTimeSpent(timeSpent));
     }
     router.push("/lobby");
   };
 
+  const swordAudioRef = useRef<HTMLAudioElement>(null);
+
+  function playSwordSound() {
+    if (!swordAudioRef.current) return;
+    swordAudioRef.current.currentTime = 0;
+    swordAudioRef.current.play().catch(() => {});
+  }
+
   return (
     <div className={styles.container}>
+      <audio
+        ref={swordAudioRef}
+        src="/sounds/swordSFX.wav"
+        style={{ display: "none" }}
+      />
+      <audio
+        ref={correctAudioRef}
+        src="/sounds/correctFx.wav"
+        style={{ display: "none" }}
+      />
+      <audio
+        ref={incorrectAudioRef}
+        src="/sounds/incorrectFx.wav"
+        style={{ display: "none" }}
+      />
+
       <div className={styles.questHeader}>
         <h1 className={styles.title}>오늘의 문제</h1>
-        <h1 className={styles.timer}>{isStart ? formattedTime : "00:00:00"}</h1>
-        <Button className={styles.startButton} onClick={handleStartOrStop}>
+        <h1 className="text-[2rem]">{isStart ? formattedTime : "00:00:00"}</h1>
+        <Button
+          className="ml-4 border-2 border-[rgba(111,99,98,1)] p-6 text-[1.5rem]"
+          onClick={handleStartOrStop}
+        >
           {buttonText}
         </Button>
       </div>
@@ -271,7 +317,11 @@ export default function QuestSection() {
             onChange={onChangeCode}
           />
 
-          <Button disabled={!isStart} onClick={handleSubmit}>
+          <Button
+            disabled={!isStart}
+            onClick={handleSubmit}
+            className="min-h-10 border-2 border-[rgba(111,99,98,1)] p-6 text-[1.7rem] "
+          >
             제출하기
           </Button>
 
@@ -281,7 +331,9 @@ export default function QuestSection() {
               {isLoading ? (
                 <div className={styles.spinnerContainer}>
                   <div className={styles.spinner}></div>
-                  <p>답안을 검토 중입니다... 잠시만 기다려주세요.</p>
+                  <p className="text-[1.7rem]">
+                    답안을 검토 중입니다... 잠시만 기다려주세요.
+                  </p>
                 </div>
               ) : (
                 <>
@@ -338,8 +390,8 @@ export default function QuestSection() {
                       </Button>
                       {session?.user?.role === "guest" && (
                         <p className={styles.guestWarning}>
-                          현재 게스트 로그인 상태입니다! 랭킹에 기록되지
-                          않습니다.
+                          현재 게스트 로그인 상태입니다! 일일 퀘스트 완료로
+                          기록되지 않습니다.
                         </p>
                       )}
                     </div>

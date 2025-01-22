@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 
-import { ChatWidget } from "@/components/chat/ChatWidget";
+import { BgMusicButton } from "@/components/bgMusic/BgMusicButton";
+import { BgMusicGlobal } from "@/components/bgMusic/BgMusicGlobal";
+import { ChatWidget } from "@/components/chat/right/RightChatWidget";
 import useClientIdStore from "@/store/useClientIdStore";
 import useSocketStore from "@/store/useSocketStore";
 
@@ -15,18 +17,10 @@ const ROOM_ID = "floor7";
 export default function Page() {
   const [chatOpen, setChatOpen] = useState(false);
   const { clientId } = useClientIdStore();
-  const { socket, isConnected, currentRoom, setCurrentRoom } = useSocketStore();
-
+  const { socket, isConnected } = useSocketStore();
+  const [isJoin, setIsJoin] = useState<boolean>(false);
   useEffect(() => {
     if (!clientId || !socket || !isConnected) return;
-
-    // 이전 방에서 나가기
-    if (currentRoom) {
-      socket.emit("CS_LEAVE_ROOM", {
-        client_id: clientId,
-        roomId: currentRoom,
-      });
-    }
 
     // 새로운 방 입장
     socket.emit("CS_JOIN_ROOM", {
@@ -35,24 +29,29 @@ export default function Page() {
       room_id: ROOM_ID,
     });
 
-    setCurrentRoom(ROOM_ID);
-
+    socket.emit("CS_USER_POSITION", {
+      client_id: clientId,
+      room_id: ROOM_ID,
+    });
+    setIsJoin(true);
     return () => {
-      if (socket && isConnected) {
-        socket.emit("CS_LEAVE_ROOM", {
-          client_id: clientId,
-          roomId: currentRoom,
-        });
-        setCurrentRoom(null);
-      }
+      if (!clientId || !socket || !isConnected) return;
+
+      socket.emit("CS_LEAVE_ROOM", {
+        client_id: clientId,
+        room_id: ROOM_ID,
+      });
+      setIsJoin(false);
     };
   }, [socket, isConnected]);
 
   return (
     <>
-      <LobbyCanvas chatOpen={chatOpen} />
-      <ChatWidget isOpen={chatOpen} setIsOpen={setChatOpen} position="right" />
-      <FriendInformation />
+      <LobbyCanvas chatOpen={chatOpen} isJoin={isJoin} />
+      <ChatWidget isOpen={chatOpen} setIsOpen={setChatOpen} />
+      <FriendInformation chatOpen={chatOpen} />
+      <BgMusicGlobal src="/sounds/lobbyBGM.wav" />
+      <BgMusicButton chatOpen={chatOpen} />
     </>
   );
 }

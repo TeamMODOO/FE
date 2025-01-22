@@ -4,17 +4,19 @@ export type PenColorTypes =
   | "red"
   | "orange"
   | "yellow"
-  | "lightGreen"
   | "blue"
-  | "black";
-
+  | "navy"
+  | "violet"
+  | "pink"
+  | "black"
+  | "white";
 interface PenColorState {
   penColor: string;
   setPenColor: (penColor: string) => void;
 }
 
 const usePenColorStore = create<PenColorState>((set) => ({
-  penColor: "black",
+  penColor: "white",
   setPenColor: (color) => set({ penColor: color }),
 }));
 

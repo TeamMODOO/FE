@@ -1,4 +1,4 @@
-/* Modal.module.css */
+/* RankingModal.module.css */
 .overlay {
   position: fixed;
   top: 0;
@@ -14,28 +14,42 @@
 }
 
 .modal {
-  background-image: url("/background/sheet.png");
-  aspect-ratio: 308 / 345;
-  /* 디버깅 용 */
-  /* border: 2px solid red; */
-
-  width: 27dvw;
-
-  padding: 60px;
-  padding-top: 70px;
-  /* border-radius: 8px; */
+  font-family: var(--font-dung-geun-mo), serif;
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.6),
+    rgba(0, 0, 0, 0.9)
+  );
+  width: 35rem;
+  height: 40rem;
+  padding: 1.5rem;
+  border-radius: 10px;
   position: relative;
-  color: black;
-  /* border: 2px solid rgba(111, 99, 98, 1); */
+  color: white;
+  border: 2px solid rgba(111, 99, 98, 1);
   background-repeat: no-repeat;
   background-size: contain;
   background-position: center;
+  overflow: auto;
+}
+
+.modal::-webkit-scrollbar {
+  width: 5px;
+}
+
+.modal::-webkit-scrollbar-track {
+  background: none;
+}
+
+.modal::-webkit-scrollbar-thumb {
+  background: red;
+  border-radius: 5px;
 }
 
 .closeBtn {
   position: absolute;
-  top: 0;
-  right: 0;
+  top: 0.5rem;
+  right: 0.7rem;
   font-family: none;
   cursor: pointer;
   font-size: 2rem;
@@ -51,7 +65,7 @@
 }
 
 .modalTitle {
-  font-family: var(--font-noto-serif-kr), serif;
+  font-family: var(--font-dung-geun-mo), serif;
   color: rgba(192, 37, 202, 1);
   font-weight: bold;
   font-size: 2rem;
@@ -63,8 +77,8 @@
   min-height: 28dvh;
   overflow: auto;
   border-radius: 5px;
-  background-color: rgba(50, 50, 50, 0.6);
-  border: 1px solid rgba(111, 99, 98, 1);
+  /* background-color: rgba(50, 50, 50, 0.6); */
+  /* border: 1px solid rgba(111, 99, 98, 1); */
 }
 
 .modalContent::-webkit-scrollbar {
@@ -90,18 +104,27 @@
 }
 
 .rankingItem {
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.6),
+    rgba(0, 0, 0, 0.9)
+  );
+  color: white;
   display: flex;
   justify-content: space-between;
   text-align: center;
   align-items: center;
   justify-items: center;
   font-size: 1.1rem;
+  border: 2px solid rgba(111, 99, 98, 1);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
 }
 
 .modalSub {
   font-size: 1.5rem;
   color: red;
-  font-family: var(--font-noto-serif-kr), serif;
   font-weight: bold;
 }
 
@@ -112,4 +135,19 @@
   to {
     opacity: 1;
   }
+}
+
+.rankingItemGold {
+  border: 2px solid gold;
+  color: gold;
+}
+
+.rankingItemSilver {
+  border: 2px solid silver;
+  color: silver;
+}
+
+.rankingItemBronze {
+  border: 2px solid #cd7f32; /* 동색 */
+  color: #cd7f32;
 }

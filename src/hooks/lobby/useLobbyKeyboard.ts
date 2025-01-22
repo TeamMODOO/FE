@@ -9,8 +9,9 @@ import { useSession } from "next-auth/react";
 
 import { NpcInfo } from "@/model/Npc";
 import { PortalInfo } from "@/model/Portal";
-import useUsersStore from "@/store/useUsersStore";
+import { User } from "@/model/User";
 
+/** 파라미터 타입 정의 */
 interface UseLobbyKeyboardParams {
   roomId: string;
   localClientId: string; // 로컬스토리지에서 가져온 uuid
@@ -20,6 +21,9 @@ interface UseLobbyKeyboardParams {
   portals: PortalInfo[];
   onMeetingModalOpen: () => void;
   onNoticeModalOpen: () => void;
+
+  // [추가] ref와 함수들을 외부에서 넘겨받기
+  usersRef: React.MutableRefObject<User[]>;
 }
 
 export function useLobbyKeyboard({
@@ -31,19 +35,22 @@ export function useLobbyKeyboard({
   portals,
   onMeetingModalOpen,
   onNoticeModalOpen,
+  // [추가]
+  usersRef,
 }: UseLobbyKeyboardParams) {
   const [pressedKeys, setPressedKeys] = useState<Record<string, boolean>>({});
   const router = useRouter();
   const { data: session, status } = useSession();
 
-  // 스페이스바 상호작용
+  /**
+   * 스페이스바 상호작용
+   */
   function handleSpacebarInteraction() {
-    const { users } = useUsersStore.getState();
-    const me = users.find((u) => u.id === localClientId);
+    // [기존] useUsersStore.getState().users -> [변경] usersRef.current
+    const me = usersRef.current.find((u) => u.id === localClientId);
     if (!me) return;
 
-    // 내 캐릭터 사각 영역
-    const [cl, cr, ct, cb] = [me.x, me.x + 32, me.y, me.y + 32];
+    const [cl, cr, ct, cb] = [me.x, me.x + 60, me.y, me.y + 120];
 
     // 1) 포탈 충돌
     for (const portal of portals) {
@@ -54,14 +61,11 @@ export function useLobbyKeyboard({
         portal.y + portal.height,
       ];
       const overlap = cl < pr && cr > pl && ct < pb && cb > pt;
-
       if (overlap) {
-        // 회의실
         if (portal.name === "회의실") {
           onMeetingModalOpen();
           return;
         }
-        // 마이룸
         if (portal.name === "마이룸") {
           if (status === "loading") {
             alert("세션 정보를 불러오는 중입니다. 잠시 후 다시 시도해주세요.");
@@ -71,7 +75,6 @@ export function useLobbyKeyboard({
             alert("로그인이 필요합니다.");
             return;
           }
-          // 이동
           router.push(`/myroom/${session.user.id}`);
           return;
         }
@@ -91,10 +94,10 @@ export function useLobbyKeyboard({
       if (overlap) {
         // 모달 열기
         if (npc.name === "NPC1") {
-          // 예: NPC1 모달
+          // NPC1 관련 동작
         }
         if (npc.name === "NPC2") {
-          // 예: NPC2 모달
+          // NPC2 관련 동작
         }
         if (npc.name === "공지사항") {
           onNoticeModalOpen();
@@ -104,17 +107,27 @@ export function useLobbyKeyboard({
     }
   }
 
+  /**
+   * 키보드 이벤트 등록
+   */
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (chatOpen || isAnyModalOpen) return;
 
       // 이동키/Space
       if (
-        ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", " "].includes(e.key)
+        [
+          "ArrowUp",
+          "ArrowDown",
+          "ArrowLeft",
+          "ArrowRight",
+          " ",
+          "Space",
+        ].includes(e.key)
       ) {
         e.preventDefault();
       }
-      if (e.key === " ") {
+      if (e.key === " " || e.key === "Space") {
         handleSpacebarInteraction();
       }
       setPressedKeys((prev) => ({ ...prev, [e.key]: true }));

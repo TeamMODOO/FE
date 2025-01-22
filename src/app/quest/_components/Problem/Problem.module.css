@@ -19,7 +19,7 @@
 }
 
 .container::-webkit-scrollbar-thumb {
-  background: red;
+  background: yellow;
   border-radius: 5px;
 }
 
@@ -39,6 +39,7 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
+  font-size: 1.7rem;
 }
 
 .lockedImage:hover {
@@ -58,8 +59,8 @@
 }
 
 .title {
-  color: red;
-  font-size: 1.3rem;
+  color: yellow;
+  font-size: 1.7rem;
 }
 
 .showProblem > .problemSection {

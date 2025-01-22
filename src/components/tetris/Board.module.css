@@ -1,0 +1,25 @@
+.board {
+  margin-left: 8%;
+  border-spacing: 1px;
+  /* margin: 0 auto; */
+  background-color: #333;
+}
+
+.board tr {
+  height: 30px;
+}
+
+.board td {
+  width: 30px;
+  height: 30px;
+  background-color: #000;
+  border: 1px solid #555;
+}
+
+.board td.active {
+  background-color: #f00; /* 블록 색상 (빨간색) */
+}
+
+.board td.fixed {
+  background-color: #0f0; /* 고정된 블록 색상 (초록색) */
+}

@@ -1,7 +1,11 @@
+"use client";
+import { useEffect, useState } from "react";
+
 import { useRouter } from "next/navigation";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MeetingRoom } from "@/model/MeetingRoom";
+import { getHostName } from "@/queries/myroom/getName";
 
 type RoomCardProps = {
   item: MeetingRoom;
@@ -9,7 +13,16 @@ type RoomCardProps = {
 
 export const RoomCard = ({ item }: RoomCardProps) => {
   const router = useRouter();
+  const [hostName, setHostName] = useState("");
 
+  useEffect(() => {
+    async function fetchData() {
+      const name = await getHostName(item.clients[0]);
+      setHostName(name);
+    }
+
+    fetchData();
+  }, []);
   return (
     <Card
       className="
@@ -37,8 +50,7 @@ export const RoomCard = ({ item }: RoomCardProps) => {
       <CardContent>
         <ul className="space-y-2">
           <li className="flex items-center gap-2 text-lg">
-            <span className="truncate">{item.clients}</span>
-            {/* <span className="truncate">{item.title}</span> */}
+            <span className="truncate">방장: {hostName}</span>
           </li>
         </ul>
       </CardContent>

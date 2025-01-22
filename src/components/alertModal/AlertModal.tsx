@@ -1,6 +1,10 @@
 // /src/components/alertModal/AlertModal.tsx
 "use client";
 
+import { useEffect } from "react";
+
+import useEscapeKey from "@/hooks/useEscapeKey";
+
 import styles from "./AlertModal.module.css";
 
 interface AlertModalProps {
@@ -15,6 +19,7 @@ interface AlertModalProps {
   isConfirm?: boolean;
   /** '예' 버튼 클릭 시 동작 */
   onConfirm?: () => void;
+  noCloseBtn?: boolean;
 }
 
 export default function AlertModal({
@@ -23,14 +28,31 @@ export default function AlertModal({
   children,
   isConfirm = false,
   onConfirm,
+  noCloseBtn = false,
 }: AlertModalProps) {
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+
+    if (noCloseBtn) return;
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, []);
+
+  useEscapeKey(onClose, noCloseBtn ? false : true);
   return (
     <div className={styles.overlay}>
       <div className={styles.modal}>
         {/* 닫기 버튼 (X) */}
-        <button className={styles.closeBtn} onClick={onClose}>
-          X
-        </button>
+        {!noCloseBtn && (
+          <button className={styles.closeBtn} onClick={onClose}>
+            X
+          </button>
+        )}
 
         {/* 타이틀 */}
         <div className={styles.modalHeader}>

@@ -12,7 +12,7 @@ export async function middleware(req: NextRequest) {
   const session = await auth();
 
   // 인증이 필요 없는 경로 목록
-  const excludedPaths = ["/_next", "/api", "/favicon.ico", "/background"];
+  const excludedPaths = ["/_next", "/api", "/favicon.png", "/background"];
 
   // 현재 요청 경로가 제외 목록에 속하는지 확인
   const isExcluded = excludedPaths.some((path) => pathname.startsWith(path));
@@ -28,22 +28,8 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/signin", req.url));
   }
 
-  // /signin 경로에 접근하려는 경우 추가 로직 수행
-  if (pathname.startsWith("/signin")) {
-    const token = await getToken({
-      req,
-      secret: process.env.NEXTAUTH_SECRET,
-    });
-    if (token && token.providerName === "google") {
-      // 이미 구글 로그인 상태라면 /lobby로 리디렉션
-      return NextResponse.redirect(new URL("/lobby", req.url));
-    }
-    // 로그인되지 않은 사용자는 /signin에 접근 가능
-    return NextResponse.next();
-  }
-
   // 인증이 필요한 경로일 경우 토큰 확인
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+  await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
 
   if (!session) {
     // 인증되지 않은 사용자라면 /signin으로 리디렉션
@@ -56,6 +42,6 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next|api|signin|signinloading|favicon.ico|background|css|hooks).*)",
+    "/((?!_next|api|signin|signinloading|favicon.png|background|css|hooks).*)",
   ],
 };

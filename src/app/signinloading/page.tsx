@@ -8,6 +8,8 @@ import { useRouter } from "next/navigation";
 
 import { useSession } from "next-auth/react";
 
+import { BgMusicButton } from "@/components/bgMusic/BgMusicButton";
+import { BgMusicGlobal } from "@/components/bgMusic/BgMusicGlobal";
 import { useSignInPost } from "@/hooks/signin/useSignInPost";
 
 import styles from "./SignInLoading.module.css";
@@ -53,6 +55,8 @@ export default function SignInLoading() {
 
   return (
     <div className={styles.container}>
+      <BgMusicGlobal src="/sounds/signinBGM.wav" />
+      <BgMusicButton />
       {/* 배경 반딧불이 애니메이션 */}
       {Array.from({ length: 30 }).map((_, index) => (
         <div key={index} className={styles.floatingSquare}></div>

@@ -1,9 +1,9 @@
-// /src/app/questmap/_components/RankingModal/RankingModal.tsx
 "use client";
 
 import { useRouter } from "next/navigation"; // ✅ next/navigation 사용
 
 import { Button } from "@/components/ui/button";
+import useEscapeKey from "@/hooks/useEscapeKey";
 
 import styles from "./NeedSignInModal.module.css";
 
@@ -13,6 +13,8 @@ interface NeedSignInModalProps {
 
 export default function NeedSignInModal({ onClose }: NeedSignInModalProps) {
   const router = useRouter();
+
+  useEscapeKey(onClose, true);
 
   return (
     <div className={styles.overlay}>

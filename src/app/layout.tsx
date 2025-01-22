@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 
+import PrefetchManager from "@/components/PrefetchManager";
+import RedundantModal from "@/components/redundantModal/RedundantModal";
 import { Toaster } from "@/components/ui/toaster";
 import { cn } from "@/lib/utils";
 import { AppProviders } from "@/provider";
-import { QueryProvider } from "@/provider/query-provider";
-import { NotoSerifKR, SpoqaHanSansNeo } from "@/styles/font";
+import { DungGeunMo, NotoSerifKR, SpoqaHanSansNeo } from "@/styles/font";
 
 import "@/styles/globals.css";
 
@@ -12,7 +13,7 @@ export const metadata: Metadata = {
   title: "정글타워",
   description: "jungle tower",
   icons: {
-    icon: "/favicon/favicon.ico",
+    icon: "/favicon/favicon.png",
   },
 };
 
@@ -24,15 +25,21 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${SpoqaHanSansNeo.variable} ${NotoSerifKR.variable}`}
+      className={`${SpoqaHanSansNeo.variable} ${NotoSerifKR.variable} ${DungGeunMo.variable}`}
     >
-      <body className={cn("font-spoqa-han-sans-neo", "w-full", "h-dvh")}>
-        <QueryProvider>
-          <AppProviders>
-            {children}
-            <Toaster />
-          </AppProviders>
-        </QueryProvider>
+      <body
+        className={cn(
+          "[font-family:var(--font-dung-geun-mo),serif]",
+          "w-full",
+          "h-dvh",
+        )}
+      >
+        <PrefetchManager />
+        <AppProviders>
+          {children}
+          <Toaster />
+          <RedundantModal />
+        </AppProviders>
       </body>
     </html>
   );

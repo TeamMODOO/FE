@@ -1,6 +1,6 @@
 import { MicOffIcon, UserIcon, VideoOffIcon } from "lucide-react";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface LocalVideoProps {
   localVideoRef: React.RefObject<HTMLVideoElement | null>;
@@ -49,7 +49,7 @@ export function LocalVideo({
             )}
           </div>
           <div className="absolute bottom-2 right-2 flex gap-2">
-            <div className="rounded-full bg-white p-1">{userName}</div>
+            <div className="bg-black p-1 text-yellow-500">{userName}</div>
           </div>
         </div>
       </CardContent>

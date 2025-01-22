@@ -18,14 +18,11 @@ export function useMyRoomOwnerProfile(googleId?: string) {
 
   // queryFn: GET 호출
   async function fetchOwnerProfile(): Promise<OwnerProfile> {
-    // console.log(">> [fetchOwnerProfile] 호출, googleId =", googleId);
-
     // 실제 API URL 예시: /users/profile/955419d1-3e76-444a-a647-b086ebe5478f
     const { data } = await axios.get<OwnerProfile>(
       `${process.env.NEXT_PUBLIC_API_SERVER_PATH}/users/profile/${googleId}`,
     );
 
-    // console.log(">> [fetchOwnerProfile] 응답 data:", data);
     return data;
   }
 
@@ -37,12 +34,8 @@ export function useMyRoomOwnerProfile(googleId?: string) {
     // ------------------ meta.callbacks로 onSuccess / onError 전달 ------------------
     meta: {
       callbacks: {
-        onSuccess: (data: OwnerProfile) => {
-          // console.log(">> [useMyRoomOwnerProfile] onSuccess:", data);
-        },
-        onError: (error: Error) => {
-          // console.log(">> [useMyRoomOwnerProfile] onError:", error);
-        },
+        onSuccess: (data: OwnerProfile) => {},
+        onError: (error: Error) => {},
       },
     },
   });

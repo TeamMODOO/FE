@@ -1,4 +1,3 @@
-// hooks/myroom/useMyRoomKeyboard.ts
 "use client";
 
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
@@ -6,12 +5,12 @@ import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { User } from "@/model/User";
 
 interface MyRoomKeyboardProps {
+  /** 현재 마이룸에 있는 유저(들).
+   *  여기서는 한 명이라도, 다중 구조를 위해 배열로 처리 */
   users: User[];
   setUsers: Dispatch<SetStateAction<User[]>>;
   myUserId: string;
   isAnyModalOpen: boolean;
-
-  // 포탈 정보
   portal: {
     x: number;
     y: number;
@@ -20,11 +19,12 @@ interface MyRoomKeyboardProps {
     route: string;
     name: string;
   };
+  /** 포탈 진입 시 호출할 콜백 (e.g. goLobby) */
+  onPortalEnter?: () => void;
 }
 
 /**
- * 마이룸에서 키 입력을 처리하고,
- * 스페이스바로 "포탈 이동" 처리하는 훅 (방명록은 제외)
+ * 스페이스바 상호작용, 이동 키 입력 등 처리
  */
 export function useMyRoomKeyboard({
   users,
@@ -32,62 +32,72 @@ export function useMyRoomKeyboard({
   myUserId,
   isAnyModalOpen,
   portal,
+  onPortalEnter,
 }: MyRoomKeyboardProps) {
   const [pressedKeys, setPressedKeys] = useState<Record<string, boolean>>({});
 
-  // (A) 포탈 충돌 체크
+  /** 캐릭터와 포탈이 겹쳤는지 확인하는 함수 */
   function checkPortalOverlap(): boolean {
     const me = users.find((u) => u.id === myUserId);
     if (!me) return false;
 
-    const portalW = portal.width ?? 200;
-    const portalH = portal.height ?? 200;
+    // 포탈 크기
+    const pWidth = portal.width ?? 200;
+    const pHeight = portal.height ?? 200;
+    // 캐릭터 크기 (예: 60×120×스케일). 여기선 간단히 64×64라고 가정 가능
+    // 혹은 실제 MyRoomCanvas.tsx에서 사용하는 크기를 맞춰줘야 합니다.
+    // 여기서는 "가로 60, 세로 120" + 스케일 2 → (120, 240) 등등
+    // 간단히 '64×64'로 예시:
+    const cWidth = 60 * 2;
+    const cHeight = 120 * 2;
 
-    // 캐릭터 크기: 64×64 (CHAR_SCALE=3이면 192×192 일 수도 있음)
-    // 여기서는 간단히 64×64 가정
-    const [cl, cr, ct, cb] = [me.x, me.x + 64, me.y, me.y + 64];
-    const [pl, pr, pt, pb] = [
-      portal.x,
-      portal.x + portalW,
-      portal.y,
-      portal.y + portalH,
-    ];
+    const leftA = me.x;
+    const rightA = me.x + cWidth;
+    const topA = me.y;
+    const bottomA = me.y + cHeight;
 
-    return cr > pl && cl < pr && cb > pt && ct < pb;
+    const leftB = portal.x;
+    const rightB = portal.x + pWidth;
+    const topB = portal.y;
+    const bottomB = portal.y + pHeight;
+
+    // 겹치는지 여부
+    const overlap =
+      rightA > leftB && leftA < rightB && bottomA > topB && topA < bottomB;
+
+    return overlap;
   }
 
-  // (B) 스페이스바 → 포탈
+  /** 스페이스바 상호작용 */
   function handleSpaceInteraction() {
     if (checkPortalOverlap()) {
-      window.location.href = portal.route;
+      // 포탈과 겹친 상태에서 스페이스 → onPortalEnter 콜백 호출
+      onPortalEnter?.();
     }
   }
 
-  // (C) 키 다운/업
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if (isAnyModalOpen) return; // 모달 열려있으면 막기
+      if (isAnyModalOpen) return;
 
-      // 이동 or 스페이스
-      if (e.key === " ") {
+      // 스페이스바
+      if (e.key === " " || e.key === "Space") {
         e.preventDefault();
         handleSpaceInteraction();
       }
       setPressedKeys((prev) => ({ ...prev, [e.key]: true }));
     }
-
     function handleKeyUp(e: KeyboardEvent) {
       if (isAnyModalOpen) return;
       setPressedKeys((prev) => ({ ...prev, [e.key]: false }));
     }
-
     window.addEventListener("keydown", handleKeyDown, { passive: false });
     window.addEventListener("keyup", handleKeyUp);
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
       window.removeEventListener("keyup", handleKeyUp);
     };
-  }, [isAnyModalOpen, portal, users]);
+  }, [isAnyModalOpen, users, portal, onPortalEnter]);
 
   return { pressedKeys };
 }

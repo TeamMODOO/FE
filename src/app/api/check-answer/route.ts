@@ -83,9 +83,6 @@ No code fences, no 'Here is the JSON' or explanation.
     const content =
       chatCompletion.choices?.[0]?.message?.content?.trim() || "{}";
 
-    // 디버깅:: chatGPT가 준 메시지 출력
-    // console.log(content);
-
     // 5) JSON 파싱 시도
     let resultJson: CheckAnswerResult;
     try {

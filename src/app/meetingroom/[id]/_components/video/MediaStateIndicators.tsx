@@ -22,7 +22,7 @@ export function MediaStateIndicators({
         )}
       </div>
       <div className="absolute bottom-2 right-2 flex gap-2">
-        <div className="rounded-full bg-white p-1">{userName}</div>
+        <div className="bg-black p-1 text-white">{userName}</div>
       </div>
     </>
   );

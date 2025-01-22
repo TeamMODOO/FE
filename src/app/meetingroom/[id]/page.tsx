@@ -10,7 +10,7 @@ import { useSession } from "next-auth/react";
 import * as mediasoupClient from "mediasoup-client";
 import { Socket } from "socket.io-client";
 
-import { ChatWidget } from "@/components/chat/ChatWidget";
+import { ChatWidget } from "@/components/chat/left/LeftChatWidget";
 import useAudioSocketConnect from "@/hooks/socket/useAudioSocketConnect";
 import useAudioSocketStore from "@/store/useAudioSocketStore";
 import useClientIdStore from "@/store/useClientIdStore";
@@ -43,7 +43,7 @@ function Page() {
   const isAudioConnected = useAudioSocketStore((state) => state.isConnected);
 
   const { clientId } = useClientIdStore();
-  const { socket, isConnected, currentRoom, setCurrentRoom } = useSocketStore();
+  const { socket, isConnected } = useSocketStore();
 
   const { data: session } = useSession();
 
@@ -271,14 +271,6 @@ function Page() {
   useEffect(() => {
     if (!clientId || !socket || !isConnected) return;
 
-    // 이전 방에서 나가기
-    if (currentRoom) {
-      socket.emit("CS_LEAVE_ROOM", {
-        client_id: clientId,
-        roomId: currentRoom,
-      });
-    }
-
     // 새로운 방 입장
     socket.emit("CS_JOIN_ROOM", {
       client_id: clientId,
@@ -286,15 +278,12 @@ function Page() {
       room_id: roomId,
     });
 
-    setCurrentRoom(roomId);
-
     return () => {
       if (socket && isConnected) {
         socket.emit("CS_LEAVE_ROOM", {
           client_id: clientId,
-          roomId: currentRoom,
+          room_id: roomId,
         });
-        setCurrentRoom(null);
       }
     };
   }, [socket, isConnected]);
@@ -333,7 +322,7 @@ function Page() {
           userName={session?.user.name ?? ""}
         />
       </div>
-      <ChatWidget isOpen={chatOpen} setIsOpen={setChatOpen} position="left" />
+      <ChatWidget isOpen={chatOpen} setIsOpen={setChatOpen} />
     </div>
   );
 }

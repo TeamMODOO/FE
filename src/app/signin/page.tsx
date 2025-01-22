@@ -1,15 +1,22 @@
 // src/app/signin/page.tsx
 "use client";
 
+import { useRef, useState } from "react";
+
 import Image from "next/image";
 
 import { signIn } from "next-auth/react"; // 클라이언트 사이드 signIn import
 
+import { BgMusicButton } from "@/components/bgMusic/BgMusicButton";
+import { BgMusicGlobal } from "@/components/bgMusic/BgMusicGlobal";
 import { Button } from "@/components/ui/button";
 
 import styles from "./SignInpage.module.css";
 
 export default function SignInPage() {
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+
   const handleGoogleSignIn = () => {
     signIn("google", { callbackUrl: "/signinloading" });
   };
@@ -20,6 +27,10 @@ export default function SignInPage() {
 
   return (
     <div className={styles.container}>
+      {/* 배경 음악 재생 버튼 */}
+      <BgMusicGlobal src="/sounds/signinBGM.wav" />
+      <BgMusicButton />
+
       {/* 배경 반딧불이 애니메이션 */}
       {Array.from({ length: 30 }).map((_, index) => (
         <div key={index} className={styles.floatingSquare}></div>
@@ -54,6 +65,7 @@ export default function SignInPage() {
               height={80}
             />
           </Button>
+
           {/* 게스트 로그인 버튼 */}
           <Button
             className={styles.guestLoginButton}
@@ -73,6 +85,7 @@ export default function SignInPage() {
               height={80}
             />
           </Button>
+
           <div className={styles.guestWarning}>
             <p>* 게스트 로그인 시, 일부 기능이 제한 됩니다.</p>
           </div>

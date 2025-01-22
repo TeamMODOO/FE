@@ -26,13 +26,24 @@ const FriendDoor = ({ friend }: FriendDoorProps) => {
 
   return (
     <div
-      className="relative flex cursor-pointer flex-col items-center rounded-lg"
+      className="
+      relative 
+      mt-[1dvh] 
+      flex 
+      cursor-pointer 
+      flex-col 
+      items-center
+      rounded-lg 
+      transition-shadow 
+      duration-300
+      hover:shadow-[0_0_4px_4px_rgba(244,217,105,0.7)]
+      "
       style={{
         backgroundImage: `url(${friend.status === "online" ? "/furniture/litdoor.png" : "/furniture/unlitdoor.png"})`,
         backgroundSize: "contain",
         backgroundRepeat: "no-repeat",
         backgroundPosition: "center",
-        width: "120px",
+        width: "101px",
         height: "180px",
         marginBottom: "30px",
       }}
@@ -40,7 +51,7 @@ const FriendDoor = ({ friend }: FriendDoorProps) => {
     >
       {/* 아바타 및 이름 섹션 */}
       <div className="absolute bottom-6 flex flex-col items-center justify-center">
-        <p className="bg-gray-200 text-center text-base font-bold text-black shadow-md">
+        <p className="bg-[rgba(10,10,10,1)] text-center text-base font-bold text-yellow-600 shadow-md">
           {friend.name}
         </p>
       </div>

@@ -2,6 +2,7 @@ import { CollisionZone } from "@/model/CollisionZone";
 import { NpcInfo } from "@/model/Npc";
 import { PortalInfo } from "@/model/Portal";
 import { QA } from "@/model/Qna";
+import { TU } from "@/model/Tutorial";
 
 export const LOBBY_MAP_CONSTANTS = {
   CANVAS_WIDTH: 1400,
@@ -9,9 +10,11 @@ export const LOBBY_MAP_CONSTANTS = {
   MAP_WIDTH: 1200,
   MAP_HEIGHT: 700,
 
-  IMG_WIDTH: 32,
-  IMG_HEIGHT: 32,
-  SPEED: 10,
+  IMG_WIDTH: 60,
+  IMG_HEIGHT: 120,
+  SPEED: 2,
+
+  CHARACTER_SCALE: 0.4,
 };
 
 export const LOBBY_PORTALS: PortalInfo[] = [
@@ -37,31 +40,40 @@ export const LOBBY_PORTALS: PortalInfo[] = [
 
 export const LOBBY_NPCS: NpcInfo[] = [
   {
-    x: 300,
-    y: 450,
-    width: 20,
-    height: 35,
+    x: 352,
+    y: 390,
+    width: 25,
+    height: 45,
     image: "/character/npc1.png",
-    modalTitle: "NPC1 대화",
-    name: "정글의 수석코치",
+    modalTitle: "정글 김코치",
+    name: "정글 김코치\r\n[일일 코테 미션]",
   },
   {
     x: 750,
     y: 150,
-    width: 20,
-    height: 35,
+    width: 25,
+    height: 45,
     image: "/character/npc2.png",
-    modalTitle: "NPC2 대화",
-    name: "정글의 게임 전문 코치",
+    modalTitle: "정글 백코치",
+    name: "정글 백코치\r\n[정글 QnA]",
   },
   {
     x: 560,
     y: 0,
-    width: 100,
-    height: 50,
+    width: 80,
+    height: 40,
     image: "/furniture/board.png",
     modalTitle: "게시판 NPC",
-    name: "게시판",
+    name: "자유 게시판",
+  },
+  {
+    x: 420,
+    y: 170,
+    width: 52,
+    height: 52,
+    image: "/character/npc3.png",
+    modalTitle: "정글 김원장",
+    name: "정글 김원장\r\n[튜토리얼]",
   },
   {
     x: 135,
@@ -81,15 +93,6 @@ export const LOBBY_NPCS: NpcInfo[] = [
     modalTitle: "---",
     name: "미니 게임기",
   },
-  {
-    x: 420,
-    y: 170,
-    width: 40,
-    height: 40,
-    image: "/character/npc3.png",
-    modalTitle: "---",
-    name: "정글의 원장",
-  },
 ];
 
 export const LOBBY_COLLISION_ZONES: CollisionZone[] = [
@@ -98,7 +101,7 @@ export const LOBBY_COLLISION_ZONES: CollisionZone[] = [
     x: 0,
     y: 0,
     width: 1200,
-    height: 20,
+    height: 5,
   },
   {
     x: 0,
@@ -138,13 +141,13 @@ export const LOBBY_COLLISION_ZONES: CollisionZone[] = [
     x: 0,
     y: 208,
     width: 320,
-    height: 15,
+    height: 5,
   },
   {
     x: 315,
     y: 0,
     width: 5,
-    height: 80,
+    height: 65,
   },
   {
     x: 315,
@@ -155,19 +158,19 @@ export const LOBBY_COLLISION_ZONES: CollisionZone[] = [
 
   // 마이룸
   {
-    x: 885,
+    x: 880,
     y: 208,
     width: 315,
-    height: 15,
+    height: 5,
   },
   {
-    x: 885,
+    x: 880,
     y: 0,
     width: 5,
-    height: 80,
+    height: 65,
   },
   {
-    x: 885,
+    x: 880,
     y: 172,
     width: 5,
     height: 40,
@@ -184,13 +187,13 @@ export const LOBBY_COLLISION_ZONES: CollisionZone[] = [
     x: 185,
     y: 370,
     width: 10,
-    height: 50,
+    height: 24,
   },
   {
     x: 430,
     y: 370,
     width: 10,
-    height: 50,
+    height: 24,
   },
   // 퀘스트 - 아래쪽
   {
@@ -201,13 +204,13 @@ export const LOBBY_COLLISION_ZONES: CollisionZone[] = [
   },
   {
     x: 185,
-    y: 530,
+    y: 532,
     width: 10,
     height: 50,
   },
   {
     x: 430,
-    y: 530,
+    y: 532,
     width: 10,
     height: 50,
   },
@@ -216,39 +219,77 @@ export const LOBBY_COLLISION_ZONES: CollisionZone[] = [
   {
     x: 765,
     y: 370,
-    width: 250,
-    height: 15,
+    width: 115,
+    height: 18,
+  },
+  {
+    x: 885,
+    y: 370,
+    width: 65,
+    height: 12,
+  },
+  {
+    x: 955,
+    y: 370,
+    width: 60,
+    height: 18,
   },
   {
     x: 1005,
     y: 370,
     width: 10,
-    height: 50,
+    height: 24,
   },
   {
     x: 765,
     y: 370,
     width: 10,
-    height: 50,
+    height: 24,
   },
 
   // 미팅룸 - 아래쪽
   {
     x: 765,
-    y: 545,
+    y: 570,
     width: 250,
     height: 15,
   },
   {
     x: 1005,
-    y: 505,
+    y: 532,
     width: 10,
     height: 50,
   },
   {
     x: 765,
-    y: 505,
+    y: 532,
     width: 10,
+    height: 50,
+  },
+
+  /////// NPC /////////
+  {
+    x: 352,
+    y: 400,
+    width: 25,
+    height: 25,
+  },
+  {
+    x: 750,
+    y: 160,
+    width: 25,
+    height: 25,
+  },
+  {
+    x: 434,
+    y: 180,
+    width: 24,
+    height: 32,
+  },
+  {
+    x: 100,
+    y: 50,
+    width: 130,
     height: 50,
   },
 ];
@@ -298,6 +339,34 @@ export const QNA_LIST: QA[] = [
       "책을 처음 펴면 당연히 쉽게 읽히지 않으실 겁니다. 실제로 필드에서 경험해야, 그 때서 이해되는 경우도 많죠.",
       "지식을 체화한 사람은 이유가 있습니다. 읽는다고 바로 체화되지는 않습니다.",
       "학습과 경험을 통한 체화가 함께 진행되어야 합니다. 본인만의 공부하는 습관을 들여서 조금씩 성장하십시오.",
+    ],
+  },
+];
+export const TUTORIAL_LIST: TU[] = [
+  {
+    category: "기본 조작법",
+    question: "기본적인 조작법을 알려주세요.",
+    answers: [
+      "방향키 또는 W/A/S/D 키로 캐릭터를 이동할 수 있습니다.",
+      "메인 페이지에서 Z 키를 눌러 친구 목록을 열 수 있습니다.",
+      "메인 페이지에서 X 키를 눌러 채팅을 열 수 있습니다.",
+      "정글 타워 안에서 C 키를 눌러 배경 음악을 끄고 켤 수 있습니다.",
+      "NPC, 또는 포탈 근처에서 Space 키로 상호작용 할 수 있어요.",
+      "ESC 키로 대화창이나 메뉴를 닫을 수도 있지요.",
+      "화면 우측 상단의 토글 버튼들을 통해 친구목록을 확인할 수도, 채팅을 할 수도, 또 배경음악을 켜고 끌 수도 있어요.",
+    ],
+  },
+  {
+    category: "메인페이지",
+    question: "정글타워에서는 무엇을 할 수 있나요?",
+    answers: [
+      "정글 타워에서는 여러분의 정글 생활의 편의를 위해 여러가지 기능들을 제공합니다.",
+      "메인 페이지의 위쪽으로 올라가보면, 자유롭게 글을 남길 수 있는 게시판이 있어요.",
+      "곳곳에 있는 NPC들과 대화를 나누거나, 포탈을 타고 정글타워 이곳저곳을 돌아다닐 수도 있죠.",
+      "각 코치님들은 여러분의 알고리즘 문제 풀이나 정글 생활에 대한 질문에 답변해주기도 합니다.",
+      "마이룸에서는 여러분의 이력서와 포트폴리오를 올려 여러분을 표현할 수도 있지요.",
+      "친구 목록을 통해 다른 사람의 마이룸에 들어가면서, 여러 정글러들의 개발자로서의 삶을 엿볼 수도 있어요.",
+      "여러분의 휴식을 위해 간단한 미니게임장도 준비했으니, 한번 들려보세요.",
     ],
   },
 ];

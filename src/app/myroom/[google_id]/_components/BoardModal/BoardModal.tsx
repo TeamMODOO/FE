@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import { useGuestBookGet } from "@/hooks/myroom/useGuestBookGet";
 import { useGuestBookPost } from "@/hooks/myroom/useGuestBookPost";
 import { BoardModalProps } from "@/model/Board";
+import useClientIdStore from "@/store/useClientIdStore";
 
 import Style from "./BoardModal.style";
 
@@ -34,12 +35,15 @@ const BoardModal: React.FC<BoardModalProps> = ({
   // URI에서 방 주인의 Google ID param으로 추출
   const params = useParams();
   const hostGoogleId = params.google_id as string;
+  const { clientId } = useClientIdStore();
 
   // 1) 비밀 여부 체크박스 상태
   const [isSecret, setIsSecret] = useState<boolean>(false);
+  // needsigninmodal 오픈 상태
+  const [signInModalOpen, setSignInModalOpen] = useState(false);
 
   // 2) useGuestBookPost 훅 사용
-  const { postGuestBook, postLoading, postError, postData } =
+  const { postGuestBook, deleteGuestBook, postLoading, postError, postData } =
     useGuestBookPost(hostGoogleId);
 
   // 3) 방명록 목록 조회 훅
@@ -70,8 +74,10 @@ const BoardModal: React.FC<BoardModalProps> = ({
     }
   };
 
-  // needsigninmodal 오픈 상태
-  const [signInModalOpen, setSignInModalOpen] = useState(false);
+  const deleteCommentHandler = async (guestbookId: string) => {
+    await deleteGuestBook(hostGoogleId, guestbookId);
+    await fetchGuestBookList();
+  };
 
   return (
     <>
@@ -113,14 +119,21 @@ const BoardModal: React.FC<BoardModalProps> = ({
             {guestBooks &&
               guestBooks.map((entry) => (
                 <div key={entry.id} className={Style.singleCommentContainer}>
-                  <div className={Style.commentName}>
-                    {entry.author_name}
-                    {entry.is_secret && " (비밀)"}
+                  <div className="flex justify-between">
+                    <div className={Style.commentName}>{entry.author_name}</div>
+                    {hostGoogleId === clientId ? (
+                      <button
+                        className={Style.commentName}
+                        onClick={() => deleteCommentHandler(entry.id)}
+                      >
+                        삭제
+                      </button>
+                    ) : (
+                      <></>
+                    )}
                   </div>
                   <div className={Style.commentMessage}>
-                    {entry.is_secret
-                      ? "비밀 방명록입니다." // 실제로 방 주인만 보려면 서버 로직에서 처리
-                      : entry.content}
+                    내용: {entry.content}
                   </div>
                 </div>
               ))}
@@ -128,7 +141,7 @@ const BoardModal: React.FC<BoardModalProps> = ({
 
           {/* 방명록 작성 폼 */}
           <div className={Style.formContainer}>
-            <Label htmlFor="message" className="text-black">
+            <Label htmlFor="message" className="#fff">
               방명록 남기기
             </Label>
 
