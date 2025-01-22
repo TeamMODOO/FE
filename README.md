@@ -1,36 +1,41 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## 🌿 Jungle Tower
 
-## Getting Started
+"정글러들이 더 재미있게 정글 생활을 할 수 없을까?"
 
-First, run the development server:
+"정글 생활에 필요한 고민들을 한 번에 해결할 수 있는 웹 서비스가 없을까?"
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+정글러들만을 위한 메타버스, 정글 타워에서 모든 고민 해결!
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+본인의 이력 어필과 팀 프로젝트를 위한 팀원 모집, 코딩 테스트 준비와 팀 회의까지!
+정글 타워 안에서 모두 즐겨보세요!
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+![image](https://github.com/user-attachments/assets/b693cadc-0713-4b06-b9ae-7159c68e292f)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## ✅주요 서비스 기능
 
-## Learn More
+![image](https://github.com/user-attachments/assets/5d7e0a14-cf47-458c-b5ed-b5f8544acbf6)
 
-To learn more about Next.js, take a look at the following resources:
+<a href src="https://jgtower.com/">[정글 타워 바로가기]</a>
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🛠️ 서비스 아키텍처
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+![image](https://github.com/user-attachments/assets/c990e6fe-04d9-411b-bec4-f49e7d42d18b)
 
-## Deploy on Vercel
+## 💡 기술적 챌린지
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+![image](https://github.com/user-attachments/assets/569bfb04-25cf-4bbe-bd48-11cdd48e7e3a)
+![image](https://github.com/user-attachments/assets/2e775abf-36c1-4347-9653-1080ab3c6d6a)
+![image](https://github.com/user-attachments/assets/ed27392e-0d13-4c6e-b082-f2fd7660caba)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🎬 발표 영상
+
+<a href src="https://youtu.be/rIdfkrjFIro?si=6Mf1lEHPCHJ47xe1">
+<img src="https://github.com/user-attachments/assets/f85aeef3-b695-40aa-b127-589b6e3c28ad" alt="정글 타워"/>
+[발표 영상 바로가기]
+</a>
+
+### 🌱 팀원 소개
+
+---
+
+![image](https://github.com/user-attachments/assets/a78d5e6d-5c90-4ace-ad94-d010399393a9)
